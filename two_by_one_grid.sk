@@ -1,0 +1,53 @@
+int simple_alu1(int x, int y) {
+  int opcode = ??(2);
+  if (opcode == 0) {
+    return x + y;
+  } else if (opcode == 1) {
+    return x * y;
+  } else if (opcode == 2) {
+    return x - y;
+  } else {
+    assert(opcode == 3);
+    return x / y;
+  }
+}
+
+int simple_alu2(int x, int y) {
+  int opcode = ??(2);
+  if (opcode == 0) {
+    return x + y;
+  } else if (opcode == 1) {
+    return x * y;
+  } else if (opcode == 2) {
+    return x - y;
+  } else {
+    assert(opcode == 3);
+    return x / y;
+  }
+}
+
+int simple_alu3(int x, int y) {
+  int opcode = ??(2);
+  if (opcode == 0) {
+    return x + y;
+  } else if (opcode == 1) {
+    return x * y;
+  } else if (opcode == 2) {
+    return x - y;
+  } else {
+    assert(opcode == 3);
+    return x / y;
+  }
+}
+
+harness void main(int x, int y, int z) {
+  assume (y != 0);
+
+  // Stage 1
+  int result  = simple_alu1(x, y);
+  int result2 = simple_alu2(x, y);
+
+  // Stage 2
+  int result3 = simple_alu3(result, result2);
+  assert(x / y + x*y == result3);
+}
