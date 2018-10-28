@@ -1,0 +1,63 @@
+generator int simple_alu(int x, int y) {
+  int opcode = ??(2);
+  if (opcode == 0) {
+    return x + y;
+  } else if (opcode == 1) {
+    return x * y;
+  } else if (opcode == 2) {
+    return x - y;
+  } else {
+    assert(opcode == 3);
+    return x / y;
+  }
+}
+
+generator int mux(int a, int b, int c, int d) {
+  int opcode = ??(2);
+  if (opcode == 0) {
+    return a;
+  } else if (opcode == 1) {
+    return b;
+  } else if (opcode == 3) {
+    return c;
+  } else {
+    assert(opcode == 4);
+    return d;
+  }
+}
+
+harness void main(int x, int y, int z, int w) {
+  assume(x != 0);
+  assume(y != 0);
+  assume(z != 0);
+  assume(w != 0);
+
+  // Assign packet fields to first stage inputs. Fixed for now, can make this programmable.
+  int input11 = x;
+  int input12 = y;
+  int input13 = z;
+  int input14 = w;
+
+  //*********** Stage 1 ***********//
+  // Get operands from input packet headers
+  int operand11     = mux(input11, input12, input13, input14);
+  int operand12     = mux(input11, input12, input13, input14);
+  int operand13     = mux(input11, input12, input13, input14);
+  int operand14     = mux(input11, input12, input13, input14);
+
+  // Run simple ALUs
+  int destination11 = simple_alu(operand11, operand12);
+  int destination12 = simple_alu(operand11, operand12);
+  int destination13 = simple_alu(operand13, operand14);
+  int destination14 = simple_alu(operand13, operand14);
+
+  // Write outputs
+  int output11 = mux(destination11, destination12, destination13, destination14);
+  int output12 = mux(destination11, destination12, destination13, destination14);
+  int output13 = mux(destination11, destination12, destination13, destination14);
+  int output14 = mux(destination11, destination12, destination13, destination14);
+
+  // Stage 2: to be written TODO
+  assert(x / z == output11);
+  assert(x / y == output12);
+}
