@@ -1,20 +1,20 @@
-int gen_opcode() { return ??(2); }
-
-harness void main(int x, int y) {
-  assume (y != 0);
-  int opcode = gen_opcode();
-  int result;
+generator int simple_alu(int x, int y) {
+  int opcode = ??(2);
   if (opcode == 0) {
-    result = x + y; 
+    return x + y;
   } else if (opcode == 1) {
-    result = x * y;
+    return x * y;
   } else if (opcode == 2) {
-    result = x - y;
+    return x - y;
   } else {
     assert(opcode == 3);
-    result = x / y;
+    return x / y;
   }
+}
 
-  int spec_result = x / y;
-  assert(spec_result == result);
+harness void main(int x, int y, int z) {
+  assume (y != 0);
+  int result = simple_alu(x, y);
+  int result2 = simple_alu(result, z);
+  assert(x / y + z == result2);
 }
