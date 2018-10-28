@@ -14,6 +14,6 @@ harness void main(int x, int y) {
     result = x / y;
   }
 
-  int spec_result = x * y;
+  int spec_result = x / y;
   assert(spec_result == result);
 }
