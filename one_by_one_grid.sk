@@ -1,6 +1,7 @@
 int gen_opcode() { return ??(2); }
 
 harness void main(int x, int y) {
+  assume (y != 0);
   int opcode = gen_opcode();
   int result;
   if (opcode == 0) {
