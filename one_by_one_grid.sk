@@ -1,0 +1,19 @@
+int gen_opcode() { return ??(2); }
+
+harness void main(int x, int y) {
+  int opcode = gen_opcode();
+  int result;
+  if (opcode == 0) {
+    result = x + y; 
+  } else if (opcode == 1) {
+    result = x * y;
+  } else if (opcode == 2) {
+    result = x - y;
+  } else {
+    assert(opcode == 3);
+    result = x / y;
+  }
+
+  int spec_result = x * y;
+  assert(spec_result == result);
+}
