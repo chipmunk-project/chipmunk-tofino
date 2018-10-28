@@ -18,10 +18,10 @@ generator int mux(int a, int b, int c, int d) {
     return a;
   } else if (opcode == 1) {
     return b;
-  } else if (opcode == 3) {
+  } else if (opcode == 2) {
     return c;
   } else {
-    assert(opcode == 4);
+    assert(opcode == 3);
     return d;
   }
 }
