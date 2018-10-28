@@ -44,12 +44,16 @@ harness void main(int x, int y, int z, int w) {
   int operand12     = mux(input11, input12, input13, input14);
   int operand13     = mux(input11, input12, input13, input14);
   int operand14     = mux(input11, input12, input13, input14);
+  int operand15     = mux(input11, input12, input13, input14);
+  int operand16     = mux(input11, input12, input13, input14);
+  int operand17     = mux(input11, input12, input13, input14);
+  int operand18     = mux(input11, input12, input13, input14);
 
   // Run simple ALUs
   int destination11 = simple_alu(operand11, operand12);
-  int destination12 = simple_alu(operand11, operand12);
-  int destination13 = simple_alu(operand13, operand14);
-  int destination14 = simple_alu(operand13, operand14);
+  int destination12 = simple_alu(operand13, operand14);
+  int destination13 = simple_alu(operand15, operand16);
+  int destination14 = simple_alu(operand17, operand18);
 
   // Write outputs
   int output11 = mux(destination11, destination12, destination13, destination14);
