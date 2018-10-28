@@ -60,6 +60,6 @@ harness void main(int x, int y, int z, int w) {
   // Stage 2: to be written TODO
   assert(x / y == output11);
   assert(x - y == output12);
-  assert(z + w == output13);
+  assert(x + w == output13);
   assert(z * w == output14);
 }
