@@ -1,3 +1,7 @@
+generator int constant() {
+  return ??(2);
+}
+
 generator int simple_alu(int x, int y) {
   int opcode = ??(2);
   if (opcode == 0) {
@@ -26,7 +30,7 @@ generator int mux4(int a, int b, int c, int d) {
   }
 }
 
-generator int mux5(int a, int b, int c, int d, int e) {
+generator int mux6(int a, int b, int c, int d, int e, int f) {
   int opcode = ??(3);
   if (opcode == 0) {
     return a;
@@ -38,6 +42,8 @@ generator int mux5(int a, int b, int c, int d, int e) {
     return d;
   } else if (opcode == 4) {
     return e;
+  } else if (opcode == 5) {
+    return f;
   } else {
     assert(false);
   }
@@ -59,14 +65,14 @@ harness void main(int x, int y, int z, int w) {
 
   //*********** Stage 1 ***********//
   // Get operands from input packet headers
-  int operand11     = mux5(input11, input12, input13, input14, input15);
-  int operand12     = mux5(input11, input12, input13, input14, input15);
-  int operand13     = mux5(input11, input12, input13, input14, input15);
-  int operand14     = mux5(input11, input12, input13, input14, input15);
-  int operand15     = mux5(input11, input12, input13, input14, input15);
-  int operand16     = mux5(input11, input12, input13, input14, input15);
-  int operand17     = mux5(input11, input12, input13, input14, input15);
-  int operand18     = mux5(input11, input12, input13, input14, input15);
+  int operand11     = mux6(input11, input12, input13, input14, input15, constant());
+  int operand12     = mux6(input11, input12, input13, input14, input15, constant());
+  int operand13     = mux6(input11, input12, input13, input14, input15, constant());
+  int operand14     = mux6(input11, input12, input13, input14, input15, constant());
+  int operand15     = mux6(input11, input12, input13, input14, input15, constant());
+  int operand16     = mux6(input11, input12, input13, input14, input15, constant());
+  int operand17     = mux6(input11, input12, input13, input14, input15, constant());
+  int operand18     = mux6(input11, input12, input13, input14, input15, constant());
 
   // Run simple ALUs
   int destination11 = simple_alu(operand11, operand12);
@@ -85,5 +91,5 @@ harness void main(int x, int y, int z, int w) {
   assert(x / y == output11);
   assert(x - y == output12);
   assert(x + w == output13);
-  assert(z * w == output14);
+  assert(z * 3 == output14);
 }
