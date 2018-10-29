@@ -12,7 +12,7 @@ generator int simple_alu(int x, int y) {
   }
 }
 
-generator int mux(int a, int b, int c, int d) {
+generator int mux4(int a, int b, int c, int d) {
   int opcode = ??(2);
   if (opcode == 0) {
     return a;
@@ -26,28 +26,47 @@ generator int mux(int a, int b, int c, int d) {
   }
 }
 
+generator int mux5(int a, int b, int c, int d, int e) {
+  int opcode = ??(3);
+  if (opcode == 0) {
+    return a;
+  } else if (opcode == 1) {
+    return b;
+  } else if (opcode == 2) {
+    return c;
+  } else if (opcode == 3) {
+    return d;
+  } else if (opcode == 4) {
+    return e;
+  } else {
+    assert(false);
+  }
+}
+
 harness void main(int x, int y, int z, int w) {
   assume(x != 0);
   assume(y != 0);
   assume(z != 0);
   assume(w != 0);
 
-  // Assign packet fields to first stage inputs. Fixed for now, can make this programmable.
+  // Assign packet fields to first stage inputs.
+  // TODO: This is hardcoded for now, we can make this programmable.
   int input11 = x;
   int input12 = y;
   int input13 = z;
   int input14 = w;
+  int input15 = 0;
 
   //*********** Stage 1 ***********//
   // Get operands from input packet headers
-  int operand11     = mux(input11, input12, input13, input14);
-  int operand12     = mux(input11, input12, input13, input14);
-  int operand13     = mux(input11, input12, input13, input14);
-  int operand14     = mux(input11, input12, input13, input14);
-  int operand15     = mux(input11, input12, input13, input14);
-  int operand16     = mux(input11, input12, input13, input14);
-  int operand17     = mux(input11, input12, input13, input14);
-  int operand18     = mux(input11, input12, input13, input14);
+  int operand11     = mux5(input11, input12, input13, input14, input15);
+  int operand12     = mux5(input11, input12, input13, input14, input15);
+  int operand13     = mux5(input11, input12, input13, input14, input15);
+  int operand14     = mux5(input11, input12, input13, input14, input15);
+  int operand15     = mux5(input11, input12, input13, input14, input15);
+  int operand16     = mux5(input11, input12, input13, input14, input15);
+  int operand17     = mux5(input11, input12, input13, input14, input15);
+  int operand18     = mux5(input11, input12, input13, input14, input15);
 
   // Run simple ALUs
   int destination11 = simple_alu(operand11, operand12);
@@ -56,10 +75,11 @@ harness void main(int x, int y, int z, int w) {
   int destination14 = simple_alu(operand17, operand18);
 
   // Write outputs
-  int output11 = mux(destination11, destination12, destination13, destination14);
-  int output12 = mux(destination11, destination12, destination13, destination14);
-  int output13 = mux(destination11, destination12, destination13, destination14);
-  int output14 = mux(destination11, destination12, destination13, destination14);
+  int output11 = mux4(destination11, destination12, destination13, destination14);
+  int output12 = mux4(destination11, destination12, destination13, destination14);
+  int output13 = mux4(destination11, destination12, destination13, destination14);
+  int output14 = mux4(destination11, destination12, destination13, destination14);
+  int output15 = mux4(destination11, destination12, destination13, destination14);
 
   // Stage 2: to be written TODO
   assert(x / y == output11);
