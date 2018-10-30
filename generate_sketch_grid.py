@@ -43,14 +43,15 @@ def generate_selector(n, selector_name):
   sketch_code += "}\n";
   return sketch_code
 
-if (len(sys.argv) < 5):
-  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <maximum number of fields in packet> < number of pipeline stages> <number of ALUs per stage> ")
+if (len(sys.argv) < 6):
+  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <number of state variables in program> <number of containers in PHV> < number of pipeline stages> <number of ALUs per stage> ")
   sys.exit(1)
 else:
   num_fields_in_prog   = int(sys.argv[1])
-  num_phv_containers   = int(sys.argv[2])
-  num_pipeline_stages  = int(sys.argv[3])
-  num_alus_per_stage   = int(sys.argv[4])
+  num_state_vars       = int(sys.argv[2])
+  num_phv_containers   = int(sys.argv[3])
+  num_pipeline_stages  = int(sys.argv[4])
+  num_alus_per_stage   = int(sys.argv[5])
 
 # Generate one mux to represent the register allocator
 # i.e., for each of up to num_phv_containers phv containers, assign a packet field (out of num_fields_in_prog)
@@ -76,6 +77,8 @@ sketch_harness += alu_generator + "\n" + constant_generator + "\n"
 sketch_harness += "harness void main("
 for p in range(num_fields_in_prog):
   sketch_harness += "int pkt_" + str(p) + ", "
+for s in range(num_state_vars):
+  sketch_harness += "int state_" + str(s) + ", "
 sketch_harness = sketch_harness[:-2] + ") {\n"
 
 # Generate PHV allocator
