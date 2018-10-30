@@ -7,8 +7,8 @@ generator int constant() {
 }
 '''
 
-alu_generator = '''
-generator int simple_alu(int x, int y) {
+stateless_alu_generator = '''
+generator int stateless_alu(int x, int y) {
   int opcode = ??(2);
   if (opcode == 0) {
     return x + y;
@@ -22,6 +22,23 @@ generator int simple_alu(int x, int y) {
   }
 }
 '''
+
+stateful_alu_generator = '''
+generator void stateful_alu(ref int s, int y) {
+  int opcode = ??(2);
+  if (opcode == 0) {
+    s = s + y;
+  } else if (opcode == 1) {
+    s = s * y;
+  } else if (opcode == 2) {
+    s = s - y;
+  } else {
+    assert(opcode == 3);
+    s = s / y;
+  }
+}
+'''
+
 
 # Sketch code for an n-to-1 selector
 # Used for n-to-1 muxes and for compile-time configuration
@@ -71,7 +88,7 @@ sketch_harness += generate_selector(num_phv_containers + 1, "operand_mux") + "\n
 sketch_harness += generate_selector(num_alus_per_stage, "output_mux") + "\n"
 
 # Add sketch code for alu and constants
-sketch_harness += alu_generator + "\n" + constant_generator + "\n"
+sketch_harness += stateless_alu_generator + "\n" + stateful_alu_generator + constant_generator + "\n"
 
 # Function signature
 sketch_harness += "harness void main("
@@ -102,7 +119,7 @@ for i in range(num_pipeline_stages):
     for k in range(num_phv_containers):
       sketch_harness += "  int input_" + str(i) + "_" + str(k) + " = output_" + str(i-1) + "_" + str(k) + ";\n"
 
-  # Two operands for each ALU in each stage
+  # Two operands for each stateless ALU in each stage
   sketch_harness += "\n  // Operands\n"
   for j in range(num_alus_per_stage):
     # First operand
@@ -119,10 +136,10 @@ for i in range(num_pipeline_stages):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "constant());\n"
 
-  # ALUs
-  sketch_harness += "\n  // ALUs\n"
+  # Stateless ALUs
+  sketch_harness += "\n  // Stateless ALUs\n"
   for j in range(num_alus_per_stage):
-    sketch_harness += "  int destination_" + str(i) + "_" + str(j) + "= simple_alu(operand_" + str(i) + "_" + str(j) + "_a, operand_" + str(i) + "_" + str(j) + "_b);\n"
+    sketch_harness += "  int destination_" + str(i) + "_" + str(j) + "= stateless_alu(operand_" + str(i) + "_" + str(j) + "_a, operand_" + str(i) + "_" + str(j) + "_b);\n"
 
   # Write outputs
   sketch_harness += "\n  // Outputs\n"
@@ -147,7 +164,7 @@ print(sketch_harness)
 
 #TODO: Handle state.
 #TODO: Ensure that inputs to this problem are appropriately canonicalized.
-# i.e., packet fields are renamed to pkt_1, pkt_2, ....
-# and state is renamed to state_1, state_2, state_3, ...
-# How do we handle addresses in stateful arrays?
-# Maybe transform it to some kind of equivalent scalar stateful form?
+# 1. i.e., packet fields are renamed to pkt_1, pkt_2, ....
+# 2. and state is renamed to state_1, state_2, state_3, ...
+# 3. How do we handle addresses in stateful arrays?
+# 4. Maybe transform it to some kind of equivalent scalar stateful form?
