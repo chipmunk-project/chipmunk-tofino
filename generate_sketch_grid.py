@@ -41,6 +41,34 @@ generator int stateful_alu(ref int s, int y) {
 }
 '''
 
+def generate_state_selector(num_stateful_slots, num_state_vars):
+  state_selector = "  // One bit for each combination of stateful ALU slot and state variable\n"
+  state_selector += "  // Note that some stateful ALUs can have more than one slot\n"
+  for i in range(num_stateful_slots):
+    for j in range(num_state_vars):
+      state_selector += "  bit salu_" + str(i) + "_" + str(j) + " = ??(1);\n"
+
+  state_selector += "  // Any stateful slot has at most one variable assigned to it\n"
+  for i in range(num_stateful_slots):
+    state_selector += "  assert(("
+    for j in range(num_state_vars):
+      state_selector += "salu_" + str(i) + "_" + str(j) + " + "
+    state_selector = state_selector[:-2] + ") <= 1);\n"
+
+  state_selector += "  // Any stateful variable is assigned to at most one slot\n"
+  for j in range(num_state_vars):
+    state_selector += "  assert(("
+    for i in range(num_stateful_slots):
+      state_selector += "salu_" + str(i) + "_" + str(j) + " + "
+    state_selector = state_selector[:-2] + ") <= 1);\n"
+
+  return state_selector
+#  state_selector += "  // Now set the slots based on the indicator variables\n"
+#  for i in range(num_stateful_slots):
+#    state_selector += "  // Slot " + str(i)
+#    for j in range(num_state_vars):
+#      if (j ==
+#      state_selector += " 
 
 # Sketch code for an n-to-1 selector
 # Used for n-to-1 muxes and for compile-time configuration
@@ -124,7 +152,7 @@ for i in range(num_pipeline_stages):
       sketch_harness += "  int input_" + str(i) + "_" + str(k) + " = output_" + str(i-1) + "_" + str(k) + ";\n"
 
   # Two operands for each stateless ALU in each stage
-  sketch_harness += "\n  // Operands\n"
+  sketch_harness += "\n  // Stateless operands\n"
   for j in range(num_alus_per_stage):
     # First operand
     sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_a ="
@@ -146,7 +174,7 @@ for i in range(num_pipeline_stages):
     sketch_harness += "  int destination_" + str(i) + "_" + str(j) + "= stateless_alu(operand_" + str(i) + "_" + str(j) + "_a, operand_" + str(i) + "_" + str(j) + "_b);\n"
 
   # One packet operand for each stateful ALU in each stage
-  sketch_harness += "\n  // Operands\n"
+  sketch_harness += "\n  // Stateful operands\n"
   for j in range(num_alus_per_stage):
     # First operand
     sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_stateful_alu ="
@@ -159,6 +187,7 @@ for i in range(num_pipeline_stages):
   sketch_harness += "\n  // Stateful ALUs\n"
   for j in range(num_alus_per_stage):
     sketch_harness += "  int old_value_of_state_" + str(i) + "_" + str(j) + "= stateful_alu(state_1, operand_" + str(i) + "_" + str(j) + "_stateful_alu);\n"
+    # TODO: Unhardcode state_1 here.
 
   # Write outputs
   sketch_harness += "\n  // Outputs\n"
@@ -180,12 +209,10 @@ for p in range(num_fields_in_prog):
     sketch_harness += "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ", "
   sketch_harness = sketch_harness[:-2] + ");\n"
 
+sketch_harness += generate_state_selector(num_alus_per_stage, num_alus_per_stage) # TODO: Fix arguments
+
 sketch_harness += "}\n"
 print(sketch_harness)
 
-#TODO: Handle state.
-#TODO: Ensure that inputs to this problem are appropriately canonicalized.
-# 1. i.e., packet fields are renamed to pkt_1, pkt_2, ....
-# 2. and state is renamed to state_1, state_2, state_3, ...
 # 3. How do we handle addresses in stateful arrays?
 # 4. Maybe transform it to some kind of equivalent scalar stateful form?
