@@ -62,7 +62,7 @@ sketch_harness = generate_selector(num_fields_in_prog, "phv_allocator") + "\n"
 # In general, we would expect the final value of a packet field
 # to be available in the same PHV container that was allocated to the packet field,
 # but this is a bit harder to model in Sketch, but we should fix it soon.
-sketch_harness = generate_selector(num_phv_containers, "phv_deallocator") + "\n"
+sketch_harness += generate_selector(num_phv_containers, "phv_deallocator") + "\n"
 
 # Generate two muxes, one for inputs: num_phv_containers+1 to 1
 # and one for outputs: num_alus_per_stage to 1
@@ -125,7 +125,7 @@ for i in range(num_pipeline_stages):
   sketch_harness += "\n  // Outputs\n"
   for k in range(num_phv_containers):
     sketch_harness += "  int output_" + str(i) + "_" + str(k)
-    sketch_harness  += "= operand_mux("
+    sketch_harness  += "= output_mux("
     for j in range(num_alus_per_stage):
       sketch_harness += "destination_" + str(i) + "_" + str(j) + ", "
     sketch_harness = sketch_harness[:-2] + ");\n"
@@ -133,7 +133,7 @@ for i in range(num_pipeline_stages):
 # Generate PHV de-allocator
 sketch_harness += "\n  // PHV de-allocation\n"
 for p in range(num_fields_in_prog):
-  sketch_harness += "  int pkt_" + str(p) + " = "
+  sketch_harness += "  pkt_" + str(p) + " = "
   sketch_harness += " phv_deallocator("
   for k in range(num_phv_containers):
     sketch_harness += "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ", "
