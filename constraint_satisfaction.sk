@@ -1,0 +1,17 @@
+harness void constraint_sat() {
+  int x00 = ??(1);
+  int x01 = ??(1);
+  int x02 = ??(1);
+  int x10 = ??(1);
+  int x11 = ??(1);
+  int x12 = ??(1);
+  int x20 = ??(1);
+  int x21 = ??(1);
+  int x22 = ??(1);
+  assert(x00 + x01 + x02 == 1);
+  assert(x10 + x11 + x12 == 1);
+  assert(x20 + x21 + x22 == 1);
+  assert(x00 + x10 + x20 == 1);
+  assert(x01 + x11 + x21 == 1);
+  assert(x02 + x12 + x22 == 1); 
+}
