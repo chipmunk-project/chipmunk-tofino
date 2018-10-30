@@ -24,8 +24,9 @@ generator int stateless_alu(int x, int y) {
 '''
 
 stateful_alu_generator = '''
-generator void stateful_alu(ref int s, int y) {
+generator int stateful_alu(ref int s, int y) {
   int opcode = ??(2);
+  int old_val = s;
   if (opcode == 0) {
     s = s + y;
   } else if (opcode == 1) {
@@ -36,6 +37,7 @@ generator void stateful_alu(ref int s, int y) {
     assert(opcode == 3);
     s = s / y;
   }
+  return old_val;
 }
 '''
 
@@ -83,9 +85,11 @@ sketch_harness = generate_selector(num_fields_in_prog, "phv_allocator") + "\n"
 sketch_harness += generate_selector(num_phv_containers, "phv_deallocator") + "\n"
 
 # Generate two muxes, one for inputs: num_phv_containers+1 to 1
-# and one for outputs: num_alus_per_stage to 1
+# and one for outputs: num_alus_per_stage + num_alus_per_stage to 1
+# TODO: For now, we are assuming the number of stateful and statless ALUs per stage is the same.
+# We can always relax this assumption later.
 sketch_harness += generate_selector(num_phv_containers + 1, "operand_mux") + "\n"
-sketch_harness += generate_selector(num_alus_per_stage, "output_mux") + "\n"
+sketch_harness += generate_selector(num_alus_per_stage + num_alus_per_stage, "output_mux") + "\n"
 
 # Add sketch code for alu and constants
 sketch_harness += stateless_alu_generator + "\n" + stateful_alu_generator + constant_generator + "\n"
@@ -141,6 +145,21 @@ for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
     sketch_harness += "  int destination_" + str(i) + "_" + str(j) + "= stateless_alu(operand_" + str(i) + "_" + str(j) + "_a, operand_" + str(i) + "_" + str(j) + "_b);\n"
 
+  # One packet operand for each stateful ALU in each stage
+  sketch_harness += "\n  // Operands\n"
+  for j in range(num_alus_per_stage):
+    # First operand
+    sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_stateful_alu ="
+    sketch_harness += " operand_mux("
+    for k in range(num_phv_containers):
+      sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
+    sketch_harness += "constant());\n"
+
+  # Stateful ALUs
+  sketch_harness += "\n  // Stateful ALUs\n"
+  for j in range(num_alus_per_stage):
+    sketch_harness += "  int old_value_of_state_" + str(i) + "_" + str(j) + "= stateful_alu(state_1, operand_" + str(i) + "_" + str(j) + "_stateful_alu);\n"
+
   # Write outputs
   sketch_harness += "\n  // Outputs\n"
   for k in range(num_phv_containers):
@@ -148,6 +167,8 @@ for i in range(num_pipeline_stages):
     sketch_harness  += "= output_mux("
     for j in range(num_alus_per_stage):
       sketch_harness += "destination_" + str(i) + "_" + str(j) + ", "
+    for j in range(num_alus_per_stage):
+      sketch_harness += "old_value_of_state_" + str(i) + "_" + str(j) + ", "
     sketch_harness = sketch_harness[:-2] + ");\n"
 
 # Generate PHV de-allocator
