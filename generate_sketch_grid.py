@@ -141,3 +141,10 @@ for p in range(num_fields_in_prog):
 
 sketch_harness += "}\n"
 print(sketch_harness)
+
+#TODO: Handle state.
+#TODO: Ensure that inputs to this problem are appropriately canonicalized.
+# i.e., packet fields are renamed to pkt_1, pkt_2, ....
+# and state is renamed to state_1, state_2, state_3, ...
+# How do we handle addresses in stateful arrays?
+# Maybe transform it to some kind of equivalent scalar stateful form?
