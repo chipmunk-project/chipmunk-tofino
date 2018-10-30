@@ -23,10 +23,13 @@ generator int simple_alu(int x, int y) {
 }
 '''
 
-def generate_n_to_1_mux(n, prefix):
+# Sketch code for an n-to-1 selector
+# Used for n-to-1 muxes and for compile-time configuration
+# (e.g., assigning packet fields to containers in the packet header vector (PHV))
+def generate_selector(n, selector_name):
   assert(n > 1)
   num_bits = math.ceil(math.log(n, 2))
-  sketch_code = "generator int " + prefix + "mux"+ str(n) + "("
+  sketch_code = "generator int " + selector_name + "("
   for i in range(0, n):
     sketch_code += "int v" + str(i) + ","
   sketch_code = sketch_code[:-1] + ") {\n"
@@ -40,39 +43,60 @@ def generate_n_to_1_mux(n, prefix):
   sketch_code += "}\n";
   return sketch_code
 
-max_fields_in_packet = int(sys.argv[1])
-num_pipeline_stages  = int(sys.argv[2])
-num_alus_per_stage   = int(sys.argv[3])
+if (len(sys.argv) < 5):
+  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <maximum number of fields in packet> < number of pipeline stages> <number of ALUs per stage> ")
+  sys.exit(1)
+else:
+  num_fields_in_prog   = int(sys.argv[1])
+  num_phv_containers   = int(sys.argv[2])
+  num_pipeline_stages  = int(sys.argv[3])
+  num_alus_per_stage   = int(sys.argv[4])
 
-# Generate two muxes, one for inputs: max_fields_in_packet+1 to 1
+# Generate one mux to represent the register allocator
+# i.e., for each of up to num_phv_containers phv containers, assign a packet field (out of num_fields_in_prog)
+sketch_harness = generate_selector(num_fields_in_prog, "phv_allocator") + "\n"
+
+# The code below represents a register de-allocator
+# i.e., for each of up to num_fields_in_prog fields in the program, assign a container (out of num_phv_containers)
+# TODO: It's optimistic to assume that a de-allocator exists.
+# In general, we would expect the final value of a packet field
+# to be available in the same PHV container that was allocated to the packet field,
+# but this is a bit harder to model in Sketch, but we should fix it soon.
+sketch_harness = generate_selector(num_phv_containers, "phv_deallocator") + "\n"
+
+# Generate two muxes, one for inputs: num_phv_containers+1 to 1
 # and one for outputs: num_alus_per_stage to 1
-sketch_harness = generate_n_to_1_mux(max_fields_in_packet + 1, "i") + "\n"
-sketch_harness += generate_n_to_1_mux(num_alus_per_stage, "o") + "\n"
+sketch_harness += generate_selector(num_phv_containers + 1, "operand_mux") + "\n"
+sketch_harness += generate_selector(num_alus_per_stage, "output_mux") + "\n"
 
 # Add sketch code for alu and constants
 sketch_harness += alu_generator + "\n" + constant_generator + "\n"
 
 # Function signature
-# TODO: The function signature needs to be fixed
-# because the number of packet fields may not be
-# related to max_fields_in_packet
 sketch_harness += "harness void main("
-for i in range(max_fields_in_packet):
-  sketch_harness += "int pkt_" + str(i) + ", "
+for p in range(num_fields_in_prog):
+  sketch_harness += "int pkt_" + str(p) + ", "
 sketch_harness = sketch_harness[:-2] + ") {\n"
+
+# Generate PHV allocator
+sketch_harness += "\n  // PHV allocation\n"
+for k in range(num_phv_containers):
+  sketch_harness += "  int input_" +  "0"   + "_" + str(k) + " = "
+  sketch_harness += " phv_allocator("
+  for p in range(num_fields_in_prog):
+    sketch_harness += "pkt_" + str(p) + ", "
+  sketch_harness = sketch_harness[:-2] + ");\n"
 
 # Generate pipeline stages
 for i in range(num_pipeline_stages):
   sketch_harness += "\n  /********* Stage " + str(i) + " *******/\n"
   # set up inputs to each stage
-  # we can have max_fields_in_packet fields in the inputs to each stage
+  # we can have num_phv_containers fields in the inputs to each stage
   sketch_harness += "\n  // Inputs\n"
   if (i == 0):
-    for k in range(max_fields_in_packet):
-      sketch_harness += "  int input_" +  "0"   + "_" + str(k) + " = pkt_" + str(k) + ";\n"
-      # TODO for now we are assigning input_0_k = pkt_k; In general, this should be programmable.
+    sketch_harness += "  // PHV allocation already handles setting of inputs for the first stage\n"
   else:
-    for k in range(max_fields_in_packet):
+    for k in range(num_phv_containers):
       sketch_harness += "  int input_" + str(i) + "_" + str(k) + " = output_" + str(i-1) + "_" + str(k) + ";\n"
 
   # Two operands for each ALU in each stage
@@ -80,15 +104,15 @@ for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
     # First operand
     sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_a ="
-    sketch_harness += "imux" + str(max_fields_in_packet + 1) + "("
-    for k in range(max_fields_in_packet):
+    sketch_harness += " operand_mux("
+    for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "constant());\n"
 
     # Second operand
     sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_b ="
-    sketch_harness += "imux" + str(max_fields_in_packet + 1) + "("
-    for k in range(max_fields_in_packet):
+    sketch_harness += " operand_mux("
+    for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "constant());\n"
 
@@ -99,12 +123,21 @@ for i in range(num_pipeline_stages):
 
   # Write outputs
   sketch_harness += "\n  // Outputs\n"
-  for k in range(max_fields_in_packet):
+  for k in range(num_phv_containers):
     sketch_harness += "  int output_" + str(i) + "_" + str(k)
-    sketch_harness  += "= omux" + str(num_alus_per_stage) + "("
+    sketch_harness  += "= operand_mux("
     for j in range(num_alus_per_stage):
       sketch_harness += "destination_" + str(i) + "_" + str(j) + ", "
     sketch_harness = sketch_harness[:-2] + ");\n"
+
+# Generate PHV de-allocator
+sketch_harness += "\n  // PHV de-allocation\n"
+for p in range(num_fields_in_prog):
+  sketch_harness += "  int pkt_" + str(p) + " = "
+  sketch_harness += " phv_deallocator("
+  for k in range(num_phv_containers):
+    sketch_harness += "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ", "
+  sketch_harness = sketch_harness[:-2] + ");\n"
 
 sketch_harness += "}\n"
 print(sketch_harness)
