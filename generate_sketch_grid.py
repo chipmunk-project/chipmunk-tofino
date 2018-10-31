@@ -1,97 +1,15 @@
 import sys
 import math
+import sketch_helpers
 
-constant_generator = '''
-generator int constant() {
-  return ??(2);
-}
-'''
-
-stateless_alu_generator = '''
-generator int stateless_alu(int x, int y) {
-  int opcode = ??(2);
-  if (opcode == 0) {
-    return x + y;
-  } else if (opcode == 1) {
-    return x * y;
-  } else if (opcode == 2) {
-    return x - y;
-  } else {
-    assert(opcode == 3);
-    return x / y;
-  }
-}
-'''
-
-stateful_alu_generator = '''
-generator int stateful_alu(ref int s, int y) {
-  int opcode = ??(2);
-  int old_val = s;
-  if (opcode == 0) {
-    s = s + y;
-  } else if (opcode == 1) {
-    s = s * y;
-  } else if (opcode == 2) {
-    s = s - y;
-  } else {
-    assert(opcode == 3);
-    s = s / y;
-  }
-  return old_val;
-}
-'''
-
-def generate_state_selector(num_stateful_slots, num_state_vars):
-  state_selector = "  // One bit for each combination of stateful ALU slot and state variable\n"
-  state_selector += "  // Note that some stateful ALUs can have more than one slot\n"
-  for i in range(num_stateful_slots):
-    for j in range(num_state_vars):
-      state_selector += "  bit salu_" + str(i) + "_" + str(j) + " = ??(1);\n"
-
-  state_selector += "  // Any stateful slot has at most one variable assigned to it\n"
-  for i in range(num_stateful_slots):
-    state_selector += "  assert(("
-    for j in range(num_state_vars):
-      state_selector += "salu_" + str(i) + "_" + str(j) + " + "
-    state_selector = state_selector[:-2] + ") <= 1);\n"
-
-  state_selector += "  // Any stateful variable is assigned to at most one slot\n"
-  for j in range(num_state_vars):
-    state_selector += "  assert(("
-    for i in range(num_stateful_slots):
-      state_selector += "salu_" + str(i) + "_" + str(j) + " + "
-    state_selector = state_selector[:-2] + ") <= 1);\n"
-
-  return state_selector
-#  state_selector += "  // Now set the slots based on the indicator variables\n"
-#  for i in range(num_stateful_slots):
-#    state_selector += "  // Slot " + str(i)
-#    for j in range(num_state_vars):
-#      if (j ==
-#      state_selector += " 
-
-# Sketch code for an n-to-1 selector
-# Used for n-to-1 muxes and for compile-time configuration
-# (e.g., assigning packet fields to containers in the packet header vector (PHV))
-def generate_selector(n, selector_name):
-  assert(n > 1)
-  num_bits = math.ceil(math.log(n, 2))
-  sketch_code = "generator int " + selector_name + "("
-  for i in range(0, n):
-    sketch_code += "int v" + str(i) + ","
-  sketch_code = sketch_code[:-1] + ") {\n"
-
-  sketch_code += "  int opcode = ??(" + str(num_bits) + ");\n"
-  sketch_code += "  if (opcode == 0) { return v0; }\n"
-  for i in range(1, n):
-    sketch_code += "  else if (opcode == " + str(i) + ") { return v" + str(i) + "; } \n"
-  sketch_code += "  else { assert(false); }\n"
-
-  sketch_code += "}\n";
-  return sketch_code
+# Convention for indices:
+# i : pipeline stage
+# j : ALU within pipeline stage
+# k : PHV container within pipeline stage
+# l : packet field or state variable from program
 
 if (len(sys.argv) < 6):
-  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <number of state variables in program> <number of containers in PHV> < number of pipeline stages> <number of ALUs per stage> ")
+  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <number of state variables in program> <number of containers in PHV> <number of pipeline stages> <number of stateless/stateful ALUs per stage> ")
   sys.exit(1)
 else:
   num_fields_in_prog   = int(sys.argv[1])
@@ -100,29 +18,21 @@ else:
   num_pipeline_stages  = int(sys.argv[4])
   num_alus_per_stage   = int(sys.argv[5])
 
-# Generate one mux to represent the register allocator
-# i.e., for each of up to num_phv_containers phv containers, assign a packet field (out of num_fields_in_prog)
-sketch_harness = generate_selector(num_fields_in_prog, "phv_allocator") + "\n"
-
-# The code below represents a register de-allocator
-# i.e., for each of up to num_fields_in_prog fields in the program, assign a container (out of num_phv_containers)
-# TODO: It's optimistic to assume that a de-allocator exists.
-# In general, we would expect the final value of a packet field
-# to be available in the same PHV container that was allocated to the packet field,
-# but this is a bit harder to model in Sketch, but we should fix it soon.
-sketch_harness += generate_selector(num_phv_containers, "phv_deallocator") + "\n"
-
-# Generate two muxes, one for inputs: num_phv_containers+1 to 1
+# Generate two muxes, one for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 # and one for outputs: num_alus_per_stage + num_alus_per_stage to 1
-# TODO: For now, we are assuming the number of stateful and statless ALUs per stage is the same.
+# For now, we are assuming the number of stateful and statless ALUs per stage is the same.
 # We can always relax this assumption later.
-sketch_harness += generate_selector(num_phv_containers + 1, "operand_mux") + "\n"
-sketch_harness += generate_selector(num_alus_per_stage + num_alus_per_stage, "output_mux") + "\n"
+sketch_harness =  ""
+sketch_harness += sketch_helpers.generate_selector(num_phv_containers + 1, "operand_mux") + "\n"
+sketch_harness += sketch_helpers.generate_selector(num_alus_per_stage + num_alus_per_stage, "output_mux") + "\n"
 
-# Add sketch code for alu and constants
-sketch_harness += stateless_alu_generator + "\n" + stateful_alu_generator + constant_generator + "\n"
+# Add sketch code for alus and constants
+sketch_harness += sketch_helpers.stateless_alu_generator + "\n" + \
+                  sketch_helpers.stateful_alu_generator + "\n" + \
+                  sketch_helpers.constant_generator + "\n"
 
-# Function signature
+# Function signature that includes both packet fields and state variables
+# belonging to this particular packet transaction
 sketch_harness += "harness void main("
 for p in range(num_fields_in_prog):
   sketch_harness += "int pkt_" + str(p) + ", "
@@ -130,14 +40,24 @@ for s in range(num_state_vars):
   sketch_harness += "int state_" + str(s) + ", "
 sketch_harness = sketch_harness[:-2] + ") {\n"
 
-# Generate PHV allocator
-sketch_harness += "\n  // PHV allocation\n"
+# Generate PHV containers
+sketch_harness += "  // One variable for each container in the PHV\n"
+sketch_harness += "  // This will be allocated to a packet field from the program using indicator variables.\n"
 for k in range(num_phv_containers):
-  sketch_harness += "  int input_" +  "0"   + "_" + str(k) + " = "
-  sketch_harness += " phv_allocator("
-  for p in range(num_fields_in_prog):
-    sketch_harness += "pkt_" + str(p) + ", "
-  sketch_harness = sketch_harness[:-2] + ");\n"
+  sketch_harness += "  int input_" +  "0"   + "_" + str(k) + ";\n"
+
+# Generate PHV allocator
+sketch_harness += sketch_helpers.generate_phv_allocator(num_phv_containers, num_fields_in_prog)
+
+# Generate stateful operands
+sketch_harness += "  // One variable for each stateful ALU's state operand\n"
+sketch_harness += "  // This will be allocated to a state variable from the program using indicator variables.\n"
+for i in range(num_pipeline_stages):
+  for j in range(num_alus_per_stage):
+    sketch_harness += "  int state_operand_salu_" + str(i) + "_" + str(j) + ";\n"
+
+# Generate state allocator
+sketch_harness += sketch_helpers.generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars)
 
 # Generate pipeline stages
 for i in range(num_pipeline_stages):
@@ -146,8 +66,18 @@ for i in range(num_pipeline_stages):
   # we can have num_phv_containers fields in the inputs to each stage
   sketch_harness += "\n  // Inputs\n"
   if (i == 0):
-    sketch_harness += "  // PHV allocation already handles setting of inputs for the first stage\n"
+    # Read packet fields into PHV
+    sketch_harness += "  // Read each PHV container from appropriate packet field based on PHV allocation\n"
+    for k in range(num_phv_containers):
+      for l in range(num_fields_in_prog):
+        if (l == 0):
+          sketch_harness += "  if (phv_" + str(k) + "_" + str(l) + " == 1) { input_0_" + str(k) + " = pkt_" + str(l) + ";}\n"
+        else:
+          sketch_harness += "  else if (phv_" + str(k) + "_" + str(l) + " == 1) { input_0_" + str(k) + " = pkt_" + str(l) + ";}\n"
+
   else:
+    # Read previous stage's outputs into this one.
+    sketch_harness += "  // Input of this stage is the output of the previous one\n"
     for k in range(num_phv_containers):
       sketch_harness += "  int input_" + str(i) + "_" + str(k) + " = output_" + str(i-1) + "_" + str(k) + ";\n"
 
@@ -176,20 +106,27 @@ for i in range(num_pipeline_stages):
   # One packet operand for each stateful ALU in each stage
   sketch_harness += "\n  // Stateful operands\n"
   for j in range(num_alus_per_stage):
-    # First operand
-    sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_stateful_alu ="
+    sketch_harness += "  int packet_operand_salu" + str(i) + "_" + str(j) + " ="
     sketch_harness += " operand_mux("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "constant());\n"
 
+  # Read state
+  sketch_harness += "\n  // Read stateful ALU slots from allocated state variables\n"
+  for j in range(num_alus_per_stage):
+    for l in range(num_state_vars):
+      if (l == 0):
+        sketch_harness += "  if (salu_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_" + str(l) + ";}\n"
+      else:
+        sketch_harness += "  else if (salu_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_" + str(l) + ";}\n"
+
   # Stateful ALUs
   sketch_harness += "\n  // Stateful ALUs\n"
   for j in range(num_alus_per_stage):
-    sketch_harness += "  int old_value_of_state_" + str(i) + "_" + str(j) + "= stateful_alu(state_1, operand_" + str(i) + "_" + str(j) + "_stateful_alu);\n"
-    # TODO: Unhardcode state_1 here.
+    sketch_harness += "  int old_state_" + str(i) + "_" + str(j) + "= stateful_alu(state_operand_salu_" + str(i) + "_" + str(j) + ", packet_operand_salu" + str(i) + "_" + str(j) + ");\n"
 
-  # Write outputs
+  # Write packet outputs
   sketch_harness += "\n  // Outputs\n"
   for k in range(num_phv_containers):
     sketch_harness += "  int output_" + str(i) + "_" + str(k)
@@ -197,22 +134,26 @@ for i in range(num_pipeline_stages):
     for j in range(num_alus_per_stage):
       sketch_harness += "destination_" + str(i) + "_" + str(j) + ", "
     for j in range(num_alus_per_stage):
-      sketch_harness += "old_value_of_state_" + str(i) + "_" + str(j) + ", "
+      sketch_harness += "old_state_" + str(i) + "_" + str(j) + ", "
     sketch_harness = sketch_harness[:-2] + ");\n"
 
-# Generate PHV de-allocator
-sketch_harness += "\n  // PHV de-allocation\n"
-for p in range(num_fields_in_prog):
-  sketch_harness += "  pkt_" + str(p) + " = "
-  sketch_harness += " phv_deallocator("
-  for k in range(num_phv_containers):
-    sketch_harness += "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ", "
-  sketch_harness = sketch_harness[:-2] + ");\n"
+  # Write state
+  for k in range(num_state_vars):
+    sketch_harness += "\n  // Write state_" + str(k) + "\n"
+    for j in range(num_alus_per_stage):
+      if (j == 0):
+        sketch_harness += "  if (salu_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
+      else:
+        sketch_harness += "  else if (salu_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
 
-sketch_harness += generate_state_selector(num_alus_per_stage, num_alus_per_stage) # TODO: Fix arguments
+# Write back PHV containers into packet fields
+for l in range(num_fields_in_prog):
+  sketch_harness += "\n  // Write pkt_" + str(l) + "\n"
+  for k in range(num_phv_containers):
+    if (k == 0):
+      sketch_harness += "  if (phv_" + str(k) + "_" + str(l) + " == 1) { pkt_" + str(l) + " = " + "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ";}\n"
+    else:
+      sketch_harness += "  else if (phv_" + str(k) + "_" + str(l) + " == 1) { pkt_" + str(l) + " = " + "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ";}\n"
 
 sketch_harness += "}\n"
 print(sketch_harness)
-
-# 3. How do we handle addresses in stateful arrays?
-# 4. Maybe transform it to some kind of equivalent scalar stateful form?
