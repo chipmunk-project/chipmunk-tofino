@@ -1,0 +1,7 @@
+# 1. How do we handle addresses in stateful arrays? Maybe transform it to some
+# kind of equivalent scalar stateful form?
+# 2. Maybe use the Domino compiler as a bootstrap for this? In the sense
+# that there is no point searching in a grid that's larger than the grid
+# that the Domino compiler requires.
+# 3. Write a simple translator to turn Domino code into a canonical form for
+# Sketch.
