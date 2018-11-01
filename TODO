@@ -5,3 +5,4 @@
 # that the Domino compiler requires.
 # 3. Write a simple translator to turn Domino code into a canonical form for
 # Sketch.
+# 4. Extract configuration of holes in human-readable form after synthesis.
