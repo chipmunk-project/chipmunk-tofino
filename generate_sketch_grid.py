@@ -31,10 +31,10 @@ sketch_harness += sketch_helpers.stateless_alu_generator + "\n" + \
                   sketch_helpers.stateful_alu_generator + "\n" + \
                   sketch_helpers.constant_generator + "\n"
 
-# Add sketch code for Result data type
+# Add sketch code for StateAndPacket data type
 # This is a struct consisting of all packet and state variables
 sketch_harness += "// Data type for holding result from spec and implementation\n"
-sketch_harness += "struct Result {\n"
+sketch_harness += "struct StateAndPacket {\n"
 for p in range(num_fields_in_prog):
   sketch_harness += "  int pkt_" + str(p) + ";\n"
 for s in range(num_state_vars):
@@ -43,7 +43,7 @@ sketch_harness += "}\n"
 
 # Function signature that includes both packet fields and state variables
 # belonging to this particular packet transaction
-sketch_harness += "Result pipeline(Result state_and_packet){\n"
+sketch_harness += "StateAndPacket pipeline(StateAndPacket state_and_packet){\n"
 
 # Generate PHV containers
 sketch_harness += "\n  // One variable for each container in the PHV\n"
