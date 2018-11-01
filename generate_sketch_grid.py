@@ -43,7 +43,7 @@ sketch_harness += "}\n"
 
 # Function signature that includes both packet fields and state variables
 # belonging to this particular packet transaction
-sketch_harness += "StateAndPacket pipeline(StateAndPacket state_and_packet){\n"
+sketch_harness += "|StateAndPacket| pipeline(|StateAndPacket| state_and_packet){\n"
 
 # Generate PHV containers
 sketch_harness += "\n  // One variable for each container in the PHV\n"
@@ -164,4 +164,5 @@ for l in range(num_fields_in_prog):
 sketch_harness += "\n  // Return updated packet fields and state variables\n"
 sketch_harness += "  return state_and_packet;\n"
 sketch_harness += "}\n"
+
 print(sketch_harness)
