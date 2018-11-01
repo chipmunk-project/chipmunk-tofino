@@ -1,6 +1,8 @@
 import sys
 import math
 import sketch_helpers
+# TODO: Fix this. Need a more seamless way of specifying the spec.
+import spec_program
 
 # Convention for indices:
 # i : pipeline stage
@@ -41,9 +43,12 @@ for s in range(num_state_vars):
   sketch_harness += "  int state_" + str(s) + ";\n"
 sketch_harness += "}\n"
 
+# Add code for dummy spec program
+sketch_harness += spec_program.spec_program
+
 # Function signature that includes both packet fields and state variables
 # belonging to this particular packet transaction
-sketch_harness += "|StateAndPacket| pipeline(|StateAndPacket| state_and_packet){\n"
+sketch_harness += "|StateAndPacket| pipeline(|StateAndPacket| state_and_packet) implements program {\n"
 
 # Generate PHV containers
 sketch_harness += "\n  // One variable for each container in the PHV\n"
