@@ -89,22 +89,20 @@ def generate_phv_allocator(num_phv_containers, num_fields_in_prog):
 
   return phv_allocator
 
-# Sketch code for an n-to-1 selector
-# Used for n-to-1 muxes and for compile-time configuration
-# (e.g., assigning packet fields to containers in the packet header vector (PHV))
-def generate_selector(n, selector_name):
+# Sketch code for an n-to-1 mux
+def generate_mux(n, mux_name):
   assert(n > 1)
   num_bits = math.ceil(math.log(n, 2))
-  sketch_code = "generator int " + selector_name + "("
+  mux_code = "generator int " + mux_name + "("
   for i in range(0, n):
-    sketch_code += "int v" + str(i) + ","
-  sketch_code = sketch_code[:-1] + ") {\n"
+    mux_code += "int v" + str(i) + ","
+  mux_code = mux_code[:-1] + ") {\n"
 
-  sketch_code += "  int opcode = ??(" + str(num_bits) + ");\n"
-  sketch_code += "  if (opcode == 0) { return v0; }\n"
+  mux_code += "  int opcode = ??(" + str(num_bits) + ");\n"
+  mux_code += "  if (opcode == 0) { return v0; }\n"
   for i in range(1, n):
-    sketch_code += "  else if (opcode == " + str(i) + ") { return v" + str(i) + "; } \n"
-  sketch_code += "  else { assert(false); }\n"
+    mux_code += "  else if (opcode == " + str(i) + ") { return v" + str(i) + "; } \n"
+  mux_code += "  else { assert(false); }\n"
 
-  sketch_code += "}\n";
-  return sketch_code
+  mux_code += "}\n";
+  return mux_code

@@ -25,8 +25,8 @@ else:
 # For now, we are assuming the number of stateful and statless ALUs per stage is the same.
 # We can always relax this assumption later.
 sketch_harness =  ""
-sketch_harness += sketch_helpers.generate_selector(num_phv_containers + 1, "operand_mux") + "\n"
-sketch_harness += sketch_helpers.generate_selector(num_alus_per_stage + num_alus_per_stage, "output_mux") + "\n"
+sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "operand_mux") + "\n"
+sketch_harness += sketch_helpers.generate_mux(num_alus_per_stage + num_alus_per_stage, "output_mux") + "\n"
 
 # Add sketch code for alus and constants
 sketch_harness += sketch_helpers.stateless_alu_generator + "\n" + \
