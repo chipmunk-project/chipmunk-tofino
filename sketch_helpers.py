@@ -1,15 +1,21 @@
 # Helper functions to generate sketch code for synthesis
 import math
 
-constant_generator = '''
-generator int constant() {
-  return ??(2);
-}
-'''
+# Used by Sketch to dump out values for holes into an XML file using the --fe-output-xml flag
+def generate_hole_function(hole_name, hole_bit_width):
+  return "int " + hole_name + "() { return ??(" + str(hole_bit_width) + "); }\n" 
 
-stateless_alu_generator = '''
-generator int stateless_alu(int x, int y) {
-  int opcode = ??(2);
+# Generate holes corresponding to immediate operands for instruction units
+def generate_immediate_operand(immediate_operand_name):
+  return generate_hole_function(immediate_operand_name, 2);
+
+# Generate Sketch code for a simple stateless alu (+,-,*,/) 
+def generate_stateless_alu(alu_name):
+  stateless_alu = '''
+int stateless_alu_%d(int x, int y) {
+  assert(y != 0);
+  int opcode = %d();
+  int old_val = s;
   if (opcode == 0) {
     return x + y;
   } else if (opcode == 1) {
@@ -21,11 +27,17 @@ generator int stateless_alu(int x, int y) {
     return x / y;
   }
 }
-'''
+'''%(alu_name, alu_name + "opcode")
+  return generate_hole_function(alu_name + "opcode", 2) + stateless_alu
 
-stateful_alu_generator = '''
-generator int stateful_alu(ref int s, int y) {
-  int opcode = ??(2);
+# Generate Sketch code for a simple stateful alu (+,-,*,/)
+# Takes one state and one packet operand (or immediate operand) as inputs
+# Updates the state in place and returns the old value of the state
+def generate_stateful_alu(alu_name):
+  stateful_alu = '''
+int stateful_alu_%d(ref int s, int y) {
+  assert(y != 0);
+  int opcode = %d();
   int old_val = s;
   if (opcode == 0) {
     s = s + y;
@@ -39,7 +51,23 @@ generator int stateful_alu(ref int s, int y) {
   }
   return old_val;
 }
-'''
+'''%(alu_name, alu_name + "opcode")
+  return generate_hole_function(alu_name + "opcode") + stateful_alu
+
+def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars):
+  stateful_config = ""
+  for i in range(num_pipeline_stages):
+    for j in range(num_alus_per_stage):
+      for l in range(num_state_vars):
+        stateful_config += generate_hole_function("salu_config_" + str(i) + "_" + str(j) + "_" + str(l), 1)
+  return stateful_config
+
+def generate_phv_config(num_phv_containers, num_fields_in_prog):
+  phv_config = ""
+  for k in range(num_phv_containers):
+    for l in range(num_fields_in_prog):
+      phv_config += generate_hole_function("phv_config_" + str(k) + "_" + str(l), 1)
+  return phv_config
 
 def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
   state_allocator ="\n  // One bit indicator variable for each combination of stateful ALU slot and state variable\n"
@@ -47,7 +75,7 @@ def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_
   for i in range(num_pipeline_stages):
     for j in range(num_alus_per_stage):
       for l in range(num_state_vars):
-        state_allocator += "  bit salu_" + str(i) + "_" + str(j) + "_" + str(l) + " = ??(1);\n"
+        state_allocator += "  bit salu_" + str(i) + "_" + str(j) + "_" + str(l) + " = " + "salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + "();\n"
 
   state_allocator += "\n  // Any stateful slot has at most one variable assigned to it (sum over l)\n"
   for i in range(num_pipeline_stages):
@@ -71,7 +99,7 @@ def generate_phv_allocator(num_phv_containers, num_fields_in_prog):
   phv_allocator ="\n  // One bit indicator variable for each combination of PHV container and packet field\n"
   for k in range(num_phv_containers):
     for l in range(num_fields_in_prog):
-      phv_allocator += "  bit phv_" + str(k) + "_" + str(l) + " = ??(1);\n"
+      phv_allocator += "  bit phv_" + str(k) + "_" + str(l) + " = " + "phv_config_" + str(k) + "_" + str(l) + "();\n"
 
   phv_allocator += "\n  // Any container has at most one variable assigned to it (sum over l)\n"
   for k in range(num_phv_containers):
@@ -93,16 +121,16 @@ def generate_phv_allocator(num_phv_containers, num_fields_in_prog):
 def generate_mux(n, mux_name):
   assert(n > 1)
   num_bits = math.ceil(math.log(n, 2))
-  mux_code = "generator int " + mux_name + "("
+  mux_code = "int " + mux_name + "("
   for i in range(0, n):
     mux_code += "int v" + str(i) + ","
   mux_code = mux_code[:-1] + ") {\n"
 
-  mux_code += "  int opcode = ??(" + str(num_bits) + ");\n"
-  mux_code += "  if (opcode == 0) { return v0; }\n"
+  mux_code += "  int mux_ctrl = " + mux_name + "_ctrl();\n"
+  mux_code += "  if (mux_ctrl == 0) { return v0; }\n"
   for i in range(1, n):
-    mux_code += "  else if (opcode == " + str(i) + ") { return v" + str(i) + "; } \n"
+    mux_code += "  else if (mux_ctrl == " + str(i) + ") { return v" + str(i) + "; } \n"
   mux_code += "  else { assert(false); }\n"
 
   mux_code += "}\n";
-  return mux_code
+  return generate_hole_function(mux_name + "_ctrl", num_bits) + mux_code

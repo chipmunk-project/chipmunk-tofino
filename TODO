@@ -8,3 +8,6 @@
 # 4. Extract configuration of holes in human-readable form after synthesis.
 # 5. Consider using something like AWS Lambda for increasing the level of parallelism
 # in slv-parallel.
+# 6. For now, we are assuming the number of stateful and statless ALUs per stage is the same.
+# We can always relax this assumption later.
+

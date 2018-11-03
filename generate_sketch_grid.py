@@ -23,15 +23,19 @@ else:
 # Generate two muxes, one for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 # and one for outputs: num_alus_per_stage + num_alus_per_stage to 1
 # For now, we are assuming the number of stateful and statless ALUs per stage is the same.
-# We can always relax this assumption later.
 sketch_harness =  ""
-sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "operand_mux") + "\n"
-sketch_harness += sketch_helpers.generate_mux(num_alus_per_stage + num_alus_per_stage, "output_mux") + "\n"
+for i in num_pipeline_stages:
+  sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "operand_mux_stage_" + str(i)) + "\n"
+  sketch_harness += sketch_helpers.generate_mux(num_alus_per_stage + num_alus_per_stage, "output_mux_stage_" + str(i)) + "\n"
 
-# Add sketch code for alus and constants
-sketch_harness += sketch_helpers.stateless_alu_generator + "\n" + \
-                  sketch_helpers.stateful_alu_generator + "\n" + \
-                  sketch_helpers.constant_generator + "\n"
+# Generate sketch code for alus and immediate operands in each stage
+for i in num_pipeline_stages:
+  for j in num_alus_per_stage:
+    sketch_harness += \
+                  sketch_helpers.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j)) + "\n" + \
+                  sketch_helpers.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(j) + "\n" + \
+                  sketch_helpers.generate_immediate_operand("stateless_immediate_" + str(i) + "_" + str(j)) + "\n" + \
+                  sketch_helpers.generate_immediate_operand("stateful_immediate_" + str(i) + "_" + str(j)) + "\n"
 
 # Add sketch code for StateAndPacket data type
 # This is a struct consisting of all packet and state variables
@@ -42,6 +46,12 @@ for p in range(num_fields_in_prog):
 for s in range(num_state_vars):
   sketch_harness += "  int state_" + str(s) + ";\n"
 sketch_harness += "}\n"
+
+# Generate PHV configuration holes
+sketch_harness += sketch_helpers.generate_phv_config(num_phv_containers, num_fields_in_prog)
+
+# Generate stateful ALU configuraton holes
+sketch_harness += sketch_helpers.generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars)
 
 # Add code for dummy spec program
 sketch_harness += spec_program.spec_program
