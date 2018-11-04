@@ -23,10 +23,13 @@ else:
 # Generate two muxes, one for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 # and one for outputs: num_alus_per_stage + num_alus_per_stage to 1
 # For now, we are assuming the number of stateful and statless ALUs per stage is the same.
-sketch_harness =  "\n// Operand and output muxes for each stage\n"
+sketch_harness =  "\n// Operand and output muxes for each ALU in each stage\n"
 for i in range(num_pipeline_stages):
-  sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "operand_mux_stage_" + str(i)) + "\n"
-  sketch_harness += sketch_helpers.generate_mux(num_alus_per_stage + num_alus_per_stage, "output_mux_stage_" + str(i)) + "\n"
+  for j in range(num_alus_per_stage):
+    sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "stateless_operand_mux_a_" + str(i) + "_" + str(j)) + "\n"
+    sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "stateless_operand_mux_b_" + str(i) + "_" + str(j)) + "\n"
+    sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "stateful_operand_mux_" + str(i) + "_" + str(j)) + "\n"
+    sketch_harness += sketch_helpers.generate_mux(num_alus_per_stage + num_alus_per_stage, "output_mux_" + str(i) + "_" + str(j)) + "\n"
 
 # Generate sketch code for alus and immediate operands in each stage
 sketch_harness += "\n// Sketch definition for ALUs and immediate operands\n"
@@ -111,14 +114,14 @@ for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
     # First operand
     sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_a ="
-    sketch_harness += " operand_mux_stage_" + str(i) + "("
+    sketch_harness += " stateless_operand_mux_a_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "stateless_immediate_" + str(i) + "_" + str(j) + "_a());\n"
 
     # Second operand
     sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_b ="
-    sketch_harness += " operand_mux_stage_" + str(i) + "("
+    sketch_harness += " stateless_operand_mux_b_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "stateless_immediate_" + str(i) + "_" + str(j) + "_b());\n"
@@ -132,7 +135,7 @@ for i in range(num_pipeline_stages):
   sketch_harness += "\n  // Stateful operands\n"
   for j in range(num_alus_per_stage):
     sketch_harness += "  int packet_operand_salu" + str(i) + "_" + str(j) + " ="
-    sketch_harness += " operand_mux_stage_" + str(i) + "("
+    sketch_harness += " stateful_operand_mux_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "stateful_immediate_" + str(i) + "_" + str(j) + "());\n"
@@ -155,7 +158,7 @@ for i in range(num_pipeline_stages):
   sketch_harness += "\n  // Outputs\n"
   for k in range(num_phv_containers):
     sketch_harness += "  int output_" + str(i) + "_" + str(k)
-    sketch_harness  += "= output_mux_stage_" + str(i) + "("
+    sketch_harness  += "= output_mux_" + str(i) + "_" + str(j) + "("
     for j in range(num_alus_per_stage):
       sketch_harness += "destination_" + str(i) + "_" + str(j) + ", "
     for j in range(num_alus_per_stage):
