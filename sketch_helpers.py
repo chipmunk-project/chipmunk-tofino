@@ -3,7 +3,9 @@ import math
 
 # Used by Sketch to dump out values for holes into an XML file using the --fe-output-xml flag
 def generate_hole_function(hole_name, hole_bit_width):
-  return "int " + hole_name + "() { return ??(" + str(hole_bit_width) + "); }\n" 
+  generate_hole_function.num_holes += 1
+  return "int " + hole_name + "() { return ??(" + str(hole_bit_width) + "); }\n"
+generate_hole_function.num_holes = 0
 
 # Generate holes corresponding to immediate operands for instruction units
 def generate_immediate_operand(immediate_operand_name):
@@ -12,10 +14,9 @@ def generate_immediate_operand(immediate_operand_name):
 # Generate Sketch code for a simple stateless alu (+,-,*,/) 
 def generate_stateless_alu(alu_name):
   stateless_alu = '''
-int stateless_alu_%d(int x, int y) {
+int %s(int x, int y) {
   assert(y != 0);
-  int opcode = %d();
-  int old_val = s;
+  int opcode = %s();
   if (opcode == 0) {
     return x + y;
   } else if (opcode == 1) {
@@ -27,17 +28,17 @@ int stateless_alu_%d(int x, int y) {
     return x / y;
   }
 }
-'''%(alu_name, alu_name + "opcode")
-  return generate_hole_function(alu_name + "opcode", 2) + stateless_alu
+'''%(alu_name, alu_name + "_opcode")
+  return generate_hole_function(alu_name + "_opcode", 2) + stateless_alu
 
 # Generate Sketch code for a simple stateful alu (+,-,*,/)
 # Takes one state and one packet operand (or immediate operand) as inputs
 # Updates the state in place and returns the old value of the state
 def generate_stateful_alu(alu_name):
   stateful_alu = '''
-int stateful_alu_%d(ref int s, int y) {
+int %s(ref int s, int y) {
   assert(y != 0);
-  int opcode = %d();
+  int opcode = %s();
   int old_val = s;
   if (opcode == 0) {
     s = s + y;
@@ -51,8 +52,8 @@ int stateful_alu_%d(ref int s, int y) {
   }
   return old_val;
 }
-'''%(alu_name, alu_name + "opcode")
-  return generate_hole_function(alu_name + "opcode") + stateful_alu
+'''%(alu_name, alu_name + "_opcode")
+  return generate_hole_function(alu_name + "_opcode", 2) + stateful_alu
 
 def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars):
   stateful_config = ""
@@ -75,7 +76,7 @@ def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_
   for i in range(num_pipeline_stages):
     for j in range(num_alus_per_stage):
       for l in range(num_state_vars):
-        state_allocator += "  bit salu_" + str(i) + "_" + str(j) + "_" + str(l) + " = " + "salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + "();\n"
+        state_allocator += "  int salu_" + str(i) + "_" + str(j) + "_" + str(l) + " = " + "salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + "();\n"
 
   state_allocator += "\n  // Any stateful slot has at most one variable assigned to it (sum over l)\n"
   for i in range(num_pipeline_stages):
@@ -99,7 +100,7 @@ def generate_phv_allocator(num_phv_containers, num_fields_in_prog):
   phv_allocator ="\n  // One bit indicator variable for each combination of PHV container and packet field\n"
   for k in range(num_phv_containers):
     for l in range(num_fields_in_prog):
-      phv_allocator += "  bit phv_" + str(k) + "_" + str(l) + " = " + "phv_config_" + str(k) + "_" + str(l) + "();\n"
+      phv_allocator += "  int phv_" + str(k) + "_" + str(l) + " = " + "phv_config_" + str(k) + "_" + str(l) + "();\n"
 
   phv_allocator += "\n  // Any container has at most one variable assigned to it (sum over l)\n"
   for k in range(num_phv_containers):
