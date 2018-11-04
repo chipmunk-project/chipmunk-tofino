@@ -1,0 +1,4 @@
+harness void main(int x) {
+  int y = ??;
+  assert(x * y == x * 2);
+}
