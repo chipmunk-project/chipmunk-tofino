@@ -10,15 +10,15 @@ import spec_program
 # k : PHV container within pipeline stage
 # l : packet field or state variable from program
 
-if (len(sys.argv) < 6):
-  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <number of state variables in program> <number of containers in PHV> <number of pipeline stages> <number of stateless/stateful ALUs per stage> ")
+if (len(sys.argv) < 5):
+  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <number of state variables in program> <number of pipeline stages> <number of stateless/stateful ALUs per stage> ")
   sys.exit(1)
 else:
   num_fields_in_prog   = int(sys.argv[1])
   num_state_vars       = int(sys.argv[2])
-  num_phv_containers   = int(sys.argv[3])
-  num_pipeline_stages  = int(sys.argv[4])
-  num_alus_per_stage   = int(sys.argv[5])
+  num_pipeline_stages  = int(sys.argv[3])
+  num_alus_per_stage   = int(sys.argv[4])
+  num_phv_containers   = 2 * num_alus_per_stage
 
 # Generate two muxes, one for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 # and one for outputs: num_alus_per_stage + num_alus_per_stage to 1
