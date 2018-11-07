@@ -20,9 +20,7 @@ else:
   num_alus_per_stage   = int(sys.argv[4])
   num_phv_containers   = 2 * num_alus_per_stage
 
-# Generate two muxes, one for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
-# and one for outputs: num_alus_per_stage + num_alus_per_stage to 1
-# For now, we are assuming the number of stateful and statless ALUs per stage is the same.
+# Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 sketch_harness =  "\n// Operand muxes for each ALU in each stage\n"
 sketch_harness += "// Total of num_pipeline_stages*num_alus_per_stage*3 (num_phv_containers + 1)-to-1 muxes\n"
 for i in range(num_pipeline_stages):
@@ -30,12 +28,6 @@ for i in range(num_pipeline_stages):
     sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "stateless_operand_mux_a_" + str(i) + "_" + str(j)) + "\n"
     sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "stateless_operand_mux_b_" + str(i) + "_" + str(j)) + "\n"
     sketch_harness += sketch_helpers.generate_mux(num_phv_containers + 1, "stateful_operand_mux_" + str(i) + "_" + str(j)) + "\n"
-
-sketch_harness += "\n//Output muxes for each PHV container in each stage\n"
-sketch_harness += "// Total of num_pipeline_stages*num_phv_containers (2*num_alus_per_stage)-to-1 muxes\n"
-for i in range(num_pipeline_stages):
-  for k in range(num_phv_containers):
-    sketch_harness += sketch_helpers.generate_mux(num_alus_per_stage + num_alus_per_stage, "output_mux_" + str(i) + "_" + str(k)) + "\n"
 
 # Generate sketch code for alus and immediate operands in each stage
 sketch_harness += "\n// Sketch definition for ALUs and immediate operands\n"
@@ -162,14 +154,13 @@ for i in range(num_pipeline_stages):
 
   # Write packet outputs
   sketch_harness += "\n  // Outputs\n"
+  assert(num_phv_containers == 2 * num_alus_per_stage)
   for k in range(num_phv_containers):
     sketch_harness += "  int output_" + str(i) + "_" + str(k)
-    sketch_harness  += "= output_mux_" + str(i) + "_" + str(k) + "("
-    for j in range(num_alus_per_stage):
-      sketch_harness += "destination_" + str(i) + "_" + str(j) + ", "
-    for j in range(num_alus_per_stage):
-      sketch_harness += "old_state_" + str(i) + "_" + str(j) + ", "
-    sketch_harness = sketch_harness[:-2] + ");\n"
+    if (k < num_alus_per_stage):
+      sketch_harness += "destination_" + str(i) + "_" + str(k) + ";\n"
+    else:
+      sketch_harness += "old_state_" + str(i) + "_" + str(k-num_alus_per_stage) + ";\n"
 
   # Write state
   for k in range(num_state_vars):
