@@ -158,9 +158,9 @@ for i in range(num_pipeline_stages):
   for k in range(num_phv_containers):
     sketch_harness += "  int output_" + str(i) + "_" + str(k)
     if (k < num_alus_per_stage):
-      sketch_harness += "destination_" + str(i) + "_" + str(k) + ";\n"
+      sketch_harness += "= destination_" + str(i) + "_" + str(k) + ";\n"
     else:
-      sketch_harness += "old_state_" + str(i) + "_" + str(k-num_alus_per_stage) + ";\n"
+      sketch_harness += "= old_state_" + str(i) + "_" + str(k-num_alus_per_stage) + ";\n"
 
   # Write state
   for k in range(num_state_vars):
