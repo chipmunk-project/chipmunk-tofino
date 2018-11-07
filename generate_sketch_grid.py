@@ -115,14 +115,14 @@ for i in range(num_pipeline_stages):
     sketch_harness += " stateless_operand_mux_a_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
-    sketch_harness += "stateless_immediate_" + str(i) + "_" + str(j) + "_a());\n"
+    sketch_harness += "stateless_immediate_" + str(i) + "_" + str(j) + "_a);\n"
 
     # Second operand
     sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_b ="
     sketch_harness += " stateless_operand_mux_b_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
-    sketch_harness += "stateless_immediate_" + str(i) + "_" + str(j) + "_b());\n"
+    sketch_harness += "stateless_immediate_" + str(i) + "_" + str(j) + "_b);\n"
 
   # Stateless ALUs
   sketch_harness += "\n  // Stateless ALUs\n"
@@ -136,7 +136,7 @@ for i in range(num_pipeline_stages):
     sketch_harness += " stateful_operand_mux_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
-    sketch_harness += "stateful_immediate_" + str(i) + "_" + str(j) + "());\n"
+    sketch_harness += "stateful_immediate_" + str(i) + "_" + str(j) + ");\n"
 
   # Read state
   sketch_harness += "\n  // Read stateful ALU slots from allocated state variables\n"
