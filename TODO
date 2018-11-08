@@ -1,7 +1,23 @@
 # 1. How do we handle addresses in stateful arrays? Maybe transform it to some
 # kind of equivalent scalar stateful form?
-# 2. Maybe use the Domino compiler as a bootstrap for this? In the sense
-# that there is no point searching in a grid that's larger than the grid
-# that the Domino compiler requires. Related to Domino as a bootstrap, write
-# a simple translator to turn Domino code into a canonical form for
-# Sketch.
+
+# 2. Maybe use the Domino compiler as a bootstrap for this? In the sense that
+# there is no point searching in a grid that's larger than the grid that the
+# Domino compiler requires. Related to Domino as a bootstrap, write a simple
+# translator to turn Domino code into a canonical form for Sketch.
+
+# 3. Incremental search: Try a small grid. Then expand the grid and move on to
+# larger and larger grids.: This seems to work reasonably. It terminates quite
+# quickly for grids of size up to 2 by 2.
+
+# 4. Does Alvin's idea of removing constraints on the indicator variables
+# actually reduce search time?
+
+# 5. Setup some benchmarking infrastructure.
+
+# 6. Is there any way to track progress of sketch?
+
+# 7. Maybe there is a way to specify that the packet fields and state variables
+# will always be related in some ways to each other using assume statements.
+# Because the state variables all start from some given initial value. THis
+# might mean that they continue to be related?
