@@ -15,8 +15,8 @@ def get_num_pkt_fields_and_state_vars(program):
 # k : PHV container within pipeline stage
 # l : packet field or state variable from program
 
-if (len(sys.argv) < 4):
-  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> ")
+if (len(sys.argv) < 5):
+  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <run PHV and SALU allocator?>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
@@ -24,6 +24,7 @@ else:
 
   num_pipeline_stages  = int(sys.argv[2])
   num_alus_per_stage   = int(sys.argv[3])
+  run_allocator        = str(sys.argv[4])
   num_phv_containers   = 2 * num_alus_per_stage
 
 # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
@@ -79,7 +80,8 @@ for k in range(num_phv_containers):
   sketch_harness += "  int input_" +  "0"   + "_" + str(k) + ";\n"
 
 # Generate PHV allocator
-sketch_harness += sketch_helpers.generate_phv_allocator(num_phv_containers, num_fields_in_prog)
+if (run_allocator == "yes"):
+  sketch_harness += sketch_helpers.generate_phv_allocator(num_phv_containers, num_fields_in_prog)
 
 # Generate stateful operands
 sketch_harness += "\n  // One variable for each stateful ALU's state operand\n"
@@ -89,7 +91,8 @@ for i in range(num_pipeline_stages):
     sketch_harness += "  int state_operand_salu_" + str(i) + "_" + str(j) + ";\n"
 
 # Generate state allocator
-sketch_harness += sketch_helpers.generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars)
+if (run_allocator == "yes"):
+  sketch_harness += sketch_helpers.generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars)
 
 # Generate pipeline stages
 for i in range(num_pipeline_stages):
