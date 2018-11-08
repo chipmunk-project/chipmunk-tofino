@@ -14,3 +14,8 @@
 # But some modification to the full spec causes it to compile (e.g., deleting a
 # line of code).  Then we can see if we can take the modified spec's compiled
 # output and "patch" it to get the full spec's compiled output.
+
+# 6. Understand why "time python3 compile.py test.sk 4 5 yes" compiles, but
+# "time python3 compile.py test.sk 5 5 yes" doesn't. Intuitively, you would
+# expect successful compilation on a smaller grid to imply successful
+# compilation on a larger grid.
