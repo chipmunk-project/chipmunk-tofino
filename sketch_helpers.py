@@ -1,15 +1,16 @@
 # Helper functions to generate sketch code for synthesis
 import math
+import sys
 
-# Used by Sketch to dump out values for holes into an XML file using the --fe-output-xml flag
-def generate_hole_function(hole_name, hole_bit_width):
-  generate_hole_function.num_holes += 1
+def generate_hole(hole_name, hole_bit_width):
+  generate_hole.num_holes += 1
+  print(hole_name, file=sys.stderr)
   return "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
-generate_hole_function.num_holes = 0
+generate_hole.num_holes = 0
 
 # Generate holes corresponding to immediate operands for instruction units
 def generate_immediate_operand(immediate_operand_name):
-  return generate_hole_function(immediate_operand_name, 2);
+  return generate_hole(immediate_operand_name, 2);
 
 # Generate Sketch code for a simple stateless alu (+,-,*,/) 
 def generate_stateless_alu(alu_name):
@@ -29,7 +30,7 @@ int %s(int x, int y) {
   }
 }
 '''%(alu_name, alu_name + "_opcode")
-  return generate_hole_function(alu_name + "_opcode", 2) + stateless_alu
+  return generate_hole(alu_name + "_opcode", 2) + stateless_alu
 
 # Generate Sketch code for a simple stateful alu (+,-,*,/)
 # Takes one state and one packet operand (or immediate operand) as inputs
@@ -53,21 +54,21 @@ int %s(ref int s, int y) {
   return old_val;
 }
 '''%(alu_name, alu_name + "_opcode")
-  return generate_hole_function(alu_name + "_opcode", 2) + stateful_alu
+  return generate_hole(alu_name + "_opcode", 2) + stateful_alu
 
 def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars):
   stateful_config = ""
   for i in range(num_pipeline_stages):
     for j in range(num_alus_per_stage):
       for l in range(num_state_vars):
-        stateful_config += generate_hole_function("salu_config_" + str(i) + "_" + str(j) + "_" + str(l), 1)
+        stateful_config += generate_hole("salu_config_" + str(i) + "_" + str(j) + "_" + str(l), 1)
   return stateful_config
 
 def generate_phv_config(num_phv_containers, num_fields_in_prog):
   phv_config = ""
   for k in range(num_phv_containers):
     for l in range(num_fields_in_prog):
-      phv_config += generate_hole_function("phv_config_" + str(k) + "_" + str(l), 1)
+      phv_config += generate_hole("phv_config_" + str(k) + "_" + str(l), 1)
   return phv_config
 
 def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
@@ -134,4 +135,4 @@ def generate_mux(n, mux_name):
   mux_code += "  else { assert(false); }\n"
 
   mux_code += "}\n";
-  return generate_hole_function(mux_name + "_ctrl", num_bits) + mux_code
+  return generate_hole(mux_name + "_ctrl", num_bits) + mux_code
