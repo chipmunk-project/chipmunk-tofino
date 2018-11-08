@@ -1,8 +1,13 @@
 import sys
 import math
 import sketch_helpers
-# TODO: Fix this. Need a more seamless way of specifying the spec.
-import spec_program
+import re
+
+# Use a regex to scan the program and extract the largest packet field index and largest state variable index
+def get_num_pkt_fields_and_state_vars(program):
+  pkt_fields = [int(x) for x in re.findall("state_and_packet.pkt_(\d+)", program)]
+  state_vars = [int(x) for x in re.findall("state_and_packet.state_(\d+)", program)]
+  return (max(pkt_fields) + 1, max(state_vars) + 1)
 
 # Convention for indices:
 # i : pipeline stage
@@ -10,14 +15,15 @@ import spec_program
 # k : PHV container within pipeline stage
 # l : packet field or state variable from program
 
-if (len(sys.argv) < 5):
-  print("Usage: python3 " + sys.argv[0] + " <number of packet fields in program> <number of state variables in program> <number of pipeline stages> <number of stateless/stateful ALUs per stage> ")
+if (len(sys.argv) < 4):
+  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> ")
   sys.exit(1)
 else:
-  num_fields_in_prog   = int(sys.argv[1])
-  num_state_vars       = int(sys.argv[2])
-  num_pipeline_stages  = int(sys.argv[3])
-  num_alus_per_stage   = int(sys.argv[4])
+  program_file         = str(sys.argv[1])
+  (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(open(program_file).read())
+
+  num_pipeline_stages  = int(sys.argv[2])
+  num_alus_per_stage   = int(sys.argv[3])
   num_phv_containers   = 2 * num_alus_per_stage
 
 # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
@@ -59,8 +65,8 @@ sketch_harness += "\n// Sketch holes corresponding to stateful configuration ind
 sketch_harness += sketch_helpers.generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars)
 
 # Add code for dummy spec program
-sketch_harness += "\n// Dummy spec program; TODO: Pass this on cmdline\n"
-sketch_harness += spec_program.spec_program
+sketch_harness += "\n// Specification\n"
+sketch_harness += open(program_file).read()
 
 # Function signature that includes both packet fields and state variables
 # belonging to this particular packet transaction
