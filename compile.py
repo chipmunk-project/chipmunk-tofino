@@ -46,10 +46,10 @@ for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
     sketch_harness += "" + \
                   sketch_helpers.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j)) + "\n" + \
-                  sketch_helpers.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(j)) + "\n" + \
-                  sketch_helpers.generate_immediate_operand("stateless_immediate_" + str(i) + "_" + str(j) + "_a") + "\n" + \
-                  sketch_helpers.generate_immediate_operand("stateless_immediate_" + str(i) + "_" + str(j) + "_b") + "\n" + \
-                  sketch_helpers.generate_immediate_operand("stateful_immediate_" + str(i) + "_" + str(j)) + "\n"
+                  sketch_helpers.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(j)) + "\n"
+    sketch_helpers.generate_immediate_operand("stateless_immediate_" + str(i) + "_" + str(j) + "_a")
+    sketch_helpers.generate_immediate_operand("stateless_immediate_" + str(i) + "_" + str(j) + "_b")
+    sketch_helpers.generate_immediate_operand("stateful_immediate_" + str(i) + "_" + str(j))
 
 # Add sketch code for StateAndPacket data type
 # This is a struct consisting of all packet and state variables
@@ -198,6 +198,9 @@ sketch_harness += "\n  // Return updated packet fields and state variables\n"
 sketch_harness += "  return state_and_packet;\n"
 sketch_harness += "}\n"
 
+# Prepend hole preamble
+sketch_harness = sketch_helpers.generate_hole.hole_preamble + sketch_harness
+
 # Create a temporary file and write sketch_harness into it.
 # TODO: Note that this isn't thread safe.
 temp_file = open("/tmp/op.sk", "w")
@@ -218,5 +221,5 @@ else:
     hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
     assert(len(hits) == 1)
     assert(len(hits[0]) == 2)
-    print(hits[0][0], " = ", hits[0][1])
+    print("int ", hits[0][0], " = ", hits[0][1], ";")
   sys.exit(0)

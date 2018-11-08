@@ -2,14 +2,16 @@
 import math
 import sys
 
+# Write all holes to a single hole string for ease of debugging
 def generate_hole(hole_name, hole_bit_width):
   generate_hole.hole_names += [hole_name]
-  return "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
+  generate_hole.hole_preamble += "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
 generate_hole.hole_names = []
+generate_hole.hole_preamble = ""
 
 # Generate holes corresponding to immediate operands for instruction units
 def generate_immediate_operand(immediate_operand_name):
-  return generate_hole(immediate_operand_name, 2);
+  generate_hole(immediate_operand_name, 2);
 
 # Generate Sketch code for a simple stateless alu (+,-,*,/) 
 def generate_stateless_alu(alu_name):
@@ -29,7 +31,8 @@ int %s(int x, int y) {
   }
 }
 '''%(alu_name, alu_name + "_opcode")
-  return generate_hole(alu_name + "_opcode", 2) + stateless_alu
+  generate_hole(alu_name + "_opcode", 2)
+  return stateless_alu
 
 # Generate Sketch code for a simple stateful alu (+,-,*,/)
 # Takes one state and one packet operand (or immediate operand) as inputs
@@ -53,22 +56,25 @@ int %s(ref int s, int y) {
   return old_val;
 }
 '''%(alu_name, alu_name + "_opcode")
-  return generate_hole(alu_name + "_opcode", 2) + stateful_alu
+  generate_hole(alu_name + "_opcode", 2)
+  return stateful_alu
 
 def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars):
-  stateful_config ="\n  // One bit indicator variable for each combination of stateful ALU slot and state variable\n"
-  stateful_config += "  // Note that some stateful ALUs can have more than one slot\n" #TODO: Deal with this case.
+  stateful_config ="\n// One bit indicator variable for each combination of stateful ALU slot and state variable\n"
+  stateful_config += "// Note that some stateful ALUs can have more than one slot\n" #TODO: Deal with this case.
+  stateful_config += "// See beginning of file for actual holes.\n"
   for i in range(num_pipeline_stages):
     for j in range(num_alus_per_stage):
       for l in range(num_state_vars):
-        stateful_config += generate_hole("salu_config_" + str(i) + "_" + str(j) + "_" + str(l), 1)
+        generate_hole("salu_config_" + str(i) + "_" + str(j) + "_" + str(l), 1)
   return stateful_config
 
 def generate_phv_config(num_phv_containers, num_fields_in_prog):
-  phv_config = "\n  // One bit indicator variable for each combination of PHV container and packet field\n"
+  phv_config = "\n// One bit indicator variable for each combination of PHV container and packet field\n"
+  phv_config += "// See beginning of file for actual holes.\n"
   for k in range(num_phv_containers):
     for l in range(num_fields_in_prog):
-      phv_config += generate_hole("phv_config_" + str(k) + "_" + str(l), 1)
+      generate_hole("phv_config_" + str(k) + "_" + str(l), 1)
   return phv_config
 
 def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
@@ -123,4 +129,5 @@ def generate_mux(n, mux_name):
   mux_code += "  else { assert(false); }\n"
 
   mux_code += "}\n";
-  return generate_hole(mux_name + "_ctrl", num_bits) + mux_code
+  generate_hole(mux_name + "_ctrl", num_bits)
+  return mux_code
