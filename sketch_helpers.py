@@ -3,10 +3,9 @@ import math
 import sys
 
 def generate_hole(hole_name, hole_bit_width):
-  generate_hole.num_holes += 1
-  print(hole_name, file=sys.stderr)
+  generate_hole.hole_names += [hole_name]
   return "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
-generate_hole.num_holes = 0
+generate_hole.hole_names = []
 
 # Generate holes corresponding to immediate operands for instruction units
 def generate_immediate_operand(immediate_operand_name):

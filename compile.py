@@ -2,6 +2,7 @@ import sys
 import math
 import sketch_helpers
 import re
+import subprocess
 
 # Use a regex to scan the program and extract the largest packet field index and largest state variable index
 def get_num_pkt_fields_and_state_vars(program):
@@ -197,4 +198,25 @@ sketch_harness += "\n  // Return updated packet fields and state variables\n"
 sketch_harness += "  return state_and_packet;\n"
 sketch_harness += "}\n"
 
-print(sketch_harness)
+# Create a temporary file and write sketch_harness into it.
+# TODO: Note that this isn't thread safe.
+temp_file = open("/tmp/op.sk", "w")
+temp_file.write(sketch_harness)
+temp_file.close()
+
+# Call sketch on it
+(ret_code, output) = subprocess.getstatusoutput("time sketch --bnd-inbits=2 --bnd-int-range=10 /tmp/op.sk")
+if (ret_code != 0):
+  print("Sketch failed. Output left in /tmp/errors.txt")
+  fh = open("/tmp/errors.txt", "w")
+  fh.write(output)
+  fh.close()
+  sys.exit(1)
+else:
+  print("Sketch succeeded. Generated configuration is given below.")
+  for hole_name in sketch_helpers.generate_hole.hole_names:
+    hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
+    assert(len(hits) == 1)
+    assert(len(hits[0]) == 2)
+    print(hits[0][0], " = ", hits[0][1])
+  sys.exit(0)
