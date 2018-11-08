@@ -103,9 +103,9 @@ for i in range(num_pipeline_stages):
     for k in range(num_phv_containers):
       for l in range(num_fields_in_prog):
         if (l == 0):
-          sketch_harness += "  if (phv_" + str(k) + "_" + str(l) + " == 1) { input_0_" + str(k) + " = state_and_packet.pkt_" + str(l) + ";}\n"
+          sketch_harness += "  if (phv_config_" + str(k) + "_" + str(l) + " == 1) { input_0_" + str(k) + " = state_and_packet.pkt_" + str(l) + ";}\n"
         else:
-          sketch_harness += "  else if (phv_" + str(k) + "_" + str(l) + " == 1) { input_0_" + str(k) + " = state_and_packet.pkt_" + str(l) + ";}\n"
+          sketch_harness += "  else if (phv_config_" + str(k) + "_" + str(l) + " == 1) { input_0_" + str(k) + " = state_and_packet.pkt_" + str(l) + ";}\n"
 
   else:
     # Read previous stage's outputs into this one.
@@ -149,9 +149,9 @@ for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
     for l in range(num_state_vars):
       if (l == 0):
-        sketch_harness += "  if (salu_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_and_packet.state_" + str(l) + ";}\n"
+        sketch_harness += "  if (salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_and_packet.state_" + str(l) + ";}\n"
       else:
-        sketch_harness += "  else if (salu_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_and_packet.state_" + str(l) + ";}\n"
+        sketch_harness += "  else if (salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_and_packet.state_" + str(l) + ";}\n"
 
   # Stateful ALUs
   sketch_harness += "\n  // Stateful ALUs\n"
@@ -173,18 +173,18 @@ for i in range(num_pipeline_stages):
     sketch_harness += "\n  // Write state_" + str(k) + "\n"
     for j in range(num_alus_per_stage):
       if (j == 0):
-        sketch_harness += "  if (salu_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_and_packet.state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
+        sketch_harness += "  if (salu_config_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_and_packet.state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
       else:
-        sketch_harness += "  else if (salu_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_and_packet.state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
+        sketch_harness += "  else if (salu_config_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_and_packet.state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
 
 # Write back PHV containers into packet fields
 for l in range(num_fields_in_prog):
   sketch_harness += "\n  // Write pkt_" + str(l) + "\n"
   for k in range(num_phv_containers):
     if (k == 0):
-      sketch_harness += "  if (phv_" + str(k) + "_" + str(l) + " == 1) { state_and_packet.pkt_" + str(l) + " = " + "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ";}\n"
+      sketch_harness += "  if (phv_config_" + str(k) + "_" + str(l) + " == 1) { state_and_packet.pkt_" + str(l) + " = " + "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ";}\n"
     else:
-      sketch_harness += "  else if (phv_" + str(k) + "_" + str(l) + " == 1) { state_and_packet.pkt_" + str(l) + " = " + "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ";}\n"
+      sketch_harness += "  else if (phv_config_" + str(k) + "_" + str(l) + " == 1) { state_and_packet.pkt_" + str(l) + " = " + "output_" + str(num_pipeline_stages - 1) + "_" + str(k) + ";}\n"
 
 # Return updated packet and state
 sketch_harness += "\n  // Return updated packet fields and state variables\n"
