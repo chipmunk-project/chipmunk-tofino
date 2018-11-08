@@ -198,4 +198,3 @@ sketch_harness += "  return state_and_packet;\n"
 sketch_harness += "}\n"
 
 print(sketch_harness)
-print("Total number of holes is ", sketch_helpers.generate_hole.num_holes, file = sys.stderr)
