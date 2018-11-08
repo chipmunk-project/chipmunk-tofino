@@ -205,7 +205,7 @@ temp_file.write(sketch_harness)
 temp_file.close()
 
 # Call sketch on it
-(ret_code, output) = subprocess.getstatusoutput("time sketch --bnd-inbits=2 --bnd-int-range=10 /tmp/op.sk")
+(ret_code, output) = subprocess.getstatusoutput("time sketch --slv-seed=1 --bnd-inbits=2 --bnd-int-range=10 /tmp/op.sk")
 if (ret_code != 0):
   print("Sketch failed. Output left in /tmp/errors.txt")
   fh = open("/tmp/errors.txt", "w")
