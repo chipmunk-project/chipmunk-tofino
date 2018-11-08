@@ -28,7 +28,10 @@ else:
   num_phv_containers   = 2 * num_alus_per_stage
 
 # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
-sketch_harness =  "\n// Operand muxes for each ALU in each stage\n"
+sketch_harness =  "//program_file = " + program_file + " num_pipeline_stages = " + str(num_pipeline_stages) + "\n"
+sketch_harness += "//num_alus_per_stage = " + str(num_alus_per_stage) + " run_allocator = " + str(run_allocator) + "\n"
+sketch_harness += "//num_phv_containers = " + str(num_phv_containers)
+sketch_harness += "\n// Operand muxes for each ALU in each stage\n"
 sketch_harness += "// Total of num_pipeline_stages*num_alus_per_stage*3 (num_phv_containers + 1)-to-1 muxes\n"
 for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
