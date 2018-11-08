@@ -6,23 +6,11 @@
 # Domino compiler requires. Related to Domino as a bootstrap, write a simple
 # translator to turn Domino code into a canonical form for Sketch.
 
-# 3. Incremental search: Try a small grid. Then expand the grid and move on to
-# larger and larger grids.: This seems to work reasonably. It terminates quite
-# quickly for grids of size up to 2 by 2.
+# 3. Setup some benchmarking infrastructure.
 
-# 4. Does Alvin's idea of removing constraints on the indicator variables
-# actually reduce search time?
+# 4. Is there any way to track progress of sketch?
 
-# 5. Setup some benchmarking infrastructure.
-
-# 6. Is there any way to track progress of sketch?
-
-# 7. Maybe there is a way to specify that the packet fields and state variables
-# will always be related in some ways to each other using assume statements.
-# Because the state variables all start from some given initial value. This
-# might mean that they continue to be related?
-
-# 8. Maybe the full spec doesn't compile (or doesn't compile within a timeout).
+# 5. Maybe the full spec doesn't compile (or doesn't compile within a timeout).
 # But some modification to the full spec causes it to compile (e.g., deleting a
 # line of code).  Then we can see if we can take the modified spec's compiled
 # output and "patch" it to get the full spec's compiled output.
