@@ -1,9 +1,0 @@
-int hole_2bit() { return ??(2); }
-int hole_4bita() { return ??(4); }
-int hole_4bitb() { return ??(4); }
-harness void main(int x) {
-  int y = hole_2bit();
-  int z = hole_4bita();
-  int w = hole_4bitb();
-  assert(x * y == x * 2);
-}

@@ -1,3 +1,0 @@
-hole_2bit 2
-hole_4bita 0
-hole_4bitb 0
