@@ -19,3 +19,6 @@
 # "time python3 compile.py test.sk 5 5 yes" doesn't. Intuitively, you would
 # expect successful compilation on a smaller grid to imply successful
 # compilation on a larger grid.
+# Ans: bnd-int-range of 10 is too low. Increasing this to 50 causes it to compile,
+# but after 3 hours. This also means that a really low bnd-int-range might cause
+# us to spuriously decide that something doesn't compile.

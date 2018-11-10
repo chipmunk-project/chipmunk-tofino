@@ -1,0 +1,16 @@
+1. bnd-int-range and incompleteness/non-monotonicity. Do you actually ever use
+bnd-int-range given that it can spuriously reject programs?
+2. parallel solving: Is this really equivalent to picking multiple independent
+seeds and running them in parallel? Because it seems to keep reporting failures
+from time to time. Also there is this notion of a parallel solving strategy
+that suggests that it is more compliciated than a script that run multiple
+slv-seeds in parallel.
+3. What is this random or stochastic search in slv-parallel? Is this actually used? 
+4. Increasing bnd-int-range to 50 gets the 5*5 grid to map after a while (3
+hours ten mins), but removing bnd-int-range entirely and running slv-parallel
+fails. So does running sketch --slv-seed 1 --bnd-inbits=2 (i.e., not running it
+in parallel). I don't understand why at all because I thought the default
+bnd-int-range was more than 50. I think it's 8192 * 6 (the INTEGERBOUND
+variable), but I am not sure. My results seem to suggest that the default
+bnd-int-range might be less than 50, which is why not specifying it in either
+the parallel or sequential case leads to things not resolving.
