@@ -216,10 +216,13 @@ if (ret_code != 0):
   fh.close()
   sys.exit(1)
 else:
-  print("Sketch succeeded. Generated configuration is given below.")
+  print("Sketch succeeded. Generated configuration is given below. Output left in /tmp/output.txt")
   for hole_name in sketch_helpers.generate_hole.hole_names:
     hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
     assert(len(hits) == 1)
     assert(len(hits[0]) == 2)
     print("int ", hits[0][0], " = ", hits[0][1], ";")
+  fh = open("/tmp/output.txt", "w")
+  fh.write(output)
+  fh.close()
   sys.exit(0)
