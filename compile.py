@@ -3,6 +3,7 @@ import math
 import sketch_helpers
 import re
 import subprocess
+import random
 
 # Use a regex to scan the program and extract the largest packet field index and largest state variable index
 def get_num_pkt_fields_and_state_vars(program):
@@ -210,19 +211,21 @@ temp_file.close()
 # Call sketch on it
 (ret_code, output) = subprocess.getstatusoutput("time sketch --slv-seed=1 --slv-lightverif --bnd-inbits=2 --bnd-int-range=50 /tmp/op.sk")
 if (ret_code != 0):
-  print("Sketch failed. Output left in /tmp/errors.txt")
-  fh = open("/tmp/errors.txt", "w")
+  file_name = "/tmp/errors" + str(random.randint(1, 100000)) + ".txt"
+  print("Sketch failed. Output left in " + file_name)
+  fh = open(file_name, "w")
   fh.write(output)
   fh.close()
   sys.exit(1)
 else:
-  print("Sketch succeeded. Generated configuration is given below. Output left in /tmp/output.txt")
+  file_name = "/tmp/output" + str(random.randint(1, 100000)) + ".txt"
+  print("Sketch succeeded. Generated configuration is given below. Output left in " + file_name)
   for hole_name in sketch_helpers.generate_hole.hole_names:
     hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
     assert(len(hits) == 1)
     assert(len(hits[0]) == 2)
     print("int ", hits[0][0], " = ", hits[0][1], ";")
-  fh = open("/tmp/output.txt", "w")
+  fh = open(file_name, "w")
   fh.write(output)
   fh.close()
   sys.exit(0)
