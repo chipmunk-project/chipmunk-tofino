@@ -209,17 +209,16 @@ temp_file.write(sketch_harness)
 temp_file.close()
 
 # Call sketch on it
-(ret_code, output) = subprocess.getstatusoutput("time sketch --slv-seed=1 --slv-lightverif --bnd-inbits=2 --bnd-int-range=50 /tmp/op.sk")
+(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-lightverif --beopt:lvthreshold 100 --bnd-inbits=2 --bnd-int-range=50 /tmp/op.sk")
 if (ret_code != 0):
   file_name = "/tmp/errors" + str(random.randint(1, 100000)) + ".txt"
-  print("Sketch failed. Output left in " + file_name)
   fh = open(file_name, "w")
   fh.write(output)
   fh.close()
+  print("Sketch failed. Output left in " + file_name)
   sys.exit(1)
 else:
   file_name = "/tmp/output" + str(random.randint(1, 100000)) + ".txt"
-  print("Sketch succeeded. Generated configuration is given below. Output left in " + file_name)
   for hole_name in sketch_helpers.generate_hole.hole_names:
     hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
     assert(len(hits) == 1)
@@ -228,4 +227,5 @@ else:
   fh = open(file_name, "w")
   fh.write(output)
   fh.close()
+  print("Sketch succeeded. Generated configuration is given above. Output left in " + file_name)
   sys.exit(0)
