@@ -209,7 +209,7 @@ temp_file.write(sketch_harness)
 temp_file.close()
 
 # Call sketch on it
-(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-lightverif --beopt:lvthreshold 100 --bnd-inbits=2 --bnd-int-range=50 /tmp/op.sk")
+(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-lightverif --beopt:lvthreshold 1 --bnd-inbits=2 --bnd-int-range=10 /tmp/op.sk")
 if (ret_code != 0):
   file_name = "/tmp/errors" + str(random.randint(1, 100000)) + ".txt"
   fh = open(file_name, "w")
