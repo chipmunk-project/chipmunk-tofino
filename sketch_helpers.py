@@ -20,10 +20,8 @@ int %s(int x, int y) {
   assert(y != 0);
   int opcode = %s;
   if (opcode == 0) {
-    assert(x < y);
     return x + y;
   } else if (opcode == 1) {
-    assert(x < y);
     return x * y;
   } else if (opcode == 2) {
     return x - y;
