@@ -141,12 +141,11 @@ for i in range(num_pipeline_stages):
 
   # Read state
   sketch_harness += "\n  // Read stateful ALU slots from allocated state variables\n"
-  for j in range(num_alus_per_stage):
-    for l in range(num_state_vars):
-      if (l == 0):
-        sketch_harness += "  if (salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_and_packet.state_" + str(l) + ";}\n"
-      else:
-        sketch_harness += "  else if (salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(j) + " = state_and_packet.state_" + str(l) + ";}\n"
+  for l in range(num_state_vars):
+    if (l == 0):
+      sketch_harness += "  if (salu_config_" + str(i) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(l) + " = state_and_packet.state_" + str(l) + ";}\n"
+    else:
+      sketch_harness += "  else if (salu_config_" + str(i) + "_" + str(l) + " == 1) { state_operand_salu_" + str(i) + "_" + str(l) + " = state_and_packet.state_" + str(l) + ";}\n"
 
   # Stateful ALUs
   sketch_harness += "\n  // Stateful ALUs\n"
@@ -166,11 +165,7 @@ for i in range(num_pipeline_stages):
   # Write state
   for k in range(num_state_vars):
     sketch_harness += "\n  // Write state_" + str(k) + "\n"
-    for j in range(num_alus_per_stage):
-      if (j == 0):
-        sketch_harness += "  if (salu_config_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_and_packet.state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
-      else:
-        sketch_harness += "  else if (salu_config_" + str(i) + "_" + str(j) + "_" + str(k) + " == 1) { state_and_packet.state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(j) + ";}\n"
+    sketch_harness += "  if (salu_config_" + str(i) + "_" + str(k) + " == 1) { state_and_packet.state_" + str(k) + " = " + "state_operand_salu_" + str(i) + "_" + str(k) + ";}\n"
 
 # Write back PHV containers into packet fields
 for l in range(num_fields_in_prog):

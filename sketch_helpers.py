@@ -62,30 +62,28 @@ int %s(ref int s, int y) {
   return stateful_alu
 
 def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars):
-  stateful_config ="\n// One bit indicator variable for each combination of stateful ALU slot and state variable\n"
-  stateful_config += "// Note that some stateful ALUs can have more than one slot\n" #TODO: Deal with this case.
+  stateful_config ="\n// One bit indicator variable for each combination of pipeline stage and state variable\n"
+  stateful_config += "// Note that some stateful ALUs can have more than one slot (not dealt with yet)\n"
+  #TODO: Deal with the above case.
   stateful_config += "// See beginning of file for actual holes.\n"
   for i in range(num_pipeline_stages):
-    for j in range(num_alus_per_stage):
-      for l in range(num_state_vars):
-        generate_hole("salu_config_" + str(i) + "_" + str(j) + "_" + str(l), 1)
+    for l in range(num_state_vars):
+      generate_hole("salu_config_" + str(i) + "_" + str(l), 1)
   return stateful_config
 
 def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
-  state_allocator = "\n  // Any stateful slot has at most one variable assigned to it (sum over l)\n"
+  state_allocator = "\n  // Any stage has at most num_alus_per_stage variables assigned to it (sum over l)\n"
   for i in range(num_pipeline_stages):
-    for j in range(num_alus_per_stage):
-      state_allocator += "  assert(("
-      for l in range(num_state_vars):
-        state_allocator += "salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + " + "
-      state_allocator = state_allocator[:-2] + ") <= 1);\n"
+    state_allocator += "  assert(("
+    for l in range(num_state_vars):
+      state_allocator += "salu_config_" + str(i) + "_" + str(l) + " + "
+    state_allocator = state_allocator[:-2] + ") <= " + str(num_alus_per_stage) + ");\n"
 
-  state_allocator += "\n  // Any stateful variable is assigned to at most one slot (sum over i and j)\n"
+  state_allocator += "\n  // Any stateful variable is assigned to at most one stage (sum over i)\n"
   for l in range(num_state_vars):
     state_allocator += "  assert(("
     for i in range(num_pipeline_stages):
-      for j in range(num_alus_per_stage):
-        state_allocator += "salu_config_" + str(i) + "_" + str(j) + "_" + str(l) + " + "
+      state_allocator += "salu_config_" + str(i) + "_" + str(l) + " + "
     state_allocator = state_allocator[:-2] + ") <= 1);\n"
 
   return state_allocator
