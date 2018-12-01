@@ -23,15 +23,14 @@ if (len(sys.argv) < 4):
 else:
   program_file         = str(sys.argv[1])
   (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(open(program_file).read())
-
   num_pipeline_stages  = int(sys.argv[2])
   num_alus_per_stage   = int(sys.argv[3])
   num_phv_containers   = 2 * num_alus_per_stage
 
 # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
-sketch_harness =  "//program_file = " + program_file + " num_pipeline_stages = " + str(num_pipeline_stages) + "\n"
-sketch_harness += "//num_alus_per_stage = " + str(num_alus_per_stage) + "\n"
-sketch_harness += "//num_phv_containers = " + str(num_phv_containers) + "\n"
+sketch_harness =  "// program_file = " + program_file + " num_pipeline_stages = " + str(num_pipeline_stages) + "\n"
+sketch_harness += "// num_alus_per_stage = " + str(num_alus_per_stage) + "\n"
+sketch_harness += "// num_phv_containers = " + str(num_phv_containers) + "\n"
 sketch_harness += "\n// Operand muxes for each ALU in each stage\n"
 sketch_harness += "// Total of num_pipeline_stages*num_alus_per_stage*3 (num_phv_containers + 1)-to-1 muxes\n"
 for i in range(num_pipeline_stages):
@@ -44,11 +43,10 @@ for i in range(num_pipeline_stages):
 sketch_harness += "\n// Sketch definition for ALUs and immediate operands\n"
 for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
-    sketch_harness += "" + \
-                  sketch_helpers.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j)) + "\n" + \
-                  sketch_helpers.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(j)) + "\n"
+    sketch_harness += sketch_helpers.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j)) + "\n"
     sketch_helpers.generate_immediate_operand("stateless_immediate_" + str(i) + "_" + str(j) + "_a")
     sketch_helpers.generate_immediate_operand("stateless_immediate_" + str(i) + "_" + str(j) + "_b")
+    sketch_harness += sketch_helpers.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(j)) + "\n"
     sketch_helpers.generate_immediate_operand("stateful_immediate_" + str(i) + "_" + str(j))
 
 # Add sketch code for StateAndPacket data type
