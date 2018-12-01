@@ -71,14 +71,6 @@ def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_
         generate_hole("salu_config_" + str(i) + "_" + str(j) + "_" + str(l), 1)
   return stateful_config
 
-def generate_phv_config(num_phv_containers, num_fields_in_prog):
-  phv_config = "\n// One bit indicator variable for each combination of PHV container and packet field\n"
-  phv_config += "// See beginning of file for actual holes.\n"
-  for k in range(num_phv_containers):
-    for l in range(num_fields_in_prog):
-      generate_hole("phv_config_" + str(k) + "_" + str(l), 1)
-  return phv_config
-
 def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
   state_allocator = "\n  // Any stateful slot has at most one variable assigned to it (sum over l)\n"
   for i in range(num_pipeline_stages):
@@ -97,23 +89,6 @@ def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_
     state_allocator = state_allocator[:-2] + ") <= 1);\n"
 
   return state_allocator
-
-def generate_phv_allocator(num_phv_containers, num_fields_in_prog):
-  phv_allocator = "\n  // Any container has at most one variable assigned to it (sum over l)\n"
-  for k in range(num_phv_containers):
-    phv_allocator += "  assert(("
-    for l in range(num_fields_in_prog):
-      phv_allocator += "phv_config_" + str(k) + "_" + str(l) + " + "
-    phv_allocator = phv_allocator[:-2] + ") <= 1);\n"
-
-  phv_allocator += "\n  // Any packet field is assigned to at most one container (sum over i)\n"
-  for l in range(num_fields_in_prog):
-    phv_allocator += "  assert(("
-    for k in range(num_phv_containers):
-      phv_allocator += "phv_config_" + str(k) + "_" + str(l) + " + "
-    phv_allocator = phv_allocator[:-2] + ") <= 1);\n"
-
-  return phv_allocator
 
 # Sketch code for an n-to-1 mux
 def generate_mux(n, mux_name):
