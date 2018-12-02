@@ -4,6 +4,7 @@ import sketch_helpers
 import re
 import subprocess
 import random
+import tempfile
 
 # Use a regex to scan the program and extract the largest packet field index and largest state variable index
 def get_num_pkt_fields_and_state_vars(program):
@@ -179,30 +180,28 @@ sketch_harness += "}\n"
 sketch_harness = sketch_helpers.generate_hole.hole_preamble + sketch_harness
 
 # Create a temporary file and write sketch_harness into it.
-# TODO: Note that this isn't thread safe.
-temp_file = open("/tmp/op.sk", "w")
-temp_file.write(sketch_harness)
-temp_file.close()
+sketch_file = tempfile.NamedTemporaryFile(suffix = ".sk", dir = "/tmp/", delete = False)
+sketch_file.write(sketch_harness.encode())
+sketch_file.close()
 
 # Call sketch on it
 print("Total number of hole bits is", sketch_helpers.generate_hole.total_hole_bits)
-(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --bnd-inbits=2 --bnd-int-range=50 /tmp/op.sk")
+print("Sketch file is ", sketch_file.name)
+(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
 if (ret_code != 0):
-  file_name = "/tmp/errors" + str(random.randint(1, 100000)) + ".txt"
-  fh = open(file_name, "w")
-  fh.write(output)
-  fh.close()
-  print("Sketch failed. Output left in " + file_name)
+  errors_file = tempfile.NamedTemporaryFile(suffix = ".errors", dir = "/tmp/", delete = False)
+  errors_file.write(output.encode())
+  errors_file.close()
+  print("Sketch failed. Output left in " + errors_file.name)
   sys.exit(1)
 else:
-  file_name = "/tmp/output" + str(random.randint(1, 100000)) + ".txt"
+  success_file = tempfile.NamedTemporaryFile(suffix = ".success", dir = "/tmp/", delete = False)
   for hole_name in sketch_helpers.generate_hole.hole_names:
     hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
     assert(len(hits) == 1)
     assert(len(hits[0]) == 2)
     print("int ", hits[0][0], " = ", hits[0][1], ";")
-  fh = open(file_name, "w")
-  fh.write(output)
-  fh.close()
-  print("Sketch succeeded. Generated configuration is given above. Output left in " + file_name)
+  success_file.write(output.encode())
+  success_file.close()
+  print("Sketch succeeded. Generated configuration is given above. Output left in " + success_file.name)
   sys.exit(0)
