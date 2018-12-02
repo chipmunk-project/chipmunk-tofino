@@ -18,18 +18,18 @@ def generate_immediate_operand(immediate_operand_name):
 # Generate Sketch code for a simple stateless alu (+,-,*,/) 
 def generate_stateless_alu(alu_name):
   stateless_alu = '''
-int %s(int x, int y) {
-  assert(y != 0);
+int %s(|MuxSelection| x, |MuxSelection| y) {
+  assert(y.value != 0);
   int opcode = %s;
   if (opcode == 0) {
-    return x + y;
+    return x.value + y.value;
   } else if (opcode == 1) {
-    return x * y;
+    return x.value * y.value;
   } else if (opcode == 2) {
-    return x - y;
+    return x.value - y.value;
   } else {
     assert(opcode == 3);
-    return x / y;
+    return x.value / y.value;
   }
 }
 '''%(alu_name, alu_name + "_opcode")
@@ -41,19 +41,19 @@ int %s(int x, int y) {
 # Updates the state in place and returns the old value of the state
 def generate_stateful_alu(alu_name):
   stateful_alu = '''
-int %s(ref int s, int y) {
-  assert(y != 0);
+int %s(ref int s, |MuxSelection| y) {
+  assert(y.value != 0);
   int opcode = %s;
   int old_val = s;
   if (opcode == 0) {
-    s = s + y;
+    s = s + y.value;
   } else if (opcode == 1) {
-    s = s * y;
+    s = s * y.value;
   } else if (opcode == 2) {
-    s = s - y;
+    s = s - y.value;
   } else {
     assert(opcode == 3);
-    s = s / y;
+    s = s / y.value;
   }
   return old_val;
 }
@@ -92,15 +92,14 @@ def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_
 def generate_mux(n, mux_name):
   assert(n > 1)
   num_bits = math.ceil(math.log(n, 2))
-  mux_code = "int " + mux_name + "("
+  mux_code = "|MuxSelection| " + mux_name + "("
   for i in range(0, n):
     mux_code += "int v" + str(i) + ","
   mux_code = mux_code[:-1] + ") {\n"
-
   mux_code += "  int mux_ctrl = " + mux_name + "_ctrl;\n"
-  mux_code += "  if (mux_ctrl == 0) { return v0; }\n"
+  mux_code += "  if (mux_ctrl == 0) { return |MuxSelection|(value=v0, index=0); }\n"
   for i in range(1, n):
-    mux_code += "  else if (mux_ctrl == " + str(i) + ") { return v" + str(i) + "; } \n"
+    mux_code += "  else if (mux_ctrl == " + str(i) + ") { return |MuxSelection|(value=v" + str(i) + ",index=" + str(i) + "); } \n"
   mux_code += "  else { assert(false); }\n"
 
   mux_code += "}\n";

@@ -61,6 +61,14 @@ for s in range(num_state_vars):
   sketch_harness += "  int state_" + str(s) + ";\n"
 sketch_harness += "}\n"
 
+# sketch code for MuxSelection data type
+# Struct consisting of two ints (a value and an index)
+sketch_harness += "\n// Data type for selection from mux\n"
+sketch_harness += "struct MuxSelection {\n"
+sketch_harness += "  int value;\n"
+sketch_harness += "  int index;\n"
+sketch_harness += "}\n"
+
 # Generate stateful ALU configuraton holes
 sketch_harness += "\n// Sketch holes corresponding to stateful configuration indicator variables\n"
 sketch_harness += sketch_helpers.generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars)
@@ -111,14 +119,14 @@ for i in range(num_pipeline_stages):
   sketch_harness += "\n  // Stateless operands\n"
   for j in range(num_alus_per_stage):
     # First operand
-    sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_a ="
+    sketch_harness += "  |MuxSelection| operand_" + str(i) + "_" + str(j) + "_a ="
     sketch_harness += " stateless_operand_mux_a_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
     sketch_harness += "stateless_immediate_" + str(i) + "_" + str(j) + "_a);\n"
 
     # Second operand
-    sketch_harness += "  int operand_" + str(i) + "_" + str(j) + "_b ="
+    sketch_harness += "  |MuxSelection| operand_" + str(i) + "_" + str(j) + "_b ="
     sketch_harness += " stateless_operand_mux_b_" + str(i) + "_" + str(j) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
@@ -132,7 +140,7 @@ for i in range(num_pipeline_stages):
   # One packet operand for each stateful ALU in each stage
   sketch_harness += "\n  // Stateful operands\n"
   for l in range(num_state_vars):
-    sketch_harness += "  int packet_operand_salu" + str(i) + "_" + str(l) + " ="
+    sketch_harness += "  |MuxSelection| packet_operand_salu" + str(i) + "_" + str(l) + " ="
     sketch_harness += " stateful_operand_mux_" + str(i) + "_" + str(l) + "("
     for k in range(num_phv_containers):
       sketch_harness += "input_" + str(i) + "_" + str(k) + ", "
