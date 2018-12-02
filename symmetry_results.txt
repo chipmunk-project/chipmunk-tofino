@@ -1,0 +1,4 @@
+All symmetries (state, phv, state variable reduction): 2 mins
+PHV + state: 11 mins
+PHV: 9 mins
+No symmetry: 29 mins
