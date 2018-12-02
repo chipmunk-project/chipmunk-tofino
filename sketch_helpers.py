@@ -6,6 +6,8 @@ import sys
 def generate_hole(hole_name, hole_bit_width):
   generate_hole.hole_names += [hole_name]
   generate_hole.hole_preamble += "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
+  generate_hole.total_hole_bits += hole_bit_width
+generate_hole.total_hole_bits = 0
 generate_hole.hole_names = []
 generate_hole.hole_preamble = ""
 
