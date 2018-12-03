@@ -19,7 +19,6 @@ def generate_immediate_operand(immediate_operand_name):
 def generate_stateless_alu(alu_name):
   stateless_alu = '''
 int %s(|MuxSelection| x, |MuxSelection| y) {
-  assert(y.value != 0);
   int opcode = %s;
   if (opcode == 0) {
     assert(x.index <= y.index);
@@ -31,6 +30,7 @@ int %s(|MuxSelection| x, |MuxSelection| y) {
     return x.value - y.value;
   } else {
     assert(opcode == 3);
+    assert(y.value != 0);
     return x.value / y.value;
   }
 }
@@ -44,7 +44,6 @@ int %s(|MuxSelection| x, |MuxSelection| y) {
 def generate_stateful_alu(alu_name):
   stateful_alu = '''
 int %s(ref int s, |MuxSelection| y) {
-  assert(y.value != 0);
   int opcode = %s;
   int old_val = s;
   if (opcode == 0) {
@@ -55,6 +54,7 @@ int %s(ref int s, |MuxSelection| y) {
     s = s - y.value;
   } else {
     assert(opcode == 3);
+    assert(y.value != 0);
     s = s / y.value;
   }
   return old_val;
