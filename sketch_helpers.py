@@ -22,8 +22,10 @@ int %s(|MuxSelection| x, |MuxSelection| y) {
   assert(y.value != 0);
   int opcode = %s;
   if (opcode == 0) {
+    assert(x.index <= y.index);
     return x.value + y.value;
   } else if (opcode == 1) {
+    assert(x.index <= y.index);
     return x.value * y.value;
   } else if (opcode == 2) {
     return x.value - y.value;
