@@ -11,31 +11,29 @@ generate_hole.total_hole_bits = 0
 generate_hole.hole_names = []
 generate_hole.hole_preamble = ""
 
-# Generate holes corresponding to immediate operands for instruction units
-def generate_immediate_operand(immediate_operand_name):
-  generate_hole(immediate_operand_name, 2);
-
 # Generate Sketch code for a simple stateless alu (+,-,*,/) 
 def generate_stateless_alu(alu_name):
   stateless_alu = '''
 int %s(|MuxSelection| x, |MuxSelection| y) {
   int opcode = %s;
+  int immediate_operand = %s;
   if (opcode == 0) {
     assert(x.index <= y.index);
-    return x.value + y.value;
+    return {| x.value + y.value | x.value + immediate_operand | immediate_operand |};
   } else if (opcode == 1) {
     assert(x.index <= y.index);
-    return x.value * y.value;
+    return {| x.value * y.value | x.value * immediate_operand |};
   } else if (opcode == 2) {
-    return x.value - y.value;
+    return {| x.value - y.value | immediate_operand - y.value | x.value - immediate_operand |};
   } else {
     assert(opcode == 3);
     assert(y.value != 0);
-    return x.value / y.value;
+    return {| x.value / y.value | immediate_operand / y.value | x.value / immediate_operand |};
   }
 }
-'''%(alu_name, alu_name + "_opcode")
+'''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
   generate_hole(alu_name + "_opcode", 2)
+  generate_hole(alu_name + "_immediate", 2)
   return stateless_alu
 
 # Generate Sketch code for a simple stateful alu (+,-,*,/)
@@ -45,22 +43,24 @@ def generate_stateful_alu(alu_name):
   stateful_alu = '''
 int %s(ref int s, |MuxSelection| y) {
   int opcode = %s;
+  int immediate_operand = %s;
   int old_val = s;
   if (opcode == 0) {
-    s = s + y.value;
+    s = s + {| y.value | immediate_operand |};
   } else if (opcode == 1) {
-    s = s * y.value;
+    s = s * {| y.value | immediate_operand |};
   } else if (opcode == 2) {
-    s = s - y.value;
+    s = s - {| y.value | immediate_operand |};
   } else {
     assert(opcode == 3);
     assert(y.value != 0);
-    s = s / y.value;
+    s = s / {| y.value | immediate_operand |};
   }
   return old_val;
 }
-'''%(alu_name, alu_name + "_opcode")
+'''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
   generate_hole(alu_name + "_opcode", 2)
+  generate_hole(alu_name + "_immediate", 2)
   return stateful_alu
 
 def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars):
