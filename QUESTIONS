@@ -1,11 +1,24 @@
 1. bnd-int-range and incompleteness/non-monotonicity. Do you actually ever use
 bnd-int-range given that it can spuriously reject programs?
+Ans: AFAIK and understand, the wrong bnd-int-range can lead to unsound results
+(not just incomplete results):
+https://lists.csail.mit.edu/pipermail/sketchusers/2018-December/000053.html
+
 2. parallel solving: Is this really equivalent to picking multiple independent
 seeds and running them in parallel? Because it seems to keep reporting failures
 from time to time. Also there is this notion of a parallel solving strategy
 that suggests that it is more compliciated than a script that run multiple
 slv-seeds in parallel.
-3. What is this random or stochastic search in slv-parallel? Is this actually used? 
+Ans: See below in the answer to 3. Parallel solving is more than just picking
+multiple independent seeds and running them in parallel. It turns on adaptive
+concretization, which is an algorithm that is amenable to parallelism, and I
+don't think adaptive concretization is turned on in serial mode by default.
+
+3. What is this random or stochastic search in slv-parallel? Is this actually
+used? 
+Ans: I think the random/stochastic search is the adaptive concretization algorithm:
+https://www.cs.tufts.edu/~jfoster/papers/cav15.pdf
+
 4. Increasing bnd-int-range to 50 gets the 5*5 grid to map after a while (3
 hours ten mins), but removing bnd-int-range entirely and running slv-parallel
 fails. So does running sketch --slv-seed 1 --bnd-inbits=2 (i.e., not running it
