@@ -192,7 +192,7 @@ sketch_file.close()
 # Call sketch on it
 print("Total number of hole bits is", sketch_helpers.generate_hole.total_hole_bits)
 print("Sketch file is ", sketch_file.name)
-(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
+(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-parallel --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
 if (ret_code != 0):
   errors_file = tempfile.NamedTemporaryFile(suffix = ".errors", dir = "/tmp/", delete = False)
   errors_file.write(output.encode())
