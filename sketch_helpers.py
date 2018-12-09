@@ -20,19 +20,13 @@ int %s(|MuxSelection| x, |MuxSelection| y) {
   if (opcode == 0) {
     assert(x.index <= y.index);
     return {| x.value + y.value | x.value + immediate_operand | immediate_operand |};
-  } else if (opcode == 1) {
-    assert(x.index <= y.index);
-    return {| x.value * y.value | x.value * immediate_operand |};
-  } else if (opcode == 2) {
-    return {| x.value - y.value | immediate_operand - y.value | x.value - immediate_operand |};
   } else {
-    assert(opcode == 3);
-    assert(y.value != 0);
-    return {| x.value / y.value | immediate_operand / y.value | x.value / immediate_operand |};
+    assert(opcode == 1);
+    return {| x.value - y.value | immediate_operand - y.value | x.value - immediate_operand |};
   }
 }
 '''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
-  generate_hole(alu_name + "_opcode", 2)
+  generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
   return stateless_alu
 
@@ -47,19 +41,14 @@ int %s(ref int s, |MuxSelection| y) {
   int old_val = s;
   if (opcode == 0) {
     s = s + {| y.value | immediate_operand |};
-  } else if (opcode == 1) {
-    s = s * {| y.value | immediate_operand |};
-  } else if (opcode == 2) {
-    s = s - {| y.value | immediate_operand |};
   } else {
-    assert(opcode == 3);
-    assert(y.value != 0);
-    s = s / {| y.value | immediate_operand |};
+    assert(opcode == 1);
+    s = s - {| y.value | immediate_operand |};
   }
   return old_val;
 }
 '''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
-  generate_hole(alu_name + "_opcode", 2)
+  generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
   return stateful_alu
 
