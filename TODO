@@ -15,10 +15,10 @@
 # line of code).  Then we can see if we can take the modified spec's compiled
 # output and "patch" it to get the full spec's compiled output.
 
-# 6. Understand why "time python3 compile.py test.sk 4 5 yes" compiles, but
-# "time python3 compile.py test.sk 5 5 yes" doesn't. Intuitively, you would
-# expect successful compilation on a smaller grid to imply successful
-# compilation on a larger grid.
-# Ans: bnd-int-range of 10 is too low. Increasing this to 50 causes it to compile,
-# but after 3 hours. This also means that a really low bnd-int-range might cause
-# us to spuriously decide that something doesn't compile.
+# 6. Add output muxes from stateful ALUs to PHV containers
+
+# 7. Could also add output muxes from stateless ALUs to PHV containers
+
+# 8. Automatic conversion of Domino programs to spec files
+
+# 9. Proofs of soundness and completeness of our optimizations
