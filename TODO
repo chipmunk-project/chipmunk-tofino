@@ -15,8 +15,6 @@
 # line of code).  Then we can see if we can take the modified spec's compiled
 # output and "patch" it to get the full spec's compiled output.
 
-# 6. Add output muxes from stateful ALUs to PHV containers
-
 # 7. Could also add output muxes from stateless ALUs to PHV containers
 
 # 8. Automatic conversion of Domino programs to spec files

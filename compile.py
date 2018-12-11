@@ -26,7 +26,8 @@ else:
   (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(open(program_file).read())
   num_pipeline_stages  = int(sys.argv[2])
   num_alus_per_stage   = int(sys.argv[3])
-  num_phv_containers   = num_alus_per_stage + num_state_vars
+  num_phv_containers   = num_alus_per_stage
+  assert(num_fields_in_prog <= num_phv_containers)
 
 # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 sketch_harness =  "// program_file = " + program_file + " num_pipeline_stages = " + str(num_pipeline_stages) + "\n"
@@ -39,6 +40,18 @@ for i in range(num_pipeline_stages):
     sketch_harness += sketch_helpers.generate_mux(num_phv_containers, "stateless_operand_mux_a_" + str(i) + "_" + str(j)) + "\n"
     sketch_harness += sketch_helpers.generate_mux(num_phv_containers, "stateless_operand_mux_b_" + str(i) + "_" + str(j)) + "\n"
     sketch_harness += sketch_helpers.generate_mux(num_phv_containers, "stateful_operand_mux_" + str(i) + "_" + str(j)) + "\n"
+
+# Output mux for stateful ALUs
+sketch_harness += "// Output mux for each PHV container\n"
+sketch_harness += "// Allows it to be written from either its own stateless ALU or any stateful ALU\n"
+for i in range(num_pipeline_stages):
+  for k in range(num_phv_containers):
+    # Note: We are generating a mux that takes as input all virtual stateful ALUs + corresponding stateless ALU
+    # The number of virtual stateful ALUs is more than the physical stateful ALUs, but this doesn't affect correctness
+    # because we enforce that the total number of active virtual stateful ALUs is within the physical limit.
+    # It also doesn't affect the correctness of modeling the output mux because the virtual output mux setting can be
+    # translated into the physical output mux setting after the fact.
+    sketch_harness += sketch_helpers.generate_mux(num_state_vars + 1, "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
 
 # Generate sketch code for alus and immediate operands in each stage
 sketch_harness += "\n// Sketch definition for ALUs\n"
@@ -158,13 +171,12 @@ for i in range(num_pipeline_stages):
 
   # Write packet outputs
   sketch_harness += "\n  // Outputs\n"
-  assert(num_phv_containers == num_alus_per_stage + num_state_vars)
   for k in range(num_phv_containers):
     sketch_harness += "  int output_" + str(i) + "_" + str(k)
-    if (k < num_alus_per_stage):
-      sketch_harness += "= destination_" + str(i) + "_" + str(k) + ";\n"
-    else:
-      sketch_harness += "= old_state_" + str(i) + "_" + str(k-num_alus_per_stage) + ";\n"
+    sketch_harness += "= output_mux_phv_" + str(i) + "_" + str(k) + "(";
+    for l in range(num_state_vars):
+      sketch_harness += "old_state_" + str(i) + "_" + str(l) + ", "
+    sketch_harness += "destination_" + str(i) + "_" + str(k) + ").value;\n"
 
   # Write state
   for l in range(num_state_vars):
