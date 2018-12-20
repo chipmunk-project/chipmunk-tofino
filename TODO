@@ -20,3 +20,8 @@
 # 8. Automatic conversion of Domino programs to spec files
 
 # 9. Proofs of soundness and completeness of our optimizations
+
+# 10. Try adding structure constraints as in https://homes.cs.washington.edu/~luisceze/publications/synapse-popl16.pdf
+# This is similar to Xiangyu's idea as well.
+# The idea is that when we search a 5*5 grid, we don't search 4*4 sub-grids (which have already been searched)
+# Again, we can prove the soundness of these optimizations using the tool in 9.
