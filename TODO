@@ -36,4 +36,7 @@
 
 The goal of the tool in 9 is to ensure that does not happen.
 
+I am wondering if structure constraints are easier to specify if we increase the size of the grid more gradually, i.e.,
+from 2*2 to 2*3 to 3*3 instead of 2*2 to 3*3 in one jump. I am not sure.
+
 
