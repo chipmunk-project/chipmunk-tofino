@@ -25,3 +25,15 @@
 # This is similar to Xiangyu's idea as well.
 # The idea is that when we search a 5*5 grid, we don't search 4*4 sub-grids (which have already been searched)
 # Again, we can prove the soundness of these optimizations using the tool in 9.
+# Borrowing from Synapse, structure constraints are constraints on the holes alone.
+# Essentially they prune portions of the search space because they have already been searched.
+
+# Structure constraints don't have to be perfect. They might prune only a small amount because they haven't be fully exploited
+# (or the programmer was lazy to specify them completely).
+# However, the key requirement is that they don't prune *too much* because that would violate completeness/optimality.
+# It's probably impossible to have no redundant searches. Structure constraints decrease the number of redundant searches,
+# but they should not prune out non-redundant searches.
+
+The goal of the tool in 9 is to ensure that does not happen.
+
+
