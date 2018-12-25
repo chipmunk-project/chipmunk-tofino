@@ -1,30 +1,21 @@
-# 1. How do we handle addresses in stateful arrays? Maybe transform it to some
-# kind of equivalent scalar stateful form?
+# 1. How do we handle addresses in stateful arrays? Maybe transform it to an
+# equivalent scalar form?
 
-# 2. Maybe use the Domino compiler as a bootstrap for this? In the sense that
-# there is no point searching in a grid that's larger than the grid that the
-# Domino compiler requires. Related to Domino as a bootstrap, write a simple
-# translator to turn Domino code into a canonical form for Sketch.
+# 2. Setup some benchmarking infrastructure to turn on and off each optimization.
 
-# 3. Setup some benchmarking infrastructure.
-
-# 4. Is there any way to track progress of sketch?
-
-# 5. Maybe the full spec doesn't compile (or doesn't compile within a timeout).
+# 3. Maybe the full spec doesn't compile (or doesn't compile within a timeout).
 # But some modification to the full spec causes it to compile (e.g., deleting a
 # line of code).  Then we can see if we can take the modified spec's compiled
 # output and "patch" it to get the full spec's compiled output.
 
-# 7. Could also add output muxes from stateless ALUs to PHV containers
+# 4. Automatic conversion of Domino programs to spec files
 
-# 8. Automatic conversion of Domino programs to spec files
+# 5. Proofs of soundness and completeness of our optimizations
 
-# 9. Proofs of soundness and completeness of our optimizations
-
-# 10. Try adding structure constraints as in https://homes.cs.washington.edu/~luisceze/publications/synapse-popl16.pdf
+# 6. Try adding structure constraints as in https://homes.cs.washington.edu/~luisceze/publications/synapse-popl16.pdf
 # This is similar to Xiangyu's idea as well.
 # The idea is that when we search a 5*5 grid, we don't search 4*4 sub-grids (which have already been searched)
-# Again, we can prove the soundness of these optimizations using the tool in 9.
+# Again, we can prove the soundness of these optimizations using the tool in 5.
 # Borrowing from Synapse, structure constraints are constraints on the holes alone.
 # Essentially they prune portions of the search space because they have already been searched.
 
@@ -34,9 +25,7 @@
 # It's probably impossible to have no redundant searches. Structure constraints decrease the number of redundant searches,
 # but they should not prune out non-redundant searches.
 
-The goal of the tool in 9 is to ensure that does not happen.
+The goal of the tool in 5 is to ensure that does not happen.
 
 I am wondering if structure constraints are easier to specify if we increase the size of the grid more gradually, i.e.,
 from 2*2 to 2*3 to 3*3 instead of 2*2 to 3*3 in one jump. I am not sure.
-
-
