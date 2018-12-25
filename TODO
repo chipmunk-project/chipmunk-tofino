@@ -25,7 +25,7 @@
 # It's probably impossible to have no redundant searches. Structure constraints decrease the number of redundant searches,
 # but they should not prune out non-redundant searches.
 
-The goal of the tool in 5 is to ensure that does not happen.
-
-I am wondering if structure constraints are easier to specify if we increase the size of the grid more gradually, i.e.,
-from 2*2 to 2*3 to 3*3 instead of 2*2 to 3*3 in one jump. I am not sure.
+# The goal of the tool in 5 is to ensure that does not happen.
+# 
+# I am wondering if structure constraints are easier to specify if we increase the size of the grid more gradually, i.e.,
+# from 2*2 to 2*3 to 3*3 instead of 2*2 to 3*3 in one jump. I am not sure.
