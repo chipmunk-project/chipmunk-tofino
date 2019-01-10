@@ -1,14 +1,7 @@
-# 1. How do we handle addresses in stateful arrays? Maybe transform it to an
-# equivalent scalar form?
-
-# 2. Setup some benchmarking infrastructure to turn on and off each optimization.
-
 # 3. Maybe the full spec doesn't compile (or doesn't compile within a timeout).
 # But some modification to the full spec causes it to compile (e.g., deleting a
 # line of code).  Then we can see if we can take the modified spec's compiled
 # output and "patch" it to get the full spec's compiled output.
-
-# 4. Automatic conversion of Domino programs to spec files
 
 # 5. Proofs of soundness and completeness of our optimizations
 
