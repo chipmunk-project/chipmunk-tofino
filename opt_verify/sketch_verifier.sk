@@ -1,0 +1,28 @@
+int sketch1(int x, int h1, int h2) {
+  return (h1 + h2) * x;
+}
+
+int sketch2(int x, int h3) {
+  return x * h3;
+}
+
+harness void main(int x, int h1, int h2, int h3) {
+  // Capture ranges of input holes as assume statements
+  assume(h1 < 16); // 4-bit hole: 0 to 15 (sketch1.sk)
+  assume(h2 < 16); // 4-bit hole: 0 to 15 (sketch1.sk)
+
+  // Conditions on sketch 1's holes
+  assume(h1 != h2);
+
+  // Transformation from sketch 1's holes to sketch 2's holes
+  h3 = h1 + 2 * h2 - h2; // h3 as a function of h1 and h2
+
+  // Check that sketches are equivalent.
+  assert(sketch1(x, h1, h2) == sketch2(x, h3));
+
+  // Check ranges of output holes as assert statements.
+  assert(h3 < 32); // 5-bit hole: 0 to 31 (sketch2.sk)
+
+  // Optionally, check other conditions on sketch 2's holes.
+  assert(h3 < 30); // Sum of two 4-bit holes is less than 30 if the two holes are distinct.
+}

@@ -1,0 +1,6 @@
+int h1 = ??(4);
+int h2 = ??(4);
+int sketch1(int x) {
+  assert(h1 != h2);
+  return (h1 + h2) * x;
+}

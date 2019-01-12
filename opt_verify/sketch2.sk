@@ -1,0 +1,4 @@
+int h3 = ??(5);
+int sketch2(int x) {
+  return x * h3;
+}
