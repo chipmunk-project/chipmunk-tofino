@@ -11,6 +11,10 @@ generate_hole.total_hole_bits = 0
 generate_hole.hole_names = []
 generate_hole.hole_preamble = ""
 
+def add_assert(assert_predicate):
+  add_assert.asserts += "assert(" + assert_predicate + ");\n"
+add_assert.asserts = ""
+
 # Generate Sketch code for a simple stateless alu (+,-,*,/) 
 def generate_stateless_alu(alu_name):
   stateless_alu = '''
@@ -21,13 +25,14 @@ int %s(|MuxSelection| x, |MuxSelection| y) {
     assert(x.index <= y.index);
     return {| x.value + y.value | x.value + immediate_operand | immediate_operand |};
   } else {
-    assert(opcode == 1);
+    assert(opcode == 1); /* Redundant assert */
     return {| x.value - y.value | immediate_operand - y.value | x.value - immediate_operand |};
   }
 }
 '''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
   generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
+  add_assert(alu_name +  "_opcode" + "< 2")
   return stateless_alu
 
 # Generate Sketch code for a simple stateful alu (+,-,*,/)
@@ -42,7 +47,7 @@ int %s(ref int s, |MuxSelection| y) {
   if (opcode == 0) {
     s = s + {| y.value | immediate_operand |};
   } else {
-    assert(opcode == 1);
+    assert(opcode == 1); /* Redundant assert */
     s = s - {| y.value | immediate_operand |};
   }
   return old_val;
@@ -50,34 +55,27 @@ int %s(ref int s, |MuxSelection| y) {
 '''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
   generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
+  add_assert(alu_name +  "_opcode" + "< 2")
   return stateful_alu
 
-def generate_stateful_config(num_pipeline_stages, num_alus_per_stage, num_state_vars):
-  stateful_config ="\n// One bit indicator variable for each combination of pipeline stage and state variable\n"
-  stateful_config += "// Note that some stateful ALUs can have more than one slot (not dealt with yet)\n"
-  #TODO: Deal with the above case.
-  stateful_config += "// See beginning of file for actual holes.\n"
+def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
   for i in range(num_pipeline_stages):
     for l in range(num_state_vars):
       generate_hole("salu_config_" + str(i) + "_" + str(l), 1)
-  return stateful_config
 
-def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
-  state_allocator = "\n  // Any stage has at most num_alus_per_stage variables assigned to it (sum over l)\n"
   for i in range(num_pipeline_stages):
-    state_allocator += "  assert(("
+    assert_predicate = "("
     for l in range(num_state_vars):
-      state_allocator += "salu_config_" + str(i) + "_" + str(l) + " + "
-    state_allocator = state_allocator[:-2] + ") <= " + str(num_alus_per_stage) + ");\n"
+      assert_predicate += "salu_config_" + str(i) + "_" + str(l) + " + "
+    assert_predicate += "0) <= " + str(num_alus_per_stage)
+    add_assert(assert_predicate)
 
-  state_allocator += "\n  // Any stateful variable is assigned to at most one stage (sum over i)\n"
   for l in range(num_state_vars):
-    state_allocator += "  assert(("
+    assert_predicate = "("
     for i in range(num_pipeline_stages):
-      state_allocator += "salu_config_" + str(i) + "_" + str(l) + " + "
-    state_allocator = state_allocator[:-2] + ") <= 1);\n"
-
-  return state_allocator
+      assert_predicate += "salu_config_" + str(i) + "_" + str(l) + " + "
+    assert_predicate += "0) <= 1"
+    add_assert(assert_predicate)
 
 # Sketch code for an n-to-1 mux
 def generate_mux(n, mux_name):
@@ -91,8 +89,9 @@ def generate_mux(n, mux_name):
   mux_code += "  if (mux_ctrl == 0) { return |MuxSelection|(value=v0, index=0); }\n"
   for i in range(1, n):
     mux_code += "  else if (mux_ctrl == " + str(i) + ") { return |MuxSelection|(value=v" + str(i) + ",index=" + str(i) + "); } \n"
-  mux_code += "  else { assert(false); }\n"
+  mux_code += "  else { assert(false); /* Redundant assert */ }\n"
 
   mux_code += "}\n";
   generate_hole(mux_name + "_ctrl", num_bits)
+  add_assert(mux_name + "_ctrl" + "<" + str(n))
   return mux_code
