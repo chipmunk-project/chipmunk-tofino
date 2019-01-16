@@ -36,9 +36,6 @@ output_mux_definitions  = ""
 alu_definitions         = ""
 # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 for i in range(num_pipeline_stages):
-  for j in range(num_alus_per_stage):
-    operand_mux_definitions += generate_mux(num_phv_containers, "stateless_operand_mux_a_" + str(i) + "_" + str(j)) + "\n"
-    operand_mux_definitions += generate_mux(num_phv_containers, "stateless_operand_mux_b_" + str(i) + "_" + str(j)) + "\n"
   for l in range(num_state_vars):
     operand_mux_definitions += generate_mux(num_phv_containers, "stateful_operand_mux_" + str(i) + "_" + str(l)) + "\n"
 
@@ -56,7 +53,7 @@ for i in range(num_pipeline_stages):
 # Generate sketch code for alus and immediate operands in each stage
 for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
-    alu_definitions += generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j)) + "\n"
+    alu_definitions += generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j), ["input" + str(k) for k in range(0, num_phv_containers)]) + "\n"
   for l in range(num_state_vars):
     alu_definitions += generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
 

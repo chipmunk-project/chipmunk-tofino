@@ -1,0 +1,15 @@
+int {{ alu_name }}({{arg_list|join(',')}}) {
+  int opcode = {{opcode_hole}};
+  int immediate_operand = {{immediate_operand_hole}};
+
+  |MuxSelection| x = {{ mux1 }}({{potential_operands|join(',')}});
+  |MuxSelection| y = {{ mux2 }}({{potential_operands|join(',')}});
+
+  if (opcode == 0) {
+    assert(x.index <= y.index); /* Redundant assert */
+    return {| x.value + y.value | x.value + immediate_operand | immediate_operand |};
+  } else {
+    assert(opcode == 1); /* Redundant assert */
+    return {| x.value - y.value | immediate_operand - y.value | x.value - immediate_operand |};
+  }
+}

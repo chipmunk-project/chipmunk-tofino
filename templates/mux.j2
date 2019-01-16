@@ -1,0 +1,13 @@
+|MuxSelection| {{mux_name}}({{arg_list|join(',')}}) {
+  int mux_ctrl = {{mux_name}}_ctrl;
+  if (mux_ctrl == 0) {
+    return |MuxSelection|(value = {{operand_list[0]}}, index = 0);
+  }
+  {% for operand_number in range(1, num_operands) %}
+  else if (mux_ctrl == {{operand_number}}) {
+    return |MuxSelection|(value = {{operand_list[operand_number]}}, index = {{operand_number}});
+  }
+  {% endfor %}
+
+  else { assert(false); /* Redundant assert */ }
+}

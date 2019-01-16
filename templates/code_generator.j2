@@ -77,34 +77,17 @@ struct MuxSelection {
 
   {% endif %}
 
-  // Stateless operands
-  {% for alu_number in range(num_alus_per_stage) %}
-  |MuxSelection| operand_{{stage_number}}_{{alu_number}}_a = stateless_operand_mux_a_{{stage_number}}_{{alu_number}}(
-  {% for container_number in range(num_phv_containers) %}
-  {% if container_number != num_phv_containers - 1 %}
-  input_{{stage_number}}_{{container_number}},
-  {% else %}
-  input_{{stage_number}}_{{container_number}}
-  {% endif %}
-  {% endfor %}
-  );
-  {% endfor %}
-
-  {% for alu_number in range(num_alus_per_stage) %}
-  |MuxSelection| operand_{{stage_number}}_{{alu_number}}_b = stateless_operand_mux_b_{{stage_number}}_{{alu_number}}(
-  {% for container_number in range(num_phv_containers) %}
-  {% if container_number != num_phv_containers - 1 %}
-  input_{{stage_number}}_{{container_number}},
-  {% else %}
-  input_{{stage_number}}_{{container_number}}
-  {% endif %}
-  {% endfor %}
-  );
-  {% endfor %}
-
   // Stateless ALUs
   {% for alu_number in range(num_alus_per_stage) %}
-  int destination_{{stage_number}}_{{alu_number}} = stateless_alu_{{stage_number}}_{{alu_number}}(operand_{{stage_number}}_{{alu_number}}_a, operand_{{stage_number}}_{{alu_number}}_b);
+  int destination_{{stage_number}}_{{alu_number}} = stateless_alu_{{stage_number}}_{{alu_number}}(
+  {% for container_number in range(num_phv_containers) %}
+  {% if container_number != num_phv_containers - 1 %}
+  input_{{stage_number}}_{{container_number}},
+  {% else %}
+  input_{{stage_number}}_{{container_number}}
+  {% endif %}
+  {% endfor %}
+  );
   {% endfor %}
 
   // Stateful operands
