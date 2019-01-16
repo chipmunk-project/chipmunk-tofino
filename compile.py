@@ -39,16 +39,18 @@ for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
     operand_mux_definitions += generate_mux(num_phv_containers, "stateless_operand_mux_a_" + str(i) + "_" + str(j)) + "\n"
     operand_mux_definitions += generate_mux(num_phv_containers, "stateless_operand_mux_b_" + str(i) + "_" + str(j)) + "\n"
-    operand_mux_definitions += generate_mux(num_phv_containers, "stateful_operand_mux_" + str(i) + "_" + str(j)) + "\n"
+  for l in range(num_state_vars):
+    operand_mux_definitions += generate_mux(num_phv_containers, "stateful_operand_mux_" + str(i) + "_" + str(l)) + "\n"
 
 # Output mux for stateful ALUs
 for i in range(num_pipeline_stages):
   for k in range(num_phv_containers):
     # Note: We are generating a mux that takes as input all virtual stateful ALUs + corresponding stateless ALU
-    # The number of virtual stateful ALUs is more than the physical stateful ALUs, but this doesn't affect correctness
+    # The number of virtual stateful ALUs is more or less than the physical stateful ALUs because it equals the
+    # number of state variables in the program_file, but this doesn't affect correctness
     # because we enforce that the total number of active virtual stateful ALUs is within the physical limit.
     # It also doesn't affect the correctness of modeling the output mux because the virtual output mux setting can be
-    # translated into the physical output mux setting after the fact.
+    # translated into the physical output mux setting during post processing.
     output_mux_definitions += generate_mux(num_state_vars + 1, "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
 
 # Generate sketch code for alus and immediate operands in each stage
