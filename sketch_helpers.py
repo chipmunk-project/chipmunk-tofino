@@ -46,7 +46,6 @@ int %s(ref int s, |MuxSelection| y) {
   if (opcode == 0) {
     s = s + {| y.value | immediate_operand |};
   } else {
-    assert(opcode == 1); /* Redundant assert */
     s = s - {| y.value | immediate_operand |};
   }
   return old_val;
