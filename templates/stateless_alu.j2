@@ -1,13 +1,14 @@
 int {{ alu_name }}({{arg_list|join(',')}}) {
   int opcode = {{opcode_hole}};
   int immediate_operand = {{immediate_operand_hole}};
+  int alu_mode = {{alu_mode_hole}};
 
   int x = {{ mux1 }}({{potential_operands|join(',')}});
   int y = {{ mux2 }}({{potential_operands|join(',')}});
 
   if (opcode == 0) {
-    return {| x + y | x + immediate_operand | immediate_operand |};
+    return (alu_mode == 0 ? x + y : (alu_mode == 1 ? x + immediate_operand : immediate_operand));
   } else {
-    return {| x - y | immediate_operand - y | x - immediate_operand |};
+    return (alu_mode == 0 ? x - y : (alu_mode == 1 ? immediate_operand - y : x - immediate_operand));
   }
 }
