@@ -42,18 +42,21 @@ def generate_stateful_alu(alu_name):
 int %s(ref int s, int y) {
   int opcode = %s;
   int immediate_operand = %s;
+  int alu_mode = %s;
   int old_val = s;
   if (opcode == 0) {
-    s = s + {| y | immediate_operand |};
+    s = s + (alu_mode == 0 ?  y : immediate_operand);
   } else {
-    s = s - {| y | immediate_operand |};
+    s = s - (alu_mode == 0 ?  y : immediate_operand);
   }
   return old_val;
 }
-'''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
+'''%(alu_name, alu_name + "_opcode", alu_name + "_immediate", alu_name + "_mode")
   generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
+  generate_hole(alu_name + "_mode", 1)
   # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant.
+  # add_assert(alu_name + "_mode" + "< 2")    # Comment out because assert is redundant.
   return stateful_alu
 
 def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
