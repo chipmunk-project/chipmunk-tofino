@@ -31,7 +31,7 @@ def generate_stateless_alu(alu_name, potential_operands):
   generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
   add_assert(alu_name + "_mux1_ctrl <= " + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
-  add_assert(alu_name +  "_opcode" + "< 2")
+  # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant
   return mux_op_1 + mux_op_2 + stateless_alu
 
 # Generate Sketch code for a simple stateful alu (+,-,*,/)
@@ -53,7 +53,7 @@ int %s(ref int s, int y) {
 '''%(alu_name, alu_name + "_opcode", alu_name + "_immediate")
   generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
-  add_assert(alu_name +  "_opcode" + "< 2")
+  # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant.
   return stateful_alu
 
 def generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars):
