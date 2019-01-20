@@ -31,12 +31,6 @@ struct StateAndPacket {
   {% endfor %}
 }
 
-// Data type for selection from mux
-struct MuxSelection {
-  int value;
-  int index;
-}
-
 // Sketch holes corresponding to stateful configuration indicator variables
 
 // Specification
@@ -92,7 +86,7 @@ struct MuxSelection {
 
   // Stateful operands
   {% for state_number in range(num_state_vars) %}
-  |MuxSelection| packet_operand_salu{{stage_number}}_{{state_number}} = stateful_operand_mux_{{stage_number}}_{{state_number}}(
+  int packet_operand_salu{{stage_number}}_{{state_number}} = stateful_operand_mux_{{stage_number}}_{{state_number}}(
   {% for container_number in range(num_phv_containers) %}
   {% if container_number != num_phv_containers - 1 %}
   input_{{stage_number}}_{{container_number}},
@@ -123,7 +117,7 @@ struct MuxSelection {
   {% for state_number in range(num_state_vars) %}
   old_state_{{stage_number}}_{{state_number}},
   {% endfor %}
-  destination_{{stage_number}}_{{container_number}}).value;
+  destination_{{stage_number}}_{{container_number}});
   {% endfor %}
 
   {% for state_number in range(num_state_vars) %}

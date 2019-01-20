@@ -2,12 +2,12 @@ int {{ alu_name }}({{arg_list|join(',')}}) {
   int opcode = {{opcode_hole}};
   int immediate_operand = {{immediate_operand_hole}};
 
-  |MuxSelection| x = {{ mux1 }}({{potential_operands|join(',')}});
-  |MuxSelection| y = {{ mux2 }}({{potential_operands|join(',')}});
+  int x = {{ mux1 }}({{potential_operands|join(',')}});
+  int y = {{ mux2 }}({{potential_operands|join(',')}});
 
   if (opcode == 0) {
-    return {| x.value + y.value | x.value + immediate_operand | immediate_operand |};
+    return {| x + y | x + immediate_operand | immediate_operand |};
   } else {
-    return {| x.value - y.value | immediate_operand - y.value | x.value - immediate_operand |};
+    return {| x - y | immediate_operand - y | x - immediate_operand |};
   }
 }
