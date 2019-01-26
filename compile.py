@@ -64,7 +64,8 @@ generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars
 # Create sketch_file_as_string
 env = Environment(loader=FileSystemLoader('./templates'))
 code_gen_template = env.get_template("code_generator.j2")
-code_generator = code_gen_template.render(program_file = program_file,\
+code_generator = code_gen_template.render(mode = "codegen",\
+                                          program_file = program_file,\
                                           num_pipeline_stages = num_pipeline_stages,\
                                           num_alus_per_stage = num_alus_per_stage,\
                                           num_phv_containers = num_phv_containers,\

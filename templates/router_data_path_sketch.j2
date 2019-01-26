@@ -1,6 +1,10 @@
+{% if mode == "codegen" %}
 |StateAndPacket| pipeline (|StateAndPacket| state_and_packet) implements program {
-  // Consolidate all constraints on holes here.
-  {{all_assertions}}
+// Consolidate all constraints on holes here.
+{{all_assertions}}
+{% elif mode == "optverif" %}
+|StateAndPacket| pipeline (|StateAndPacket| state_and_packet, {{hole_arguments}}) {
+{% endif %}
   // One variable for each container in the PHV
   // Container i will be allocated to packet field i from the spec.
   {% for container_number in range(num_phv_containers) %}

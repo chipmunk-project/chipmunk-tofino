@@ -7,7 +7,7 @@ else:
   program_file = sys.argv[1]
   num_pipeline_stages = int(sys.argv[2])
   num_alus_per_stage  = int(sys.argv[3])
-  transform_function  = syst.argv[4]
+  transform_function  = sys.argv[4]
 
   # Generate predicates from list of asserts.
 
