@@ -1,5 +1,5 @@
-int {{mux_name}}({{arg_list|join(',')}}) {
-  int mux_ctrl = {{mux_name}}_ctrl;
+int {{mux_name}}({{arg_list|join(',')}}, int {{mux_name}}_ctrl_local) {
+  int mux_ctrl = {{mux_name}}_ctrl_local;
   if (mux_ctrl == 0) {
     return {{operand_list[0]}};
   }

@@ -42,7 +42,10 @@
   {% else %}
   input_{{stage_number}}_{{container_number}}
   {% endif %}
-  {% endfor %}
+  {% endfor %},
+  stateless_alu_{{stage_number}}_{{alu_number}}_opcode,
+  stateless_alu_{{stage_number}}_{{alu_number}}_immediate,
+  stateless_alu_{{stage_number}}_{{alu_number}}_mode
   );
   {% endfor %}
 
@@ -56,7 +59,7 @@
   input_{{stage_number}}_{{container_number}}
   {% endif %}
   {% endfor %}
-  );
+  , stateful_operand_mux_{{stage_number}}_{{state_number}}_ctrl);
   {% endfor %}
 
   // Read stateful ALU slots from allocated state vars.
@@ -70,7 +73,10 @@
 
   // Stateful ALUs
   {% for state_number in range(num_state_vars) %}
-  int old_state_{{stage_number}}_{{state_number}} = stateful_alu_{{stage_number}}_{{state_number}}(state_operand_salu_{{stage_number}}_{{state_number}}, packet_operand_salu{{stage_number}}_{{state_number}});
+  int old_state_{{stage_number}}_{{state_number}} = stateful_alu_{{stage_number}}_{{state_number}}(state_operand_salu_{{stage_number}}_{{state_number}}, packet_operand_salu{{stage_number}}_{{state_number}},
+  stateful_alu_{{stage_number}}_{{state_number}}_opcode,
+  stateful_alu_{{stage_number}}_{{state_number}}_immediate,
+  stateful_alu_{{stage_number}}_{{state_number}}_mode);
   {% endfor %}
 
   // Outputs
@@ -79,7 +85,9 @@
   {% for state_number in range(num_state_vars) %}
   old_state_{{stage_number}}_{{state_number}},
   {% endfor %}
-  destination_{{stage_number}}_{{container_number}});
+  destination_{{stage_number}}_{{container_number}},
+  output_mux_phv_{{stage_number}}_{{container_number}}_ctrl
+  );
   {% endfor %}
 
   {% for state_number in range(num_state_vars) %}

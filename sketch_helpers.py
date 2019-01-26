@@ -42,7 +42,7 @@ def generate_stateless_alu(alu_name, potential_operands):
 # Updates the state in place and returns the old value of the state
 def generate_stateful_alu(alu_name):
   stateful_alu = '''
-int %s(ref int s, int y) {
+int %s(ref int s, int y, %s, %s, %s) {
   int opcode = %s;
   int immediate_operand = %s;
   int alu_mode = %s;
@@ -54,7 +54,9 @@ int %s(ref int s, int y) {
   }
   return old_val;
 }
-'''%(alu_name, alu_name + "_opcode", alu_name + "_immediate", alu_name + "_mode")
+'''%(alu_name,
+     "int " + alu_name + "_opcode_local", "int " + alu_name + "_immediate_local", "int " + alu_name + "_mode_local",
+     alu_name + "_opcode_local", alu_name + "_immediate_local", alu_name + "_mode_local")
   generate_hole(alu_name + "_opcode", 1)
   generate_hole(alu_name + "_immediate", 2)
   generate_hole(alu_name + "_mode", 1)

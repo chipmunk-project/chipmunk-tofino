@@ -1,10 +1,10 @@
-int {{ alu_name }}({{arg_list|join(',')}}) {
-  int opcode = {{opcode_hole}};
-  int immediate_operand = {{immediate_operand_hole}};
-  int alu_mode = {{alu_mode_hole}};
+int {{ alu_name }}({{arg_list|join(',')}}, int {{opcode_hole}}_local, int {{immediate_operand_hole}}_local, int {{alu_mode_hole}}_local) {
+  int opcode = {{opcode_hole}}_local;
+  int immediate_operand = {{immediate_operand_hole}}_local;
+  int alu_mode = {{alu_mode_hole}}_local;
 
-  int x = {{ mux1 }}({{potential_operands|join(',')}});
-  int y = {{ mux2 }}({{potential_operands|join(',')}});
+  int x = {{ mux1 }}({{potential_operands|join(',')}}, {{ mux1 }}_ctrl);
+  int y = {{ mux2 }}({{potential_operands|join(',')}}, {{ mux2 }}_ctrl);
 
   if (opcode == 0) {
     return (alu_mode == 0 ? x + y : (alu_mode == 1 ? x + immediate_operand : immediate_operand));
