@@ -3,7 +3,7 @@
 // Consolidate all constraints on holes here.
 {{all_assertions}}
 {% elif mode == "optverif" %}
-|StateAndPacket| pipeline (|StateAndPacket| state_and_packet, {{hole_arguments}}) {
+|StateAndPacket| pipeline (|StateAndPacket| state_and_packet, {{hole_arguments|join(',')}}) {
 {% endif %}
   // One variable for each container in the PHV
   // Container i will be allocated to packet field i from the spec.
@@ -49,7 +49,9 @@
   {% endfor %},
   stateless_alu_{{stage_number}}_{{alu_number}}_opcode,
   stateless_alu_{{stage_number}}_{{alu_number}}_immediate,
-  stateless_alu_{{stage_number}}_{{alu_number}}_mode
+  stateless_alu_{{stage_number}}_{{alu_number}}_mode,
+  stateless_alu_{{stage_number}}_{{alu_number}}_mux1_ctrl,
+  stateless_alu_{{stage_number}}_{{alu_number}}_mux2_ctrl
   );
   {% endfor %}
 
