@@ -4,20 +4,34 @@ from pathlib import Path
 import math
 import sys
 
+class Hole:
+  def __init__(self, hole_name, max_value):
+    self.name = hole_name
+    self.max  = max_value
+
+# Read contents of file_name into a string
+def file_to_str(file_name):
+  return Path(file_name).read_text()
+
 # Write all holes to a single hole string for ease of debugging
 def generate_hole(hole_name, hole_bit_width):
   generate_hole.hole_names += [hole_name]
   generate_hole.hole_preamble += "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
   generate_hole.total_hole_bits += hole_bit_width
   generate_hole.hole_arguments += ["int " + hole_name]
+  generate_hole.holes += [Hole(hole_name, 2**hole_bit_width)]
 generate_hole.total_hole_bits = 0
 generate_hole.hole_names = []
 generate_hole.hole_preamble = ""
 generate_hole.hole_arguments = []
+generate_hole.holes = [] # list of Hole objects
 
 def add_assert(assert_predicate):
   add_assert.asserts += "assert(" + assert_predicate + ");\n"
+  add_assert.constraints += [assert_predicate]
+
 add_assert.asserts = ""
+add_assert.constraints = []
 
 # Generate Sketch code for a simple stateless alu (+,-,*,/) 
 def generate_stateless_alu(alu_name, potential_operands):

@@ -1,1 +1,5 @@
 __pycache__
+*.constraints
+*.holes
+*.success
+*.errors

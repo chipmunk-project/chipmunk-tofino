@@ -1,5 +1,5 @@
-from jinja2 import Template
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Template, Environment, FileSystemLoader
+import pickle
 from pathlib import Path
 import sys
 import math
@@ -21,8 +21,8 @@ def get_num_pkt_fields_and_state_vars(program):
 # k : PHV container within pipeline stage
 # l : packet field or state variable from program
 
-if (len(sys.argv) < 5):
-  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverif>")
+if (len(sys.argv) < 6):
+  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverif> <output_name (w/o file extension)>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
@@ -32,6 +32,7 @@ else:
   num_phv_containers   = num_alus_per_stage
   assert(num_fields_in_prog <= num_phv_containers)
   mode                 = str(sys.argv[4])
+  output_name          = str(sys.argv[5])
 
 operand_mux_definitions = ""
 output_mux_definitions  = ""
@@ -67,23 +68,23 @@ env = Environment(loader=FileSystemLoader('./templates'))
 
 if (mode == "codegen"):
   code_gen_template = env.get_template("code_generator.j2")
-  code_generator = code_gen_template.render(mode = "codegen",\
-                                            program_file = program_file,\
-                                            num_pipeline_stages = num_pipeline_stages,\
-                                            num_alus_per_stage = num_alus_per_stage,\
-                                            num_phv_containers = num_phv_containers,\
-                                            hole_definitions = generate_hole.hole_preamble,\
-                                            operand_mux_definitions = operand_mux_definitions,\
-                                            output_mux_definitions = output_mux_definitions,\
-                                            alu_definitions = alu_definitions,\
-                                            num_fields_in_prog = num_fields_in_prog,\
-                                            num_state_vars = num_state_vars,\
-                                            spec_as_sketch = Path(program_file).read_text(),\
+  code_generator = code_gen_template.render(mode = "codegen",
+                                            program_file = program_file,
+                                            num_pipeline_stages = num_pipeline_stages,
+                                            num_alus_per_stage = num_alus_per_stage,
+                                            num_phv_containers = num_phv_containers,
+                                            hole_definitions = generate_hole.hole_preamble,
+                                            operand_mux_definitions = operand_mux_definitions,
+                                            output_mux_definitions = output_mux_definitions,
+                                            alu_definitions = alu_definitions,
+                                            num_fields_in_prog = num_fields_in_prog,
+                                            num_state_vars = num_state_vars,
+                                            spec_as_sketch = Path(program_file).read_text(),
                                             all_assertions = add_assert.asserts)
-  
-  # Create a temporary file and write sketch_harness into it.
-  sketch_file = tempfile.NamedTemporaryFile(suffix = ".sk", dir = "/tmp/", delete = False)
-  sketch_file.write(code_generator.encode())
+
+  # Create file and write sketch_harness into it.
+  sketch_file = open(output_name + ".sk", "w")
+  sketch_file.write(code_generator)
   sketch_file.close()
 
   # Call sketch on it
@@ -91,43 +92,54 @@ if (mode == "codegen"):
   print("Sketch file is ", sketch_file.name)
   (ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-parallel --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
   if (ret_code != 0):
-    errors_file = tempfile.NamedTemporaryFile(suffix = ".errors", dir = "/tmp/", delete = False)
-    errors_file.write(output.encode())
+    errors_file = open(output_name + ".errors", "w")
+    errors_file.write(output)
     errors_file.close()
     print("Sketch failed. Output left in " + errors_file.name)
     sys.exit(1)
   else:
-    success_file = tempfile.NamedTemporaryFile(suffix = ".success", dir = "/tmp/", delete = False)
+    success_file = open(output_name + ".success", "w")
     for hole_name in generate_hole.hole_names:
       hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
       assert(len(hits) == 1)
       assert(len(hits[0]) == 2)
       print("int ", hits[0][0], " = ", hits[0][1], ";")
-    success_file.write(output.encode())
+    success_file.write(output)
     success_file.close()
     print("Sketch succeeded. Generated configuration is given above. Output left in " + success_file.name)
     sys.exit(0)
 
 elif (mode == "optverif"):
   sketch_function_template = env.get_template("sketch_functions.j2")
-  sketch_function = sketch_function_template.render(mode = "optverif",\
-                                                    program_file = program_file,\
-                                                    num_pipeline_stages = num_pipeline_stages,\
-                                                    num_alus_per_stage = num_alus_per_stage,\
-                                                    num_phv_containers = num_phv_containers,\
-                                                    operand_mux_definitions = operand_mux_definitions,\
-                                                    output_mux_definitions = output_mux_definitions,\
-                                                    alu_definitions = alu_definitions,\
-                                                    num_fields_in_prog = num_fields_in_prog,\
-                                                    num_state_vars = num_state_vars,\
+  sketch_function = sketch_function_template.render(mode = "optverif",
+                                                    program_file = program_file,
+                                                    num_pipeline_stages = num_pipeline_stages,
+                                                    num_alus_per_stage = num_alus_per_stage,
+                                                    num_phv_containers = num_phv_containers,
+                                                    operand_mux_definitions = operand_mux_definitions,
+                                                    output_mux_definitions = output_mux_definitions,
+                                                    alu_definitions = alu_definitions,
+                                                    num_fields_in_prog = num_fields_in_prog,
+                                                    num_state_vars = num_state_vars,
                                                     hole_arguments = generate_hole.hole_arguments,
-                                                    sketch_name = sys.argv[5])
-  # Create a temporary file and write sketch_function into it.
-  sketch_file = tempfile.NamedTemporaryFile(suffix = ".sk", dir = "/tmp/", delete = False)
-  sketch_file.write(sketch_function.encode())
+                                                    sketch_name = output_name)
+  # Create files and write sketch_function, holes, and constraints into them.
+  sketch_file = open(output_name + ".sk", "w")
+  sketch_file.write(sketch_function)
   sketch_file.close()
-  print("Total number of hole bits is", generate_hole.total_hole_bits)
   print("Sketch file is ", sketch_file.name)
+
+  holes_file   = open(output_name + ".holes", "wb")
+  pickle.dump([generate_hole.holes + generate_hole.hole_arguments], holes_file)
+  holes_file.close()
+  print("Holes file is ", holes_file.name)
+
+  constraints_file = open(output_name + ".constraints", "wb")
+  pickle.dump(add_assert.constraints, constraints_file)
+  constraints_file.close()
+  print("Constraints file is ", constraints_file.name)
+
+  print("Total number of hole bits is", generate_hole.total_hole_bits)
 
 else:
   assert(False)
