@@ -8,33 +8,50 @@ struct StateAndPacket {
   {% endfor %}
 }
 
-include "{{sketch1_file_name}}"
-include "{{sketch2_file_name}}"
+include "{{sketch1_file_name}}";
+include "{{sketch2_file_name}}";
 
-harness void main({{input_arguments}}, {{hole1_arguments}}, {{hole2_arguments}}) {
+harness void main(
+  {% for field_number in range(num_fields_in_prog) %}
+    int sanp_pkt_{{field_number}},
+  {% endfor %}
+  {% for state_number in range(num_state_vars) %}
+    int sanp_state_{{state_number}},
+  {% endfor %}
+  {{hole1_arguments|join(',')}},
+  {{hole2_arguments|join(',')}}) {
+
   // Preconditions:
 
   {% for hole in sketch1_holes %}
-  assume((hole.name >= 0) && (hole.name <= hole.max));
+  assume(({{hole.name}} >= 0) && ({{hole.name}} <= {{hole.max}}));
   {% endfor %}
 
   {% for predicate in sketch1_asserts %}
-  assume(predicate);
+  assume({{predicate}});
   {% endfor %}
 
   // Transformation from sketch 1's holes to sketch 2's holes
-  {{ transformation_function }}
+  {{ transform_function }}
 
   // Check that sketches are equivalent.
-  assert({{sketch1_name}}({{input_arguments}}, {{hole1_arguments}}) == {{sketch2_name}}({{input_arguments}}, {{hole2_arguments}}));
+  |StateAndPacket| state_and_packet;
+  {% for field_number in range(num_fields_in_prog) %}
+    state_and_packet.pkt_{{field_number}} = sanp_pkt_{{field_number}};
+  {% endfor %}
+  {% for state_number in range(num_state_vars) %}
+    state_and_packet.state_{{state_number}} = sanp_state_{{state_number}};
+  {% endfor %}
+
+  assert(pipeline@{{sketch1_name}}(state_and_packet, {{sketch1_holes|map(attribute='name')|join(',')}}) == pipeline@{{sketch2_name}}(state_and_packet, {{sketch2_holes|map(attribute='name')|join(',')}}));
 
   // Postconditions:
 
   {% for hole in sketch2_holes %}
-  assume((hole.name >= 0) && (hole.name <= hole.max));
+  assert(({{hole.name}} >= 0) && ({{hole.name}} <= {{hole.max}}));
   {% endfor %}
 
   {% for predicate in sketch2_asserts %}
-  assume(predicate);
+  assert({{predicate}});
   {% endfor %}
 }

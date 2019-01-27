@@ -1,40 +1,34 @@
-from jinja2 import Template
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 from pathlib import Path
 import sys
+import pickle
 
 # Read contents of file_name into a string
 def file_to_str(file_name):
   return Path(file_name).read_text()
 
-
-def get_holes(hole_file):
-
-if (len(sys.argv) < 4):
-  print("Usage: " + sys.argv[0] + " sketch1_name sketch2_name transform_function ")
+if (len(sys.argv) < 6):
+  print("Usage: " + sys.argv[0] + " sketch1_name sketch2_name transform_function num_fields_in_prog num_state_vars")
   sys.exit(1)
 else:
   sketch1_name        = str(sys.argv[1])
-  sketch1_function    = file_to_str(sketch1_name + ".sk")
-  sketch1_holes       = file_to_str(sketch1_name + ".holes")
-  sketch1_constraints = file_to_str(sketch1_name + ".constraints")
   sketch2_name        = str(sys.argv[2])
-  sketch2_function    = file_to_str(sketch2_name + ".sk")
-  sketch2_holes       = file_to_str(sketch2_name + ".holes")
-  sketch2_constraints = file_to_str(sketch2_name + ".constraints")
-  transform_function  = file_to_str(str(sys.argv[3]))
-  env = Environment(loader=FileSystemLoader('./templates'))
+  transform_function  = str(sys.argv[3]) # TODO: Fill this up.
+  num_fields_in_prog  = int(sys.argv[4])
+  num_state_vars      = int(sys.argv[5])
+  env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
   opt_verify_template = env.get_template("opt_verify.j2")
-  hole1_arguments     =
-  hole2_arguments     =
-
-  opt_verifer         = opt_verify_template.render(sketch1_file_name = sketch1_name + ".sk",
+  opt_verifer         = opt_verify_template.render(sketch1_name = sketch1_name,
+                                                   sketch2_name = sketch2_name,
+                                                   sketch1_file_name = sketch1_name + ".sk",
                                                    sketch2_file_name = sketch2_name + ".sk",
-                                                   hole1_arguments = ,
-                                                   hole2_arguments = ,
-                                                   sketch1_holes = ,
-                                                   sketch1_asserts = ,
-                                                   sketch2_holes = ,
-                                                   sketch2_asserts = ,)
-
-
+                                                   hole1_arguments = pickle.load(open(sketch1_name + ".holes", "rb"))[1],
+                                                   hole2_arguments = pickle.load(open(sketch2_name + ".holes", "rb"))[1],
+                                                   sketch1_holes = pickle.load(open(sketch1_name + ".holes", "rb"))[0],
+                                                   sketch2_holes = pickle.load(open(sketch2_name + ".holes", "rb"))[0],
+                                                   sketch1_asserts = pickle.load(open(sketch1_name + ".constraints", "rb")),
+                                                   sketch2_asserts = pickle.load(open(sketch2_name + ".constraints", "rb")),
+                                                   num_fields_in_prog = num_fields_in_prog,
+                                                   num_state_vars  = num_state_vars,
+                                                   transform_function = transform_function)
+  print(opt_verifer)

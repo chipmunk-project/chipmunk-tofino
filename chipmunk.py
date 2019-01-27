@@ -130,7 +130,7 @@ elif (mode == "optverif"):
   print("Sketch file is ", sketch_file.name)
 
   holes_file   = open(output_name + ".holes", "wb")
-  pickle.dump([generate_hole.holes + generate_hole.hole_arguments], holes_file)
+  pickle.dump([generate_hole.holes] + [generate_hole.hole_arguments], holes_file)
   holes_file.close()
   print("Holes file is ", holes_file.name)
 
