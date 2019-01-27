@@ -1,4 +1,4 @@
-from jinja2 import Template, Environment, FileSystemLoader
+from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 import pickle
 from pathlib import Path
 import sys
@@ -64,7 +64,7 @@ for i in range(num_pipeline_stages):
 generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars)
 
 # Create sketch_file_as_string
-env = Environment(loader=FileSystemLoader('./templates'))
+env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
 
 if (mode == "codegen"):
   code_gen_template = env.get_template("code_generator.j2")
