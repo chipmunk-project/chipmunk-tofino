@@ -1,0 +1,40 @@
+// Data type for holding result from both sketches
+struct StateAndPacket {
+  {% for field_number in range(num_fields_in_prog) %}
+    int pkt_{{field_number}};
+  {% endfor %}
+  {% for state_number in range(num_state_vars) %}
+    int state_{{state_number}};
+  {% endfor %}
+}
+
+include "{{sketch1_file_name}}"
+include "{{sketch2_file_name}}"
+
+harness void main({{input_arguments}}, {{hole1_arguments}}, {{hole2_arguments}}) {
+  // Preconditions:
+
+  {% for hole in sketch1_holes %}
+  assume((hole.name >= 0) && (hole.name <= hole.max));
+  {% endfor %}
+
+  {% for predicate in sketch1_asserts %}
+  assume(predicate);
+  {% endfor %}
+
+  // Transformation from sketch 1's holes to sketch 2's holes
+  {{ transformation_function }}
+
+  // Check that sketches are equivalent.
+  assert({{sketch1_name}}({{input_arguments}}, {{hole1_arguments}}) == {{sketch2_name}}({{input_arguments}}, {{hole2_arguments}}));
+
+  // Postconditions:
+
+  {% for hole in sketch2_holes %}
+  assume((hole.name >= 0) && (hole.name <= hole.max));
+  {% endfor %}
+
+  {% for predicate in sketch2_asserts %}
+  assume(predicate);
+  {% endfor %}
+}

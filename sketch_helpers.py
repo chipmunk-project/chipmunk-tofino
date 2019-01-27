@@ -50,7 +50,7 @@ def generate_stateless_alu(alu_name, potential_operands):
   generate_hole(alu_name + "_mode", 2)
   add_assert(alu_name + "_mux1_ctrl <= " + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
   # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant
-  add_assert(alu_name + "_mode" + "< 3")
+  add_assert(alu_name + "_mode" + " < 3")
   return mux_op_1 + mux_op_2 + stateless_alu
 
 # Generate Sketch code for a simple stateful alu (+,-,*,/)
@@ -109,5 +109,5 @@ def generate_mux(n, mux_name):
                                          arg_list = ["int input" + str(i) for i in range(0, n)],
                                          num_operands = n)
   generate_hole(mux_name + "_ctrl", num_bits)
-  add_assert(mux_name + "_ctrl" + "<" + str(n))
+  add_assert(mux_name + "_ctrl" + " < " + str(n))
   return mux_code
