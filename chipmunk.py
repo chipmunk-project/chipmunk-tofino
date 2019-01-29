@@ -3,7 +3,7 @@ import pickle
 from pathlib import Path
 import sys
 import math
-from   sketch_helpers import *
+from   sketch_helpers import SketchGenerator
 import re
 import subprocess
 import random
@@ -22,7 +22,7 @@ def get_num_pkt_fields_and_state_vars(program):
 # l : packet field or state variable from program
 
 if (len(sys.argv) < 6):
-  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverif> <output_name (w/o file extension)>")
+  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverif> <sketch_name (w/o file extension)>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
@@ -32,7 +32,10 @@ else:
   num_phv_containers   = num_alus_per_stage
   assert(num_fields_in_prog <= num_phv_containers)
   mode                 = str(sys.argv[4])
-  output_name          = str(sys.argv[5])
+  sketch_name          = str(sys.argv[5])
+
+# Create an object for sketch generation
+sketch_generator = SketchGenerator(sketch_name = sketch_name)
 
 operand_mux_definitions = ""
 output_mux_definitions  = ""
@@ -40,7 +43,7 @@ alu_definitions         = ""
 # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
 for i in range(num_pipeline_stages):
   for l in range(num_state_vars):
-    operand_mux_definitions += generate_mux(num_phv_containers, "stateful_operand_mux_" + str(i) + "_" + str(l)) + "\n"
+    operand_mux_definitions += sketch_generator.generate_mux(num_phv_containers, "stateful_operand_mux_" + str(i) + "_" + str(l)) + "\n"
 
 # Output mux for stateful ALUs
 for i in range(num_pipeline_stages):
@@ -51,17 +54,17 @@ for i in range(num_pipeline_stages):
     # because we enforce that the total number of active virtual stateful ALUs is within the physical limit.
     # It also doesn't affect the correctness of modeling the output mux because the virtual output mux setting can be
     # translated into the physical output mux setting during post processing.
-    output_mux_definitions += generate_mux(num_state_vars + 1, "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
+    output_mux_definitions += sketch_generator.generate_mux(num_state_vars + 1, "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
 
 # Generate sketch code for alus and immediate operands in each stage
 for i in range(num_pipeline_stages):
   for j in range(num_alus_per_stage):
-    alu_definitions += generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j), ["input" + str(k) for k in range(0, num_phv_containers)]) + "\n"
+    alu_definitions += sketch_generator.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j), ["input" + str(k) for k in range(0, num_phv_containers)]) + "\n"
   for l in range(num_state_vars):
-    alu_definitions += generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
+    alu_definitions += sketch_generator.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
 
 # Ensures each state var is assigned to exactly stateful ALU and vice versa.
-generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars)
+sketch_generator.generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars)
 
 # Create sketch_file_as_string
 env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
@@ -73,33 +76,33 @@ if (mode == "codegen"):
                                             num_pipeline_stages = num_pipeline_stages,
                                             num_alus_per_stage = num_alus_per_stage,
                                             num_phv_containers = num_phv_containers,
-                                            hole_definitions = generate_hole.hole_preamble,
+                                            hole_definitions = sketch_generator.hole_preamble_,
                                             operand_mux_definitions = operand_mux_definitions,
                                             output_mux_definitions = output_mux_definitions,
                                             alu_definitions = alu_definitions,
                                             num_fields_in_prog = num_fields_in_prog,
                                             num_state_vars = num_state_vars,
                                             spec_as_sketch = Path(program_file).read_text(),
-                                            all_assertions = add_assert.asserts)
+                                            all_assertions = sketch_generator.asserts_)
 
   # Create file and write sketch_harness into it.
-  sketch_file = open(output_name + ".sk", "w")
+  sketch_file = open(sketch_name + ".sk", "w")
   sketch_file.write(code_generator)
   sketch_file.close()
 
   # Call sketch on it
-  print("Total number of hole bits is", generate_hole.total_hole_bits)
+  print("Total number of hole bits is", sketch_generator.total_hole_bits_)
   print("Sketch file is ", sketch_file.name)
   (ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-parallel --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
   if (ret_code != 0):
-    errors_file = open(output_name + ".errors", "w")
+    errors_file = open(sketch_name + ".errors", "w")
     errors_file.write(output)
     errors_file.close()
     print("Sketch failed. Output left in " + errors_file.name)
     sys.exit(1)
   else:
-    success_file = open(output_name + ".success", "w")
-    for hole_name in generate_hole.hole_names:
+    success_file = open(sketch_name + ".success", "w")
+    for hole_name in sketch_generator.hole_names_:
       hits = re.findall("(" + hole_name + ")__" + "\w+ = (\d+)", output)
       assert(len(hits) == 1)
       assert(len(hits[0]) == 2)
@@ -121,25 +124,25 @@ elif (mode == "optverif"):
                                                     alu_definitions = alu_definitions,
                                                     num_fields_in_prog = num_fields_in_prog,
                                                     num_state_vars = num_state_vars,
-                                                    hole_arguments = generate_hole.hole_arguments,
-                                                    sketch_name = output_name)
+                                                    hole_arguments = sketch_generator.hole_arguments_,
+                                                    sketch_name = sketch_name)
   # Create files and write sketch_function, holes, and constraints into them.
-  sketch_file = open(output_name + ".sk", "w")
+  sketch_file = open(sketch_name + ".sk", "w")
   sketch_file.write(sketch_function)
   sketch_file.close()
   print("Sketch file is ", sketch_file.name)
 
-  holes_file   = open(output_name + ".holes", "wb")
-  pickle.dump([generate_hole.holes] + [generate_hole.hole_arguments], holes_file)
+  holes_file   = open(sketch_name + ".holes", "wb")
+  pickle.dump([sketch_generator.holes_] + [sketch_generator.hole_arguments_], holes_file)
   holes_file.close()
   print("Holes file is ", holes_file.name)
 
-  constraints_file = open(output_name + ".constraints", "wb")
-  pickle.dump(add_assert.constraints, constraints_file)
+  constraints_file = open(sketch_name + ".constraints", "wb")
+  pickle.dump(sketch_generator.constraints_, constraints_file)
   constraints_file.close()
   print("Constraints file is ", constraints_file.name)
 
-  print("Total number of hole bits is", generate_hole.total_hole_bits)
+  print("Total number of hole bits is", sketch_generator.total_hole_bits_)
 
 else:
   assert(False)
