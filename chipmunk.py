@@ -72,6 +72,7 @@ env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUn
 if (mode == "codegen"):
   code_gen_template = env.get_template("code_generator.j2")
   code_generator = code_gen_template.render(mode = "codegen",
+                                            sketch_name = sketch_name,
                                             program_file = program_file,
                                             num_pipeline_stages = num_pipeline_stages,
                                             num_alus_per_stage = num_alus_per_stage,

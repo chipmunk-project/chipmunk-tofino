@@ -27,11 +27,12 @@ class SketchGenerator:
 
   # Write all holes to a single hole string for ease of debugging
   def generate_hole(self, hole_name, hole_bit_width):
-    self.hole_names_ += [hole_name]
-    self.hole_preamble_ += "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
+    qualified_hole_name = self.sketch_name_ + "_" + hole_name
+    self.hole_names_ += [qualified_hole_name]
+    self.hole_preamble_ += "int " + qualified_hole_name + "= ??(" + str(hole_bit_width) + ");\n"
     self.total_hole_bits_ += hole_bit_width
-    self.hole_arguments_ += ["int " + hole_name]
-    self.holes_ += [Hole(hole_name, 2**hole_bit_width)]
+    self.hole_arguments_ += ["int " + qualified_hole_name]
+    self.holes_ += [Hole(qualified_hole_name, 2**hole_bit_width)]
   
   def add_assert(self, assert_predicate):
     self.asserts_ += "assert(" + assert_predicate + ");\n"
@@ -52,9 +53,9 @@ class SketchGenerator:
     self.generate_hole(alu_name + "_opcode", 1)
     self.generate_hole(alu_name + "_immediate", 2)
     self.generate_hole(alu_name + "_mode", 2)
-    self.add_assert(alu_name + "_mux1_ctrl <= " + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
+    self.add_assert(self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " + self.sketch_name_ + "_" + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
     # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant
-    self.add_assert(alu_name + "_mode" + " < 3")
+    self.add_assert(self.sketch_name_ + "_" + alu_name + "_mode" + " < 3")
     return mux_op_1 + mux_op_2 + stateless_alu
   
   # Generate Sketch code for a simple stateful alu (+,-,*,/)
@@ -92,14 +93,14 @@ class SketchGenerator:
     for i in range(num_pipeline_stages):
       assert_predicate = "("
       for l in range(num_state_vars):
-        assert_predicate += "salu_config_" + str(i) + "_" + str(l) + " + "
+        assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(i) + "_" + str(l) + " + "
       assert_predicate += "0) <= " + str(num_alus_per_stage)
       self.add_assert(assert_predicate)
   
     for l in range(num_state_vars):
       assert_predicate = "("
       for i in range(num_pipeline_stages):
-        assert_predicate += "salu_config_" + str(i) + "_" + str(l) + " + "
+        assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(i) + "_" + str(l) + " + "
       assert_predicate += "0) <= 1"
       self.add_assert(assert_predicate)
   
@@ -113,5 +114,5 @@ class SketchGenerator:
                                            arg_list = ["int input" + str(i) for i in range(0, n)],
                                            num_operands = n)
     self.generate_hole(mux_name + "_ctrl", num_bits)
-    self.add_assert(mux_name + "_ctrl" + " < " + str(n))
+    self.add_assert(self.sketch_name_ + "_" + mux_name + "_ctrl" + " < " + str(n))
     return mux_code
