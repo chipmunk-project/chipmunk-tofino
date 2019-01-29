@@ -20,8 +20,8 @@ else:
   opt_verify_template = env.get_template("opt_verify.j2")
   opt_verifer         = opt_verify_template.render(sketch1_name = sketch1_name,
                                                    sketch2_name = sketch2_name,
-                                                   sketch1_file_name = sketch1_name + ".sk",
-                                                   sketch2_file_name = sketch2_name + ".sk",
+                                                   sketch1_file_name = sketch1_name + "_optverify.sk",
+                                                   sketch2_file_name = sketch2_name + "_optverify.sk",
                                                    hole1_arguments = pickle.load(open(sketch1_name + ".holes", "rb"))[1],
                                                    hole2_arguments = pickle.load(open(sketch2_name + ".holes", "rb"))[1],
                                                    sketch1_holes = pickle.load(open(sketch1_name + ".holes", "rb"))[0],

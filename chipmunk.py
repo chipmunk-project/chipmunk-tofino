@@ -22,7 +22,7 @@ def get_num_pkt_fields_and_state_vars(program):
 # l : packet field or state variable from program
 
 if (len(sys.argv) < 6):
-  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverif> <sketch_name (w/o file extension)>")
+  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
@@ -87,7 +87,7 @@ if (mode == "codegen"):
                                             all_assertions = sketch_generator.asserts_)
 
   # Create file and write sketch_harness into it.
-  sketch_file = open(sketch_name + ".sk", "w")
+  sketch_file = open(sketch_name + "_codegen.sk", "w")
   sketch_file.write(code_generator)
   sketch_file.close()
 
@@ -113,9 +113,9 @@ if (mode == "codegen"):
     print("Sketch succeeded. Generated configuration is given above. Output left in " + success_file.name)
     sys.exit(0)
 
-elif (mode == "optverif"):
+elif (mode == "optverify"):
   sketch_function_template = env.get_template("sketch_functions.j2")
-  sketch_function = sketch_function_template.render(mode = "optverif",
+  sketch_function = sketch_function_template.render(mode = "optverify",
                                                     program_file = program_file,
                                                     num_pipeline_stages = num_pipeline_stages,
                                                     num_alus_per_stage = num_alus_per_stage,
@@ -128,7 +128,7 @@ elif (mode == "optverif"):
                                                     hole_arguments = sketch_generator.hole_arguments_,
                                                     sketch_name = sketch_name)
   # Create files and write sketch_function, holes, and constraints into them.
-  sketch_file = open(sketch_name + ".sk", "w")
+  sketch_file = open(sketch_name + "_optverify.sk", "w")
   sketch_file.write(sketch_function)
   sketch_file.close()
   print("Sketch file is ", sketch_file.name)

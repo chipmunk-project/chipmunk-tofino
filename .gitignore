@@ -3,3 +3,5 @@ __pycache__
 *.holes
 *.success
 *.errors
+*_codegen.sk
+*_optverify.sk

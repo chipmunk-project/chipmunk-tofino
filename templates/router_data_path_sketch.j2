@@ -2,7 +2,7 @@
 |StateAndPacket| pipeline (|StateAndPacket| state_and_packet) implements program {
 // Consolidate all constraints on holes here.
 {{all_assertions}}
-{% elif mode == "optverif" %}
+{% elif mode == "optverify" %}
 |StateAndPacket| pipeline (|StateAndPacket| state_and_packet, {{hole_arguments|join(',')}}) {
 {% endif %}
   // One variable for each container in the PHV
