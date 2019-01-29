@@ -2,6 +2,7 @@ from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 from pathlib import Path
 import sys
 import pickle
+import subprocess
 
 # Read contents of file_name into a string
 def file_to_str(file_name):
@@ -18,7 +19,7 @@ else:
   num_state_vars      = int(sys.argv[5])
   env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
   opt_verify_template = env.get_template("opt_verify.j2")
-  opt_verifer         = opt_verify_template.render(sketch1_name = sketch1_name,
+  opt_verifier        = opt_verify_template.render(sketch1_name = sketch1_name,
                                                    sketch2_name = sketch2_name,
                                                    sketch1_file_name = sketch1_name + "_optverify.sk",
                                                    sketch2_file_name = sketch2_name + "_optverify.sk",
@@ -31,4 +32,24 @@ else:
                                                    num_fields_in_prog = num_fields_in_prog,
                                                    num_state_vars  = num_state_vars,
                                                    transform_function = file_to_str(transform_file))
-  print(opt_verifer)
+  print("Verifier file is ", sketch1_name + "_" + sketch2_name + "_verifier.sk")
+  verifier_file = sketch1_name + "_" + sketch2_name + "_verifier.sk"
+  verifier_file_handle = open(verifier_file, "w")
+  verifier_file_handle.write(opt_verifier)
+  verifier_file_handle.close()
+
+  # Call sketch on it
+  (ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 " + verifier_file)
+  if (ret_code != 0):
+    errors_file = open(verifier_file + ".errors", "w")
+    errors_file.write(output)
+    errors_file.close()
+    print("Verification failed. Output left in " + errors_file.name)
+    sys.exit(1)
+  else:
+    success_file = open(verifier_file + ".success", "w")
+    success_file.write(output)
+    success_file.close()
+    print("Verification succeeded. Output left in " + success_file.name)
+    sys.exit(0)
+
