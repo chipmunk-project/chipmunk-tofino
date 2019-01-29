@@ -5,5 +5,4 @@ __pycache__
 *.errors
 *_codegen.sk
 *_optverify.sk
-*.transform
 *_verifier.sk
