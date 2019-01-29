@@ -13,7 +13,7 @@ if (len(sys.argv) < 6):
 else:
   sketch1_name        = str(sys.argv[1])
   sketch2_name        = str(sys.argv[2])
-  transform_function  = str(sys.argv[3]) # TODO: Fill this up.
+  transform_file      = str(sys.argv[3])
   num_fields_in_prog  = int(sys.argv[4])
   num_state_vars      = int(sys.argv[5])
   env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
@@ -30,5 +30,5 @@ else:
                                                    sketch2_asserts = pickle.load(open(sketch2_name + ".constraints", "rb")),
                                                    num_fields_in_prog = num_fields_in_prog,
                                                    num_state_vars  = num_state_vars,
-                                                   transform_function = transform_function)
+                                                   transform_function = file_to_str(transform_file))
   print(opt_verifer)

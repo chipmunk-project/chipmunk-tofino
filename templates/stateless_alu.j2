@@ -1,4 +1,4 @@
-int {{ alu_name }}({{arg_list|join(',')}}, int opcode_hole_local, int immediate_operand_hole_local, int alu_mode_hole_local, int mux1_ctrl_hole_local, int mux2_ctrl_hole_local) {
+int {{sketch_name}}_{{ alu_name }}({{arg_list|join(',')}}, int opcode_hole_local, int immediate_operand_hole_local, int alu_mode_hole_local, int mux1_ctrl_hole_local, int mux2_ctrl_hole_local) {
   int opcode = opcode_hole_local;
   int immediate_operand = immediate_operand_hole_local;
   int alu_mode = alu_mode_hole_local;

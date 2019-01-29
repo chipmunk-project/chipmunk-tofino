@@ -47,7 +47,9 @@ class SketchGenerator:
                                                   alu_name = alu_name, opcode_hole = alu_name + "_opcode",
                                                   immediate_operand_hole = alu_name + "_immediate",
                                                   alu_mode_hole = alu_name + "_mode",
-                                                  mux1 = alu_name + "_mux1", mux2 = alu_name + "_mux2")
+                                                  mux1 = self.sketch_name_ + "_" + alu_name + "_mux1",
+                                                  mux2 = self.sketch_name_ + "_" + alu_name + "_mux2",
+                                                  sketch_name = self.sketch_name_)
     mux_op_1 = self.generate_mux(len(potential_operands), alu_name + "_mux1")
     mux_op_2 = self.generate_mux(len(potential_operands), alu_name + "_mux2")
     self.generate_hole(alu_name + "_opcode", 1)
@@ -75,7 +77,7 @@ class SketchGenerator:
     }
     return old_val;
   }
-  '''%(alu_name,
+  '''%(self.sketch_name_ + "_" + alu_name,
        "int " + alu_name + "_opcode_local", "int " + alu_name + "_immediate_local", "int " + alu_name + "_mode_local",
        alu_name + "_opcode_local", alu_name + "_immediate_local", alu_name + "_mode_local")
     self.generate_hole(alu_name + "_opcode", 1)
@@ -109,7 +111,7 @@ class SketchGenerator:
     assert(n > 1)
     num_bits = math.ceil(math.log(n, 2))
     operand_mux_template   = Template(Path("templates/mux.j2").read_text())
-    mux_code = operand_mux_template.render(mux_name = mux_name,
+    mux_code = operand_mux_template.render(mux_name = self.sketch_name_ + "_" + mux_name,
                                            operand_list = ["input" + str(i) for i in range(0, n)],
                                            arg_list = ["int input" + str(i) for i in range(0, n)],
                                            num_operands = n)

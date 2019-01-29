@@ -39,7 +39,7 @@
 
   // Stateless ALUs
   {% for alu_number in range(num_alus_per_stage) %}
-  int destination_{{stage_number}}_{{alu_number}} = stateless_alu_{{stage_number}}_{{alu_number}}(
+  int destination_{{stage_number}}_{{alu_number}} = {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}(
   {% for container_number in range(num_phv_containers) %}
   {% if container_number != num_phv_containers - 1 %}
   input_{{stage_number}}_{{container_number}},
@@ -57,7 +57,7 @@
 
   // Stateful operands
   {% for state_number in range(num_state_vars) %}
-  int packet_operand_salu{{stage_number}}_{{state_number}} = stateful_operand_mux_{{stage_number}}_{{state_number}}(
+  int packet_operand_salu{{stage_number}}_{{state_number}} = {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_number}}(
   {% for container_number in range(num_phv_containers) %}
   {% if container_number != num_phv_containers - 1 %}
   input_{{stage_number}}_{{container_number}},
@@ -79,7 +79,7 @@
 
   // Stateful ALUs
   {% for state_number in range(num_state_vars) %}
-  int old_state_{{stage_number}}_{{state_number}} = stateful_alu_{{stage_number}}_{{state_number}}(state_operand_salu_{{stage_number}}_{{state_number}}, packet_operand_salu{{stage_number}}_{{state_number}},
+  int old_state_{{stage_number}}_{{state_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_number}}(state_operand_salu_{{stage_number}}_{{state_number}}, packet_operand_salu{{stage_number}}_{{state_number}},
   {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_number}}_opcode,
   {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_number}}_immediate,
   {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_number}}_mode);
@@ -87,7 +87,7 @@
 
   // Outputs
   {% for container_number in range(num_phv_containers) %}
-  int output_{{stage_number}}_{{container_number}} = output_mux_phv_{{stage_number}}_{{container_number}}(
+  int output_{{stage_number}}_{{container_number}} = {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}(
   {% for state_number in range(num_state_vars) %}
   old_state_{{stage_number}}_{{state_number}},
   {% endfor %}
