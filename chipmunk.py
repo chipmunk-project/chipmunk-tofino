@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import math
 from   sketch_helpers import SketchGenerator
+from   chipmunk_pickle import ChipmunkPickle
 import re
 import subprocess
 import random
@@ -133,15 +134,15 @@ elif (mode == "optverify"):
   sketch_file.close()
   print("Sketch file is ", sketch_file.name)
 
-  holes_file   = open(sketch_name + ".holes", "wb")
-  pickle.dump([sketch_generator.holes_] + [sketch_generator.hole_arguments_], holes_file)
-  holes_file.close()
-  print("Holes file is ", holes_file.name)
-
-  constraints_file = open(sketch_name + ".constraints", "wb")
-  pickle.dump(sketch_generator.constraints_, constraints_file)
-  constraints_file.close()
-  print("Constraints file is ", constraints_file.name)
+  pickle_file   = open(sketch_name + ".pickle", "wb")
+  pickle.dump(ChipmunkPickle(holes = sketch_generator.holes_,
+                             hole_arguments = sketch_generator.hole_arguments_,
+                             constraints = sketch_generator.constraints_,
+                             num_fields_in_prog = num_fields_in_prog,
+                             num_state_vars = num_state_vars),
+              pickle_file)
+  pickle_file.close()
+  print("Pickle file is ", pickle_file.name)
 
   print("Total number of hole bits is", sketch_generator.total_hole_bits_)
 

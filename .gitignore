@@ -1,6 +1,6 @@
 __pycache__
-*.constraints
-*.holes
+*.pyc
+*.pickle
 *.success
 *.errors
 *_codegen.sk
