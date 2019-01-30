@@ -9,13 +9,9 @@ class Hole:
     self.name = hole_name
     self.max  = max_value
 
-# Read contents of file_name into a string
-def file_to_str(file_name):
-  return Path(file_name).read_text()
-
 # Sketch Generator class
 class SketchGenerator:
-  def __init__(self, sketch_name):
+  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages):
     self.sketch_name_ = sketch_name
     self.total_hole_bits_ = 0
     self.hole_names_ = []
@@ -24,6 +20,10 @@ class SketchGenerator:
     self.holes_ = []
     self.asserts_ = ""
     self.constraints_ = []
+    self.num_phv_containers_  = num_phv_containers
+    self.num_pipeline_stages_ = num_pipeline_stages
+    self.num_state_vars_      = num_state_vars
+    self.num_alus_per_stage_  = num_alus_per_stage
 
   # Write all holes to a single hole string for ease of debugging
   def generate_hole(self, hole_name, hole_bit_width):
@@ -87,21 +87,21 @@ class SketchGenerator:
     # add_assert(alu_name + "_mode" + "< 2")    # Comment out because assert is redundant.
     return stateful_alu
   
-  def generate_state_allocator(self, num_pipeline_stages, num_alus_per_stage, num_state_vars):
-    for i in range(num_pipeline_stages):
-      for l in range(num_state_vars):
+  def generate_state_allocator(self):
+    for i in range(self.num_pipeline_stages_):
+      for l in range(self.num_state_vars_):
         self.generate_hole("salu_config_" + str(i) + "_" + str(l), 1)
   
-    for i in range(num_pipeline_stages):
+    for i in range(self.num_pipeline_stages_):
       assert_predicate = "("
-      for l in range(num_state_vars):
+      for l in range(self.num_state_vars_):
         assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(i) + "_" + str(l) + " + "
-      assert_predicate += "0) <= " + str(num_alus_per_stage)
+      assert_predicate += "0) <= " + str(self.num_alus_per_stage_)
       self.add_assert(assert_predicate)
   
-    for l in range(num_state_vars):
+    for l in range(self.num_state_vars_):
       assert_predicate = "("
-      for i in range(num_pipeline_stages):
+      for i in range(self.num_pipeline_stages_):
         assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(i) + "_" + str(l) + " + "
       assert_predicate += "0) <= 1"
       self.add_assert(assert_predicate)
@@ -118,3 +118,36 @@ class SketchGenerator:
     self.generate_hole(mux_name + "_ctrl", num_bits)
     self.add_assert(self.sketch_name_ + "_" + mux_name + "_ctrl" + " < " + str(n))
     return mux_code
+
+  # Stateful operand muxes (stateless ones are part of generate_stateless_alu)
+  def generate_stateful_operand_muxes(self):
+    ret = ""
+    # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
+    for i in range(self.num_pipeline_stages_):
+      for l in range(self.num_state_vars_):
+        ret += self.generate_mux(self.num_phv_containers_, "stateful_operand_mux_" + str(i) + "_" + str(l)) + "\n"
+    return ret
+
+  # Output muxes to pick between stateful ALUs and stateless ALU
+  def generate_output_muxes(self):
+    # Note: We are generating a mux that takes as input all virtual stateful ALUs + corresponding stateless ALU
+    # The number of virtual stateful ALUs is more or less than the physical stateful ALUs because it equals the
+    # number of state variables in the program_file, but this doesn't affect correctness
+    # because we enforce that the total number of active virtual stateful ALUs is within the physical limit.
+    # It also doesn't affect the correctness of modeling the output mux because the virtual output mux setting can be
+    # translated into the physical output mux setting during post processing.
+    ret = ""
+    for i in range(self.num_pipeline_stages_):
+      for k in range(self.num_phv_containers_):
+        ret += self.generate_mux(self.num_state_vars_ + 1, "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
+    return ret
+
+  def generate_alus(self):
+    # Generate sketch code for alus and immediate operands in each stage
+    ret = ""
+    for i in range(self.num_pipeline_stages_):
+      for j in range(self.num_alus_per_stage_):
+       ret += self.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j), ["input" + str(k) for k in range(0, self.num_phv_containers_)]) + "\n"
+      for l in range(self.num_state_vars_):
+       ret += self.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
+    return ret

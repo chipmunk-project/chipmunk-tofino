@@ -2,7 +2,7 @@ from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 import pickle
 from pathlib import Path
 import sys
-from   sketch_helpers import SketchGenerator
+from   sketch_generator import SketchGenerator
 from   chipmunk_pickle import ChipmunkPickle
 import re
 import subprocess
@@ -34,40 +34,20 @@ else:
   sketch_name          = str(sys.argv[5])
 
 # Create an object for sketch generation
-sketch_generator = SketchGenerator(sketch_name = sketch_name)
+sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars)
 
-operand_mux_definitions = ""
-output_mux_definitions  = ""
-alu_definitions         = ""
-# Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
-for i in range(num_pipeline_stages):
-  for l in range(num_state_vars):
-    operand_mux_definitions += sketch_generator.generate_mux(num_phv_containers, "stateful_operand_mux_" + str(i) + "_" + str(l)) + "\n"
+# Create operand muxes for stateful ALUs, output muxes, and stateless and stateful ALUs
+stateful_operand_mux_definitions = sketch_generator.generate_stateful_operand_muxes()
+output_mux_definitions           = sketch_generator.generate_output_muxes()
+alu_definitions                  = sketch_generator.generate_alus()
 
-# Output mux for stateful ALUs
-for i in range(num_pipeline_stages):
-  for k in range(num_phv_containers):
-    # Note: We are generating a mux that takes as input all virtual stateful ALUs + corresponding stateless ALU
-    # The number of virtual stateful ALUs is more or less than the physical stateful ALUs because it equals the
-    # number of state variables in the program_file, but this doesn't affect correctness
-    # because we enforce that the total number of active virtual stateful ALUs is within the physical limit.
-    # It also doesn't affect the correctness of modeling the output mux because the virtual output mux setting can be
-    # translated into the physical output mux setting during post processing.
-    output_mux_definitions += sketch_generator.generate_mux(num_state_vars + 1, "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
+# Create allocator to ensure each state var is assigned to exactly stateful ALU and vice versa.
+sketch_generator.generate_state_allocator()
 
-# Generate sketch code for alus and immediate operands in each stage
-for i in range(num_pipeline_stages):
-  for j in range(num_alus_per_stage):
-    alu_definitions += sketch_generator.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j), ["input" + str(k) for k in range(0, num_phv_containers)]) + "\n"
-  for l in range(num_state_vars):
-    alu_definitions += sketch_generator.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
-
-# Ensures each state var is assigned to exactly stateful ALU and vice versa.
-sketch_generator.generate_state_allocator(num_pipeline_stages, num_alus_per_stage, num_state_vars)
-
-# Create sketch_file_as_string
+# Initialize jinja2 environment for templates
 env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
 
+# Now fill the appropriate template holes using the components created using sketch_generator
 if (mode == "codegen"):
   code_gen_template = env.get_template("code_generator.j2")
   code_generator = code_gen_template.render(mode = "codegen",
@@ -77,7 +57,7 @@ if (mode == "codegen"):
                                             num_alus_per_stage = num_alus_per_stage,
                                             num_phv_containers = num_phv_containers,
                                             hole_definitions = sketch_generator.hole_preamble_,
-                                            operand_mux_definitions = operand_mux_definitions,
+                                            stateful_operand_mux_definitions = stateful_operand_mux_definitions,
                                             output_mux_definitions = output_mux_definitions,
                                             alu_definitions = alu_definitions,
                                             num_fields_in_prog = num_fields_in_prog,
@@ -120,7 +100,7 @@ else:
                                                     num_pipeline_stages = num_pipeline_stages,
                                                     num_alus_per_stage = num_alus_per_stage,
                                                     num_phv_containers = num_phv_containers,
-                                                    operand_mux_definitions = operand_mux_definitions,
+                                                    stateful_operand_mux_definitions = stateful_operand_mux_definitions,
                                                     output_mux_definitions = output_mux_definitions,
                                                     alu_definitions = alu_definitions,
                                                     num_fields_in_prog = num_fields_in_prog,
