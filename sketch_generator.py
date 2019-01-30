@@ -44,7 +44,8 @@ class SketchGenerator:
     stateless_alu_template = self.jinja2_env_.get_template("stateless_alu.j2")
     stateless_alu = stateless_alu_template.render(potential_operands = potential_operands,
                                                   arg_list = ["int " + x for x in potential_operands],
-                                                  alu_name = alu_name, opcode_hole = alu_name + "_opcode",
+                                                  alu_name = self.sketch_name_ + "_" + alu_name,
+                                                  opcode_hole = alu_name + "_opcode",
                                                   immediate_operand_hole = alu_name + "_immediate",
                                                   alu_mode_hole = alu_name + "_mode",
                                                   mux1 = self.sketch_name_ + "_" + alu_name + "_mux1",
@@ -55,7 +56,8 @@ class SketchGenerator:
     self.generate_hole(alu_name + "_opcode", 1)
     self.generate_hole(alu_name + "_immediate", 2)
     self.generate_hole(alu_name + "_mode", 2)
-    self.add_assert(self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " + self.sketch_name_ + "_" + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
+    self.add_assert(self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
+                    self.sketch_name_ + "_" + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
     # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant
     self.add_assert(self.sketch_name_ + "_" + alu_name + "_mode" + " < 3")
     return mux_op_1 + mux_op_2 + stateless_alu
