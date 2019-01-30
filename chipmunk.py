@@ -33,8 +33,11 @@ else:
   assert((mode == "codegen") or (mode == "optverify"))
   sketch_name          = str(sys.argv[5])
 
+# Initialize jinja2 environment for templates
+env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
+
 # Create an object for sketch generation
-sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars)
+sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, jinja2_env = env)
 
 # Create operand muxes for stateful ALUs, output muxes, and stateless and stateful ALUs
 stateful_operand_mux_definitions = sketch_generator.generate_stateful_operand_muxes()
@@ -43,9 +46,6 @@ alu_definitions                  = sketch_generator.generate_alus()
 
 # Create allocator to ensure each state var is assigned to exactly stateful ALU and vice versa.
 sketch_generator.generate_state_allocator()
-
-# Initialize jinja2 environment for templates
-env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
 
 # Now fill the appropriate template holes using the components created using sketch_generator
 if (mode == "codegen"):

@@ -1,6 +1,5 @@
 # Helper functions to generate sketch code for synthesis
 from jinja2 import Template
-from pathlib import Path
 import math
 import sys
 
@@ -11,7 +10,7 @@ class Hole:
 
 # Sketch Generator class
 class SketchGenerator:
-  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages):
+  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages, jinja2_env):
     self.sketch_name_ = sketch_name
     self.total_hole_bits_ = 0
     self.hole_names_ = []
@@ -24,6 +23,7 @@ class SketchGenerator:
     self.num_pipeline_stages_ = num_pipeline_stages
     self.num_state_vars_      = num_state_vars
     self.num_alus_per_stage_  = num_alus_per_stage
+    self.jinja2_env_ = jinja2_env
 
   # Write all holes to a single hole string for ease of debugging
   def generate_hole(self, hole_name, hole_bit_width):
@@ -40,8 +40,8 @@ class SketchGenerator:
 
   # Generate Sketch code for a simple stateless alu (+,-,*,/) 
   def generate_stateless_alu(self, alu_name, potential_operands):
-    operand_mux_template   = Template(Path("templates/mux.j2").read_text())
-    stateless_alu_template = Template(Path("templates/stateless_alu.j2").read_text())
+    operand_mux_template   = self.jinja2_env_.get_template("mux.j2")
+    stateless_alu_template = self.jinja2_env_.get_template("stateless_alu.j2")
     stateless_alu = stateless_alu_template.render(potential_operands = potential_operands,
                                                   arg_list = ["int " + x for x in potential_operands],
                                                   alu_name = alu_name, opcode_hole = alu_name + "_opcode",
@@ -110,7 +110,7 @@ class SketchGenerator:
   def generate_mux(self, n, mux_name):
     assert(n > 1)
     num_bits = math.ceil(math.log(n, 2))
-    operand_mux_template   = Template(Path("templates/mux.j2").read_text())
+    operand_mux_template   = self.jinja2_env_.get_template("mux.j2")
     mux_code = operand_mux_template.render(mux_name = self.sketch_name_ + "_" + mux_name,
                                            operand_list = ["input" + str(i) for i in range(0, n)],
                                            arg_list = ["int input" + str(i) for i in range(0, n)],
