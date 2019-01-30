@@ -2,6 +2,7 @@
 from jinja2 import Template
 import math
 import sys
+from pathlib import Path
 
 class Hole:
   def __init__(self, hole_name, max_value):
@@ -10,7 +11,7 @@ class Hole:
 
 # Sketch Generator class
 class SketchGenerator:
-  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages, jinja2_env):
+  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages, num_fields_in_prog, jinja2_env):
     self.sketch_name_ = sketch_name
     self.total_hole_bits_ = 0
     self.hole_names_ = []
@@ -23,6 +24,7 @@ class SketchGenerator:
     self.num_pipeline_stages_ = num_pipeline_stages
     self.num_state_vars_      = num_state_vars
     self.num_alus_per_stage_  = num_alus_per_stage
+    self.num_fields_in_prog_  = num_fields_in_prog
     self.jinja2_env_ = jinja2_env
 
   # Write all holes to a single hole string for ease of debugging
@@ -149,3 +151,23 @@ class SketchGenerator:
       for l in range(self.num_state_vars_):
        ret += self.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
     return ret
+
+  def generate_sketch(self, program_file, alu_definitions, output_mux_definitions,
+                      stateful_operand_mux_definitions, mode):
+    template = (self.jinja2_env_.get_template("code_generator.j2") if mode == "codegen"
+                else self.jinja2_env_.get_template("sketch_functions.j2"))
+    return template.render(mode = mode,
+                           sketch_name = self.sketch_name_,
+                           program_file = program_file,
+                           num_pipeline_stages = self.num_pipeline_stages_,
+                           num_alus_per_stage = self.num_alus_per_stage_,
+                           num_phv_containers = self.num_phv_containers_,
+                           hole_definitions = self.hole_preamble_,
+                           stateful_operand_mux_definitions = stateful_operand_mux_definitions,
+                           output_mux_definitions = output_mux_definitions,
+                           alu_definitions = alu_definitions,
+                           num_fields_in_prog = self.num_fields_in_prog_,
+                           num_state_vars = self.num_state_vars_,
+                           spec_as_sketch = Path(program_file).read_text(),
+                           all_assertions = self.asserts_,
+                           hole_arguments = self.hole_arguments_)

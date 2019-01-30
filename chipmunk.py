@@ -37,7 +37,7 @@ else:
 env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
 
 # Create an object for sketch generation
-sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, jinja2_env = env)
+sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, num_fields_in_prog = num_fields_in_prog, jinja2_env = env)
 
 # Create operand muxes for stateful ALUs, output muxes, and stateless and stateful ALUs
 stateful_operand_mux_definitions = sketch_generator.generate_stateful_operand_muxes()
@@ -49,25 +49,14 @@ sketch_generator.generate_state_allocator()
 
 # Now fill the appropriate template holes using the components created using sketch_generator
 if (mode == "codegen"):
-  code_gen_template = env.get_template("code_generator.j2")
-  code_generator = code_gen_template.render(mode = "codegen",
-                                            sketch_name = sketch_name,
-                                            program_file = program_file,
-                                            num_pipeline_stages = num_pipeline_stages,
-                                            num_alus_per_stage = num_alus_per_stage,
-                                            num_phv_containers = num_phv_containers,
-                                            hole_definitions = sketch_generator.hole_preamble_,
-                                            stateful_operand_mux_definitions = stateful_operand_mux_definitions,
-                                            output_mux_definitions = output_mux_definitions,
-                                            alu_definitions = alu_definitions,
-                                            num_fields_in_prog = num_fields_in_prog,
-                                            num_state_vars = num_state_vars,
-                                            spec_as_sketch = Path(program_file).read_text(),
-                                            all_assertions = sketch_generator.asserts_)
+  codegen_code = sketch_generator.generate_sketch(program_file = program_file,
+                 alu_definitions = alu_definitions,
+                 stateful_operand_mux_definitions = stateful_operand_mux_definitions, mode = mode,
+                 output_mux_definitions = output_mux_definitions)
 
   # Create file and write sketch_harness into it.
   sketch_file = open(sketch_name + "_codegen.sk", "w")
-  sketch_file.write(code_generator)
+  sketch_file.write(codegen_code)
   sketch_file.close()
 
   # Call sketch on it
@@ -94,22 +83,14 @@ if (mode == "codegen"):
 
 else:
   assert(mode == "optverify")
-  sketch_function_template = env.get_template("sketch_functions.j2")
-  sketch_function = sketch_function_template.render(mode = "optverify",
-                                                    program_file = program_file,
-                                                    num_pipeline_stages = num_pipeline_stages,
-                                                    num_alus_per_stage = num_alus_per_stage,
-                                                    num_phv_containers = num_phv_containers,
-                                                    stateful_operand_mux_definitions = stateful_operand_mux_definitions,
-                                                    output_mux_definitions = output_mux_definitions,
-                                                    alu_definitions = alu_definitions,
-                                                    num_fields_in_prog = num_fields_in_prog,
-                                                    num_state_vars = num_state_vars,
-                                                    hole_arguments = sketch_generator.hole_arguments_,
-                                                    sketch_name = sketch_name)
+  optverify_code = sketch_generator.generate_sketch(program_file = program_file,
+                   alu_definitions = alu_definitions,
+                   stateful_operand_mux_definitions = stateful_operand_mux_definitions, mode = mode,
+                   output_mux_definitions = output_mux_definitions)
+
   # Create file and write sketch_function into it
   sketch_file = open(sketch_name + "_optverify.sk", "w")
-  sketch_file.write(sketch_function)
+  sketch_file.write(optverify_code)
   sketch_file.close()
   print("Sketch file is ", sketch_file.name)
 
