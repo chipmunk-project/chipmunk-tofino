@@ -2,13 +2,10 @@ from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 import pickle
 from pathlib import Path
 import sys
-import math
 from   sketch_helpers import SketchGenerator
 from   chipmunk_pickle import ChipmunkPickle
 import re
 import subprocess
-import random
-import tempfile
 
 # Use a regex to scan the program and extract the largest packet field index and largest state variable index
 def get_num_pkt_fields_and_state_vars(program):
@@ -33,6 +30,7 @@ else:
   num_phv_containers   = num_alus_per_stage
   assert(num_fields_in_prog <= num_phv_containers)
   mode                 = str(sys.argv[4])
+  assert((mode == "codegen") or (mode == "optverify"))
   sketch_name          = str(sys.argv[5])
 
 # Create an object for sketch generation
@@ -114,7 +112,8 @@ if (mode == "codegen"):
     print("Sketch succeeded. Generated configuration is given above. Output left in " + success_file.name)
     sys.exit(0)
 
-elif (mode == "optverify"):
+else:
+  assert(mode == "optverify")
   sketch_function_template = env.get_template("sketch_functions.j2")
   sketch_function = sketch_function_template.render(mode = "optverify",
                                                     program_file = program_file,
@@ -128,12 +127,13 @@ elif (mode == "optverify"):
                                                     num_state_vars = num_state_vars,
                                                     hole_arguments = sketch_generator.hole_arguments_,
                                                     sketch_name = sketch_name)
-  # Create files and write sketch_function, holes, and constraints into them.
+  # Create file and write sketch_function into it
   sketch_file = open(sketch_name + "_optverify.sk", "w")
   sketch_file.write(sketch_function)
   sketch_file.close()
   print("Sketch file is ", sketch_file.name)
 
+  # Put the rest (holes, hole arguments, constraints, etc.) into a .pickle file.
   pickle_file   = open(sketch_name + ".pickle", "wb")
   pickle.dump(ChipmunkPickle(holes = sketch_generator.holes_,
                              hole_arguments = sketch_generator.hole_arguments_,
@@ -145,6 +145,3 @@ elif (mode == "optverify"):
   print("Pickle file is ", pickle_file.name)
 
   print("Total number of hole bits is", sketch_generator.total_hole_bits_)
-
-else:
-  assert(False)
