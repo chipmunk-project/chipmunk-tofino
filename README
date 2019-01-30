@@ -1,0 +1,9 @@
+Example of code generation:
+
+python3 chipmunk.py example_specs/simple.sk 2 2 codegen sample1
+
+Example of optimization verification:
+
+python3 chipmunk.py example_specs/simple.sk 1 2 optverify sample1
+python3 chipmunk.py example_specs/simple.sk 1 2 optverify sample2
+python3 optverify.py sample1 sample2 example_transforms/sample.transform 
