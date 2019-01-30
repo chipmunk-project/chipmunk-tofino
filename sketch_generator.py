@@ -45,12 +45,8 @@ class SketchGenerator:
     stateless_alu = stateless_alu_template.render(potential_operands = potential_operands,
                                                   arg_list = ["int " + x for x in potential_operands],
                                                   alu_name = self.sketch_name_ + "_" + alu_name,
-                                                  opcode_hole = alu_name + "_opcode",
-                                                  immediate_operand_hole = alu_name + "_immediate",
-                                                  alu_mode_hole = alu_name + "_mode",
                                                   mux1 = self.sketch_name_ + "_" + alu_name + "_mux1",
-                                                  mux2 = self.sketch_name_ + "_" + alu_name + "_mux2",
-                                                  sketch_name = self.sketch_name_)
+                                                  mux2 = self.sketch_name_ + "_" + alu_name + "_mux2")
     mux_op_1 = self.generate_mux(len(potential_operands), alu_name + "_mux1")
     mux_op_2 = self.generate_mux(len(potential_operands), alu_name + "_mux2")
     self.generate_hole(alu_name + "_opcode", 1)
