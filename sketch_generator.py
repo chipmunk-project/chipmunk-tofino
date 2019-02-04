@@ -29,6 +29,7 @@ class SketchGenerator:
 
   # Write all holes to a single hole string for ease of debugging
   def generate_hole(self, hole_name, hole_bit_width):
+    assert(hole_bit_width >= 0)
     qualified_hole_name = self.sketch_name_ + "_" + hole_name
     self.hole_names_ += [qualified_hole_name]
     self.hole_preamble_ += "int " + qualified_hole_name + "= ??(" + str(hole_bit_width) + ");\n"
@@ -108,7 +109,7 @@ class SketchGenerator:
   
   # Sketch code for an n-to-1 mux
   def generate_mux(self, n, mux_name):
-    assert(n > 1)
+    assert(n >= 1)
     num_bits = math.ceil(math.log(n, 2))
     operand_mux_template   = self.jinja2_env_.get_template("mux.j2")
     mux_code = operand_mux_template.render(mux_name = self.sketch_name_ + "_" + mux_name,
