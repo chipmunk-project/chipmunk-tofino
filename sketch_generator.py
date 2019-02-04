@@ -147,9 +147,9 @@ class SketchGenerator:
     ret = ""
     for i in range(self.num_pipeline_stages_):
       for j in range(self.num_alus_per_stage_):
-       ret += self.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j), ["input" + str(k) for k in range(0, self.num_phv_containers_)]) + "\n"
+        ret += self.generate_stateless_alu("stateless_alu_" + str(i) + "_" + str(j), ["input" + str(k) for k in range(0, self.num_phv_containers_)]) + "\n"
       for l in range(self.num_state_vars_):
-       ret += self.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
+        ret += self.generate_stateful_alu("stateful_alu_" + str(i) + "_" + str(l)) + "\n"
     return ret
 
   def generate_sketch(self, program_file, alu_definitions, output_mux_definitions,
