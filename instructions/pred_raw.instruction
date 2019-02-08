@@ -1,0 +1,4 @@
+state_1, state_2
+pkt_1, pkt_2, pkt_3, pkt_4, pkt_5
+
+rel_op(Opt(state_1), Mux3(pkt_1, pkt_2, C())) : state_1 = Opt(state_1) + Mux3(pkt_1, pkt_2, C())
