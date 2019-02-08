@@ -7,6 +7,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     self.mux2Count = 0
     self.relopCount = 0
     self.optCount = 0
+    self.constCount = 0
     self.helperFunctionStrings = "\n\n\n"
     self.globalholes = ""
     self.mainFunction = ""
@@ -15,10 +16,11 @@ class ChipmunkAluGenVisitor(instructionVisitor):
   def visitInstruction(self, ctx):
     self.mainFunction += "int atom("
     self.visit(ctx.getChild(0))
+    self.mainFunction += ", "
     self.visit(ctx.getChild(1))
-    self.mainFunction += ") {\n   "
+    self.mainFunction += ") {\n int old_state = state_1;"
     self.visit(ctx.getChild(2))
-    self.mainFunction += "\n}"
+    self.mainFunction += "\n; return old_state;\n}"
 
 
   def visitState_var(self, ctx):
@@ -31,6 +33,24 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     self.mainFunction += ','
     self.mainFunction += "ref int "
     self.visit(ctx.getChild(1))
+
+  def visitPacket_field(self, ctx):
+     self.mainFunction += ctx.getText()
+
+  def visitPacket_fields(self, ctx):
+    self.mainFunction += "int "
+    self.visit(ctx.getChild(0))
+    self.mainFunction += ','
+    self.mainFunction += "int "
+    self.visit(ctx.getChild(1))
+
+  def visitState_vars(self, ctx):
+    self.mainFunction +=  "ref int "
+    self.visit(ctx.getChild(0))
+    self.mainFunction += ','
+    self.mainFunction += "ref int "
+    self.visit(ctx.getChild(1))
+
 
 
 
@@ -77,8 +97,10 @@ class ChipmunkAluGenVisitor(instructionVisitor):
 
 
   def visitConstant(self, ctx):
-    self.mainFunction += ctx.getText()
-
+    self.mainFunction += "C_" + str(self.constCount) + "("
+    self.mainFunction += ")"
+    self.generateConstant()
+    self.constCount += 1
 
   def visitPacketField(self, ctx):
     self.mainFunction += ctx.getText()
@@ -97,7 +119,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     self.mainFunction += ")"
     self.mainFunction += "{\n\t"
     self.visit(ctx.getChild(2))
-    self.mainFunction += "\n}"
+    self.mainFunction += ";\n}"
 
   def visitExprWithOp(self, ctx):
     self.visit(ctx.getChild(0))
@@ -106,7 +128,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
 
   def generate2Mux(self):
     self.helperFunctionStrings += """int Mux2_""" + str(self.mux2Count) +  """(int op1, int op2) {
-    int choice = Mux2_""" + str(self.mux2Count) +  "_hole" """
+    int choice = Mux2_""" + str(self.mux2Count) +  "_hole;" """
     if (choice == 0) return op1;
     else if (choice == 1) return op2;
     } \n\n"""
@@ -115,7 +137,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
 
   def generate3Mux(self):
     self.helperFunctionStrings += """int Mux3_""" + str(self.mux3Count) + """(int op1, int op2, int op3) {
-    int choice = Mux3_""" + str(self.mux3Count) +  "_hole" """
+    int choice = Mux3_""" + str(self.mux3Count) +  "_hole;" """
     if (choice == 0) return op1;
     else if (choice == 1) return op2;
     else if (choice == 2) return op3;
@@ -127,7 +149,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
 
   def generateRelOp(self):
     self.helperFunctionStrings += """bit rel_op_""" + str(self.relopCount) + """(int operand1, int operand2) {
-    int opcode = rel_op_""" + str(self.relopCount) + """_hole
+    int opcode = rel_op_""" + str(self.relopCount) + """_hole;
     if (opcode == 0) {
       return operand1 != operand2;
     } else if (opcode == 1) {
@@ -142,11 +164,16 @@ class ChipmunkAluGenVisitor(instructionVisitor):
 
     self.globalholes += "int rel_op_" + str(self.relopCount) + "_hole = ??(2);\n" 
 
-  
+  def generateConstant(self):
+    self.helperFunctionStrings += """int C_""" + str(self.constCount) + """() {
+    return const_""" + str(self.constCount) + """_hole;
+    }\n\n"""
+
+    self.globalholes += "int const_" + str(self.constCount) + "_hole = ??(2);\n" 
 
   def generateOpt(self):
     self.helperFunctionStrings += """int Opt_""" + str(self.optCount) + """(int op1) {
-    bit enable = opt_""" + str(self.optCount) + "_hole""" + """
+    bit enable = opt_""" + str(self.optCount) + "_hole;""" + """
     if (! enable) return 0;
     return op1;
     } \n\n"""
