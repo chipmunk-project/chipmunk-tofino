@@ -13,7 +13,8 @@ def main(argv):
     tree = parser.instruction()
     chipmunk_alu_gen_visitor = ChipmunkAluGenVisitor(instruction_file)
     chipmunk_alu_gen_visitor.visit(tree)
-    print(chipmunk_alu_gen_visitor.globalholes)
+    for hole in chipmunk_alu_gen_visitor.globalholes:
+      print("int ", hole, " = ", "??(" + str(chipmunk_alu_gen_visitor.globalholes[hole]) + ");\n")
     print(chipmunk_alu_gen_visitor.helperFunctionStrings)
     print(chipmunk_alu_gen_visitor.mainFunction)
     

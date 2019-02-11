@@ -9,9 +9,12 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     self.optCount = 0
     self.constCount = 0
     self.helperFunctionStrings = "\n\n\n"
-    self.globalholes = ""
+    self.globalholes = dict()
     self.mainFunction = ""
 
+  def add_hole(self, hole_name, hole_width):
+    assert(hole_name not in self.globalholes)
+    self.globalholes[hole_name] = hole_width
 
   def visitInstruction(self, ctx):
     self.mainFunction += "int atom("
@@ -133,8 +136,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     if (choice == 0) return op1;
     else if (choice == 1) return op2;
     } \n\n"""
-
-    self.globalholes += "int Mux2_" + str(self.mux2Count) + "_hole = ??(2);\n" 
+    self.add_hole("Mux2_" + str(self.mux2Count) + "_hole", 2);
 
   def generate3Mux(self):
     self.helperFunctionStrings += """int Mux3_""" + str(self.mux3Count) + """(int op1, int op2, int op3) {
@@ -144,9 +146,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     else if (choice == 2) return op3;
     else assert(false);
     } \n\n"""
-
-    self.globalholes += "int Mux3_" + str(self.mux3Count) + "_hole = ??(2);\n"  
-      
+    self.add_hole("Mux3_" + str(self.mux3Count) + "_hole", 2)
 
   def generateRelOp(self):
     self.helperFunctionStrings += """bit rel_op_""" + str(self.relopCount) + """(int operand1, int operand2) {
@@ -162,15 +162,13 @@ class ChipmunkAluGenVisitor(instructionVisitor):
       return operand1 == operand2;
     }
     } \n\n"""
-
-    self.globalholes += "int rel_op_" + str(self.relopCount) + "_hole = ??(2);\n" 
+    self.add_hole("rel_op_" + str(self.relopCount) + "_hole", 2)
 
   def generateConstant(self):
     self.helperFunctionStrings += """int C_""" + str(self.constCount) + """() {
     return const_""" + str(self.constCount) + """_hole;
     }\n\n"""
-
-    self.globalholes += "int const_" + str(self.constCount) + "_hole = ??(2);\n" 
+    self.add_hole("const_" + str(self.constCount) + "_hole", 2)
 
   def generateOpt(self):
     self.helperFunctionStrings += """int Opt_""" + str(self.optCount) + """(int op1) {
@@ -178,5 +176,4 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     if (! enable) return 0;
     return op1;
     } \n\n"""
-    
-    self.globalholes += "int opt_" + str(self.optCount) + "_hole = ??(1);\n"
+    self.add_hole("opt_" + str(self.optCount) + "_hole", 1)
