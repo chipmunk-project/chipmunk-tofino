@@ -40,19 +40,18 @@ class ChipmunkAluGenVisitor(instructionVisitor):
   def visitPacket_fields(self, ctx):
     self.mainFunction += "int "
     self.visit(ctx.getChild(0))
-    self.mainFunction += ','
-    self.mainFunction += "int "
-    self.visit(ctx.getChild(1))
+    if (ctx.getChildCount() > 1):
+      self.mainFunction += ','
+      self.mainFunction += "int "
+      self.visit(ctx.getChild(1))
 
   def visitState_vars(self, ctx):
     self.mainFunction +=  "ref int "
     self.visit(ctx.getChild(0))
-    self.mainFunction += ','
-    self.mainFunction += "ref int "
-    self.visit(ctx.getChild(1))
-
-
-
+    if (ctx.getChildCount() > 1):
+      self.mainFunction += ','
+      self.mainFunction += "ref int "
+      self.visit(ctx.getChild(1))
 
   def visitMux2(self, ctx):
     self.mainFunction += "Mux2_" + str(self.mux2Count) + "("
@@ -95,6 +94,8 @@ class ChipmunkAluGenVisitor(instructionVisitor):
     self.generateRelOp()
     self.relopCount += 1
 
+  def visitTrue(self, ctx):
+    self.mainFunction += "true"
 
   def visitConstant(self, ctx):
     self.mainFunction += "C_" + str(self.constCount) + "("
