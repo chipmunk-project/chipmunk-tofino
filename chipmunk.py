@@ -19,25 +19,26 @@ def get_num_pkt_fields_and_state_vars(program):
 # k : PHV container within pipeline stage
 # l : packet field or state variable from program
 
-if (len(sys.argv) < 6):
-  print("Usage: python3 " + sys.argv[0] + " <program file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)>")
+if (len(sys.argv) < 7):
+  print("Usage: python3 " + sys.argv[0] + " <program file> <instruction file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
   (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(Path(program_file).read_text())
-  num_pipeline_stages  = int(sys.argv[2])
-  num_alus_per_stage   = int(sys.argv[3])
+  instruction_file     = str(sys.argv[2])
+  num_pipeline_stages  = int(sys.argv[3])
+  num_alus_per_stage   = int(sys.argv[4])
   num_phv_containers   = num_alus_per_stage
   assert(num_fields_in_prog <= num_phv_containers)
-  mode                 = str(sys.argv[4])
+  mode                 = str(sys.argv[5])
   assert((mode == "codegen") or (mode == "optverify"))
-  sketch_name          = str(sys.argv[5])
+  sketch_name          = str(sys.argv[6])
 
 # Initialize jinja2 environment for templates
 env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
 
 # Create an object for sketch generation
-sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, num_fields_in_prog = num_fields_in_prog, jinja2_env = env)
+sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, num_fields_in_prog = num_fields_in_prog, jinja2_env = env, instruction_file = instruction_file)
 
 # Create operand muxes for stateful ALUs, output muxes, and stateless and stateful ALUs
 stateful_operand_mux_definitions = sketch_generator.generate_stateful_operand_muxes()

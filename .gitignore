@@ -6,3 +6,11 @@ __pycache__
 *_codegen.sk
 *_optverify.sk
 *_verifier.sk
+*.class
+*.java
+*.interp
+*.tokens
+*Lexer.py
+*Parser.py
+*Visitor.py
+*Listener.py

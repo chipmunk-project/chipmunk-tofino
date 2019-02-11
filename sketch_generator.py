@@ -3,15 +3,22 @@ from jinja2 import Template
 import math
 import sys
 from pathlib import Path
+from instructionLexer import instructionLexer
+from instructionParser import instructionParser
+from chipmunk_alu_gen_visitor import ChipmunkAluGenVisitor
+from antlr4 import *
 
 class Hole:
   def __init__(self, hole_name, max_value):
     self.name = hole_name
     self.max  = max_value
 
+def add_prefix_suffix(text, prefix_string, suffix_string):
+  return prefix_string + text + suffix_string
+
 # Sketch Generator class
 class SketchGenerator:
-  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages, num_fields_in_prog, jinja2_env):
+  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages, num_fields_in_prog, jinja2_env, instruction_file):
     self.sketch_name_ = sketch_name
     self.total_hole_bits_ = 0
     self.hole_names_ = []
@@ -26,16 +33,22 @@ class SketchGenerator:
     self.num_alus_per_stage_  = num_alus_per_stage
     self.num_fields_in_prog_  = num_fields_in_prog
     self.jinja2_env_ = jinja2_env
+    self.jinja2_env_.filters["add_prefix_suffix"] = add_prefix_suffix
+    self.instruction_file_ = instruction_file
 
   # Write all holes to a single hole string for ease of debugging
-  def generate_hole(self, hole_name, hole_bit_width):
+  def add_hole(self, hole_name, hole_bit_width):
     assert(hole_bit_width >= 0)
-    qualified_hole_name = self.sketch_name_ + "_" + hole_name
-    self.hole_names_ += [qualified_hole_name]
-    self.hole_preamble_ += "int " + qualified_hole_name + "= ??(" + str(hole_bit_width) + ");\n"
+    self.hole_names_ += [hole_name]
+    self.hole_preamble_ += "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
     self.total_hole_bits_ += hole_bit_width
-    self.hole_arguments_ += ["int " + qualified_hole_name]
-    self.holes_ += [Hole(qualified_hole_name, 2**hole_bit_width)]
+    self.hole_arguments_ += ["int " + hole_name]
+    self.holes_ += [Hole(hole_name, 2**hole_bit_width)]
+
+  # Write several holes from a dictionary (new_holes) into self.holes_
+  def add_holes(self, new_holes):
+    for hole in new_holes:
+      self.add_hole(hole, new_holes[hole])
   
   def add_assert(self, assert_predicate):
     self.asserts_ += "assert(" + assert_predicate + ");\n"
@@ -52,46 +65,34 @@ class SketchGenerator:
                                                   mux2 = self.sketch_name_ + "_" + alu_name + "_mux2")
     mux_op_1 = self.generate_mux(len(potential_operands), alu_name + "_mux1")
     mux_op_2 = self.generate_mux(len(potential_operands), alu_name + "_mux2")
-    self.generate_hole(alu_name + "_opcode", 1)
-    self.generate_hole(alu_name + "_immediate", 2)
-    self.generate_hole(alu_name + "_mode", 2)
+    self.add_hole(self.sketch_name_ + "_" + alu_name + "_opcode", 1)
+    self.add_hole(self.sketch_name_ + "_" + alu_name + "_immediate", 2)
+    self.add_hole(self.sketch_name_ + "_" + alu_name + "_mode", 2)
     self.add_assert(self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
                     self.sketch_name_ + "_" + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
     # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant
     self.add_assert(self.sketch_name_ + "_" + alu_name + "_mode" + " < 3")
     return mux_op_1 + mux_op_2 + stateless_alu
-  
+
   # Generate Sketch code for a simple stateful alu (+,-,*,/)
   # Takes one state and one packet operand (or immediate operand) as inputs
   # Updates the state in place and returns the old value of the state
   def generate_stateful_alu(self, alu_name):
-    stateful_alu = '''
-  int %s(ref int s, int y, %s, %s, %s) {
-    int opcode = %s;
-    int immediate_operand = %s;
-    int alu_mode = %s;
-    int old_val = s;
-    if (opcode == 0) {
-      s = s + (alu_mode == 0 ?  y : immediate_operand);
-    } else {
-      s = s - (alu_mode == 0 ?  y : immediate_operand);
-    }
-    return old_val;
-  }
-  '''%(self.sketch_name_ + "_" + alu_name,
-       "int " + alu_name + "_opcode_local", "int " + alu_name + "_immediate_local", "int " + alu_name + "_mode_local",
-       alu_name + "_opcode_local", alu_name + "_immediate_local", alu_name + "_mode_local")
-    self.generate_hole(alu_name + "_opcode", 1)
-    self.generate_hole(alu_name + "_immediate", 2)
-    self.generate_hole(alu_name + "_mode", 1)
-    # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant.
-    # add_assert(alu_name + "_mode" + "< 2")    # Comment out because assert is redundant.
-    return stateful_alu
-  
+    input_stream = FileStream(self.instruction_file_)
+    lexer = instructionLexer(input_stream)
+    stream = CommonTokenStream(lexer)
+    parser = instructionParser(stream)
+    tree = parser.instruction()
+    chipmunk_alu_gen_visitor = ChipmunkAluGenVisitor(self.instruction_file_, self.sketch_name_ + "_" + alu_name)
+    chipmunk_alu_gen_visitor.visit(tree)
+    self.add_holes(chipmunk_alu_gen_visitor.globalholes)
+    self.stateful_alu_hole_arguments_ = [x for x in chipmunk_alu_gen_visitor.instruction_args]
+    return chipmunk_alu_gen_visitor.helperFunctionStrings + chipmunk_alu_gen_visitor.mainFunction
+
   def generate_state_allocator(self):
     for i in range(self.num_pipeline_stages_):
       for l in range(self.num_state_vars_):
-        self.generate_hole("salu_config_" + str(i) + "_" + str(l), 1)
+        self.add_hole(self.sketch_name_ + "_" + "salu_config_" + str(i) + "_" + str(l), 1)
   
     for i in range(self.num_pipeline_stages_):
       assert_predicate = "("
@@ -116,7 +117,7 @@ class SketchGenerator:
                                            operand_list = ["input" + str(i) for i in range(0, n)],
                                            arg_list = ["int input" + str(i) for i in range(0, n)],
                                            num_operands = n)
-    self.generate_hole(mux_name + "_ctrl", num_bits)
+    self.add_hole(self.sketch_name_ + "_" + mux_name + "_ctrl", num_bits)
     self.add_assert(self.sketch_name_ + "_" + mux_name + "_ctrl" + " < " + str(n))
     return mux_code
 
@@ -171,4 +172,5 @@ class SketchGenerator:
                            num_state_vars = self.num_state_vars_,
                            spec_as_sketch = Path(program_file).read_text(),
                            all_assertions = self.asserts_,
-                           hole_arguments = self.hole_arguments_)
+                           hole_arguments = self.hole_arguments_,
+                           stateful_alu_hole_arguments = self.stateful_alu_hole_arguments_)

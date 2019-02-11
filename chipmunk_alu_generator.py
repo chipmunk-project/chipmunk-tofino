@@ -11,7 +11,7 @@ def main(argv):
     stream = CommonTokenStream(lexer)
     parser = instructionParser(stream)
     tree = parser.instruction()
-    chipmunk_alu_gen_visitor = ChipmunkAluGenVisitor(instruction_file)
+    chipmunk_alu_gen_visitor = ChipmunkAluGenVisitor(instruction_file, "example_instruction")
     chipmunk_alu_gen_visitor.visit(tree)
     for hole in chipmunk_alu_gen_visitor.globalholes:
       print("int ", hole, " = ", "??(" + str(chipmunk_alu_gen_visitor.globalholes[hole]) + ");\n")
