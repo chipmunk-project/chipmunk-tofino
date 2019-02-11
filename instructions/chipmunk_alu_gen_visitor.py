@@ -43,6 +43,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
   def visitPacket_fields(self, ctx):
     self.mainFunction += "int "
     self.visit(ctx.getChild(0))
+    assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
     if (ctx.getChildCount() > 1):
       self.mainFunction += ','
       self.mainFunction += "int "
@@ -51,6 +52,7 @@ class ChipmunkAluGenVisitor(instructionVisitor):
   def visitState_vars(self, ctx):
     self.mainFunction +=  "ref int "
     self.visit(ctx.getChild(0))
+    assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
     if (ctx.getChildCount() > 1):
       self.mainFunction += ','
       self.mainFunction += "ref int "
