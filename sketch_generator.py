@@ -3,9 +3,9 @@ from jinja2 import Template
 import math
 import sys
 from pathlib import Path
-from instructionLexer import instructionLexer
-from instructionParser import instructionParser
-from chipmunk_alu_gen_visitor import ChipmunkAluGenVisitor
+from aluLexer import aluLexer
+from aluParser import aluParser
+from alu_sketch_generator import AluSketchGenerator
 from antlr4 import *
 
 class Hole:
@@ -18,7 +18,7 @@ def add_prefix_suffix(text, prefix_string, suffix_string):
 
 # Sketch Generator class
 class SketchGenerator:
-  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages, num_fields_in_prog, jinja2_env, instruction_file):
+  def __init__(self, sketch_name, num_phv_containers, num_state_vars, num_alus_per_stage, num_pipeline_stages, num_fields_in_prog, jinja2_env, alu_file):
     self.sketch_name_ = sketch_name
     self.total_hole_bits_ = 0
     self.hole_names_ = []
@@ -34,7 +34,7 @@ class SketchGenerator:
     self.num_fields_in_prog_  = num_fields_in_prog
     self.jinja2_env_ = jinja2_env
     self.jinja2_env_.filters["add_prefix_suffix"] = add_prefix_suffix
-    self.instruction_file_ = instruction_file
+    self.alu_file_ = alu_file
 
   # Write all holes to a single hole string for ease of debugging
   def add_hole(self, hole_name, hole_bit_width):
@@ -78,16 +78,16 @@ class SketchGenerator:
   # Takes one state and one packet operand (or immediate operand) as inputs
   # Updates the state in place and returns the old value of the state
   def generate_stateful_alu(self, alu_name):
-    input_stream = FileStream(self.instruction_file_)
-    lexer = instructionLexer(input_stream)
+    input_stream = FileStream(self.alu_file_)
+    lexer = aluLexer(input_stream)
     stream = CommonTokenStream(lexer)
-    parser = instructionParser(stream)
-    tree = parser.instruction()
-    chipmunk_alu_gen_visitor = ChipmunkAluGenVisitor(self.instruction_file_, self.sketch_name_ + "_" + alu_name)
-    chipmunk_alu_gen_visitor.visit(tree)
-    self.add_holes(chipmunk_alu_gen_visitor.globalholes)
-    self.stateful_alu_hole_arguments_ = [x for x in chipmunk_alu_gen_visitor.instruction_args]
-    return chipmunk_alu_gen_visitor.helperFunctionStrings + chipmunk_alu_gen_visitor.mainFunction
+    parser = aluParser(stream)
+    tree = parser.alu()
+    alu_sketch_generator = AluSketchGenerator(self.alu_file_, self.sketch_name_ + "_" + alu_name)
+    alu_sketch_generator.visit(tree)
+    self.add_holes(alu_sketch_generator.globalholes)
+    self.stateful_alu_hole_arguments_ = [x for x in alu_sketch_generator.alu_args]
+    return alu_sketch_generator.helperFunctionStrings + alu_sketch_generator.mainFunction
 
   def generate_state_allocator(self):
     for i in range(self.num_pipeline_stages_):

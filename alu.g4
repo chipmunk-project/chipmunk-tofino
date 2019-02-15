@@ -1,4 +1,4 @@
-grammar instruction;
+grammar alu;
 
 // Hide whitespace, but don't skip it
 WS : [ \n\t\r]+ -> channel(HIDDEN);
@@ -48,4 +48,4 @@ expr   : state_var #StateVar
        | CONSTANT #Constant
        ; 
 
-instruction: state_vars packet_fields guarded_updates;
+alu: state_vars packet_fields guarded_updates;

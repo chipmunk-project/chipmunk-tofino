@@ -20,12 +20,12 @@ def get_num_pkt_fields_and_state_vars(program):
 # l : packet field or state variable from program
 
 if (len(sys.argv) < 7):
-  print("Usage: python3 " + sys.argv[0] + " <program file> <instruction file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)>")
+  print("Usage: python3 " + sys.argv[0] + " <program file> <alu file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
   (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(Path(program_file).read_text())
-  instruction_file     = str(sys.argv[2])
+  alu_file     = str(sys.argv[2])
   num_pipeline_stages  = int(sys.argv[3])
   num_alus_per_stage   = int(sys.argv[4])
   num_phv_containers   = num_alus_per_stage
@@ -38,7 +38,7 @@ else:
 env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
 
 # Create an object for sketch generation
-sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, num_fields_in_prog = num_fields_in_prog, jinja2_env = env, instruction_file = instruction_file)
+sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, num_fields_in_prog = num_fields_in_prog, jinja2_env = env, alu_file = alu_file)
 
 # Create operand muxes for stateful ALUs, output muxes, and stateless and stateful ALUs
 stateful_operand_mux_definitions = sketch_generator.generate_stateful_operand_muxes()
