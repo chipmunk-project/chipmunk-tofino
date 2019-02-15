@@ -31,7 +31,7 @@ class AluSketchGenerator(aluVisitor):
     self.mainFunction += ", %s) {\n int old_state = state_1;" # The %s is for hole arguments, which are added below.
     self.visit(ctx.getChild(2))
     self.mainFunction += "\n; return old_state;\n}"
-    argument_string = ",".join(["int " + hole for hole in self.alu_args])
+    argument_string = ",".join(["int " + hole for hole in sorted(self.alu_args)])
     self.mainFunction = self.mainFunction%argument_string
 
   def visitState_var(self, ctx):

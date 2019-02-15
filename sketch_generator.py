@@ -47,7 +47,7 @@ class SketchGenerator:
 
   # Write several holes from a dictionary (new_holes) into self.holes_
   def add_holes(self, new_holes):
-    for hole in new_holes:
+    for hole in sorted(new_holes):
       self.add_hole(hole, new_holes[hole])
   
   def add_assert(self, assert_predicate):
@@ -86,7 +86,7 @@ class SketchGenerator:
     alu_sketch_generator = AluSketchGenerator(self.alu_file_, self.sketch_name_ + "_" + alu_name)
     alu_sketch_generator.visit(tree)
     self.add_holes(alu_sketch_generator.globalholes)
-    self.stateful_alu_hole_arguments_ = [x for x in alu_sketch_generator.alu_args]
+    self.stateful_alu_hole_arguments_ = [x for x in sorted(alu_sketch_generator.alu_args)]
     return alu_sketch_generator.helperFunctionStrings + alu_sketch_generator.mainFunction
 
   def generate_state_allocator(self):
