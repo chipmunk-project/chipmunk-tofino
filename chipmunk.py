@@ -13,19 +13,13 @@ def get_num_pkt_fields_and_state_vars(program):
   state_vars = [int(x) for x in re.findall("state_and_packet.state_(\d+)", program)]
   return (max(pkt_fields) + 1, max(state_vars) + 1)
 
-# Convention for indices:
-# i : pipeline stage
-# j : ALU within pipeline stage
-# k : PHV container within pipeline stage
-# l : packet field or state variable from program
-
 if (len(sys.argv) < 7):
   print("Usage: python3 " + sys.argv[0] + " <program file> <alu file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
   (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(Path(program_file).read_text())
-  alu_file     = str(sys.argv[2])
+  alu_file             = str(sys.argv[2])
   num_pipeline_stages  = int(sys.argv[3])
   num_alus_per_stage   = int(sys.argv[4])
   num_phv_containers   = num_alus_per_stage
