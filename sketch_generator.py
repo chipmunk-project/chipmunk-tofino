@@ -43,7 +43,7 @@ class SketchGenerator:
     self.hole_preamble_ += "int " + hole_name + "= ??(" + str(hole_bit_width) + ");\n"
     self.total_hole_bits_ += hole_bit_width
     self.hole_arguments_ += ["int " + hole_name]
-    self.holes_ += [Hole(hole_name, 2**hole_bit_width)]
+    self.holes_ += [Hole(hole_name, 2**hole_bit_width - 1)]
 
   # Write several holes from a dictionary (new_holes) into self.holes_
   def add_holes(self, new_holes):
