@@ -35,35 +35,20 @@ class AluSketchGenerator(aluVisitor):
     self.mainFunction = self.mainFunction%argument_string
 
   def visitState_var(self, ctx):
-     self.mainFunction += ctx.getText()
+    self.mainFunction += ctx.getText()
+
+  def visitPacket_field(self, ctx):
+    self.mainFunction += ctx.getText()
 
   def visitState_vars(self, ctx):
     self.mainFunction +=  "ref int "
     self.visit(ctx.getChild(0))
-    self.mainFunction += ','
-    self.mainFunction += "ref int "
-    self.visit(ctx.getChild(1))
-
-  def visitPacket_field(self, ctx):
-     self.mainFunction += ctx.getText()
+    assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
 
   def visitPacket_fields(self, ctx):
     self.mainFunction += "int "
     self.visit(ctx.getChild(0))
     assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
-    if (ctx.getChildCount() > 1):
-      self.mainFunction += ','
-      self.mainFunction += "int "
-      self.visit(ctx.getChild(1))
-
-  def visitState_vars(self, ctx):
-    self.mainFunction +=  "ref int "
-    self.visit(ctx.getChild(0))
-    assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
-    if (ctx.getChildCount() > 1):
-      self.mainFunction += ','
-      self.mainFunction += "ref int "
-      self.visit(ctx.getChild(1))
 
   def visitMux2(self, ctx):
     self.mainFunction += self.alu_name + "_" + "Mux2_" + str(self.mux2Count) + "("
@@ -109,10 +94,6 @@ class AluSketchGenerator(aluVisitor):
     self.mainFunction += "const_" + str(self.mux2Count) + ")"
     self.generateConstant()
     self.constCount += 1
-
-  def visitPacketField(self, ctx):
-    self.mainFunction += ctx.getText()
-    self.visitChildren(ctx)
 
   def visitUpdate(self, ctx):
     self.visit(ctx.getChild(0))
