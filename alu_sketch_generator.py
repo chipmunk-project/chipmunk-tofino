@@ -56,7 +56,7 @@ class AluSketchGenerator(aluVisitor):
     self.mainFunction += ","
     self.visit(ctx.getChild(4))
     self.mainFunction += "," + "Mux2_" + str(self.mux2Count) + ")"
-    self.generate2Mux()
+    self.generateMux2()
     self.mux2Count += 1
 
   def visitMux3(self, ctx):
@@ -66,14 +66,14 @@ class AluSketchGenerator(aluVisitor):
     self.visit(ctx.getChild(4))
     self.mainFunction += ","
     self.visit(ctx.getChild(6))    
-    self.mainFunction += "," + "Mux3_" + str(self.mux2Count) + ")"
-    self.generate3Mux()
+    self.mainFunction += "," + "Mux3_" + str(self.mux3Count) + ")"
+    self.generateMux3()
     self.mux3Count += 1
 
   def visitOpt(self, ctx):
     self.mainFunction += self.alu_name + "_" + "Opt_" + str(self.optCount) + "("
     self.visitChildren(ctx)
-    self.mainFunction += "," + "Opt_" + str(self.mux2Count) + ")"
+    self.mainFunction += "," + "Opt_" + str(self.optCount) + ")"
     self.generateOpt()
     self.optCount += 1
 
@@ -82,7 +82,7 @@ class AluSketchGenerator(aluVisitor):
     self.visit(ctx.getChild(2))
     self.mainFunction += ","
     self.visit(ctx.getChild(4))
-    self.mainFunction += "," + "rel_op_" + str(self.mux2Count) + ")"
+    self.mainFunction += "," + "rel_op_" + str(self.relopCount) + ")"
     self.generateRelOp()
     self.relopCount += 1
 
@@ -91,7 +91,7 @@ class AluSketchGenerator(aluVisitor):
 
   def visitConstant(self, ctx):
     self.mainFunction += self.alu_name + "_" + "C_" + str(self.constCount) + "("
-    self.mainFunction += "const_" + str(self.mux2Count) + ")"
+    self.mainFunction += "const_" + str(self.constCount) + ")"
     self.generateConstant()
     self.constCount += 1
 
@@ -113,14 +113,15 @@ class AluSketchGenerator(aluVisitor):
     self.mainFunction += ctx.getChild(1).getText()
     self.visit(ctx.getChild(2))
 
-  def generate2Mux(self):
+  def generateMux2(self):
     self.helperFunctionStrings += "int " + self.alu_name + "_" + "Mux2_" + str(self.mux2Count) +  """(int op1, int op2, int choice) {
     if (choice == 0) return op1;
     else if (choice == 1) return op2;
+    else assert(false);
     } \n\n"""
     self.add_hole("Mux2_" + str(self.mux2Count), 2);
 
-  def generate3Mux(self):
+  def generateMux3(self):
     self.helperFunctionStrings += "int " + self.alu_name + "_" + "Mux3_" + str(self.mux3Count) + """(int op1, int op2, int op3, int choice) {
     if (choice == 0) return op1;
     else if (choice == 1) return op2;
