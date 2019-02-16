@@ -68,9 +68,9 @@ class SketchGenerator:
     self.add_hole(self.sketch_name_ + "_" + alu_name + "_opcode", 1)
     self.add_hole(self.sketch_name_ + "_" + alu_name + "_immediate", 2)
     self.add_hole(self.sketch_name_ + "_" + alu_name + "_mode", 2)
-    self.add_assert(self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
-                    self.sketch_name_ + "_" + alu_name + "_mux2_ctrl") # symmetry breaking for commutativity
-    # add_assert(alu_name +  "_opcode" + "< 2") # Comment out because assert is redundant
+    self.add_assert("(" + self.sketch_name_ + "_" + alu_name + "_opcode == 1)" + "|| (" +
+                    self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
+                    self.sketch_name_ + "_" + alu_name + "_mux2_ctrl)") # symmetry breaking for commutativity
     self.add_assert(self.sketch_name_ + "_" + alu_name + "_mode" + " < 3")
     return mux_op_1 + mux_op_2 + stateless_alu
 
