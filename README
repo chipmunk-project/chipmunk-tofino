@@ -1,3 +1,5 @@
+Install overrides package for python: pip3 install overrides
+
 Example of code generation:
 
 python3 chipmunk.py example_specs/simple.sk 2 2 codegen sample1

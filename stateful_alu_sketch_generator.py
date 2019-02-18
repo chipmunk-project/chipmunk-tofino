@@ -1,5 +1,6 @@
 from stateful_aluParser import stateful_aluParser
 from stateful_aluVisitor import stateful_aluVisitor
+from overrides import overrides
 
 # Visitor class to generate Sketch code from a stateful_alu specification in a .stateful_alu file
 class StatefulAluSketchGenerator(stateful_aluVisitor):
@@ -23,6 +24,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     assert(hole_name not in self.stateful_alu_args)
     self.stateful_alu_args[hole_name] = hole_width
 
+  @overrides
   def visitStateful_alu(self, ctx):
     self.mainFunction += "int " + self.stateful_alu_name + "("
     self.visit(ctx.getChild(0))
@@ -34,22 +36,27 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     argument_string = ",".join(["int " + hole for hole in sorted(self.stateful_alu_args)])
     self.mainFunction = self.mainFunction%argument_string
 
+  @overrides
   def visitState_var(self, ctx):
     self.mainFunction += ctx.getText()
 
+  @overrides
   def visitPacket_field(self, ctx):
     self.mainFunction += ctx.getText()
 
+  @overrides
   def visitState_vars(self, ctx):
     self.mainFunction +=  "ref int "
     self.visit(ctx.getChild(0))
     assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
 
+  @overrides
   def visitPacket_fields(self, ctx):
     self.mainFunction += "int "
     self.visit(ctx.getChild(0))
     assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
 
+  @overrides
   def visitMux2(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "Mux2_" + str(self.mux2Count) + "("
     self.visit(ctx.getChild(2))
@@ -59,6 +66,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.generateMux2()
     self.mux2Count += 1
 
+  @overrides
   def visitMux3(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "Mux3_" + str(self.mux3Count) + "("
     self.visit(ctx.getChild(2))
@@ -70,6 +78,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.generateMux3()
     self.mux3Count += 1
 
+  @overrides
   def visitOpt(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "Opt_" + str(self.optCount) + "("
     self.visitChildren(ctx)
@@ -77,6 +86,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.generateOpt()
     self.optCount += 1
 
+  @overrides
   def visitRelOp(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "rel_op_" + str(self.relopCount) + "("
     self.visit(ctx.getChild(2))
@@ -86,20 +96,24 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.generateRelOp()
     self.relopCount += 1
 
+  @overrides
   def visitTrue(self, ctx):
     self.mainFunction += "true"
 
+  @overrides
   def visitConstant(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "C_" + str(self.constCount) + "("
     self.mainFunction += "const_" + str(self.constCount) + ")"
     self.generateConstant()
     self.constCount += 1
 
+  @overrides
   def visitUpdate(self, ctx):
     self.visit(ctx.getChild(0))
     self.mainFunction += " = "
     self.visit(ctx.getChild(2))
 
+  @overrides
   def visitGuarded_update(self, ctx):
     self.mainFunction += "if("
     self.visit(ctx.getChild(0))
@@ -108,6 +122,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.visit(ctx.getChild(2))
     self.mainFunction += ";\n}"
 
+  @overrides
   def visitExprWithOp(self, ctx):
     self.visit(ctx.getChild(0))
     self.mainFunction += ctx.getChild(1).getText()
