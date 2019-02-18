@@ -27,11 +27,11 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
   @overrides
   def visitStateful_alu(self, ctx):
     self.mainFunction += "int " + self.stateful_alu_name + "("
-    self.visit(ctx.getChild(0))
+    self.visit(ctx.getChild(0, stateful_aluParser.State_varsContext))
     self.mainFunction += ", "
-    self.visit(ctx.getChild(1))
+    self.visit(ctx.getChild(0, stateful_aluParser.Packet_fieldsContext))
     self.mainFunction += ", %s) {\n int old_state = state_1;" # The %s is for hole arguments, which are added below.
-    self.visit(ctx.getChild(2))
+    self.visit(ctx.getChild(0, stateful_aluParser.Guarded_updatesContext))
     self.mainFunction += "\n; return old_state;\n}"
     argument_string = ",".join(["int " + hole for hole in sorted(self.stateful_alu_args)])
     self.mainFunction = self.mainFunction%argument_string
@@ -47,21 +47,21 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
   @overrides
   def visitState_vars(self, ctx):
     self.mainFunction +=  "ref int "
-    self.visit(ctx.getChild(0))
+    self.visit(ctx.getChild(0, stateful_aluParser.State_varContext))
     assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
 
   @overrides
   def visitPacket_fields(self, ctx):
     self.mainFunction += "int "
-    self.visit(ctx.getChild(0))
+    self.visit(ctx.getChild(0, stateful_aluParser.Packet_fieldContext))
     assert(ctx.getChildCount() == 1), "We currently only handle 1 packet field and 1 state variable in an atom."
 
   @overrides
   def visitMux2(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "Mux2_" + str(self.mux2Count) + "("
-    self.visit(ctx.getChild(2))
+    self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
     self.mainFunction += ","
-    self.visit(ctx.getChild(4))
+    self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
     self.mainFunction += "," + "Mux2_" + str(self.mux2Count) + ")"
     self.generateMux2()
     self.mux2Count += 1
@@ -69,11 +69,11 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
   @overrides
   def visitMux3(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "Mux3_" + str(self.mux3Count) + "("
-    self.visit(ctx.getChild(2))
+    self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
     self.mainFunction += ","
-    self.visit(ctx.getChild(4))
+    self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
     self.mainFunction += ","
-    self.visit(ctx.getChild(6))    
+    self.visit(ctx.getChild(2, stateful_aluParser.ExprContext))
     self.mainFunction += "," + "Mux3_" + str(self.mux3Count) + ")"
     self.generateMux3()
     self.mux3Count += 1
@@ -89,9 +89,9 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
   @overrides
   def visitRelOp(self, ctx):
     self.mainFunction += self.stateful_alu_name + "_" + "rel_op_" + str(self.relopCount) + "("
-    self.visit(ctx.getChild(2))
+    self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
     self.mainFunction += ","
-    self.visit(ctx.getChild(4))
+    self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
     self.mainFunction += "," + "rel_op_" + str(self.relopCount) + ")"
     self.generateRelOp()
     self.relopCount += 1
@@ -109,24 +109,24 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
 
   @overrides
   def visitUpdate(self, ctx):
-    self.visit(ctx.getChild(0))
+    self.visit(ctx.getChild(0, stateful_aluParser.State_varContext))
     self.mainFunction += " = "
-    self.visit(ctx.getChild(2))
+    self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
 
   @overrides
   def visitGuarded_update(self, ctx):
     self.mainFunction += "if("
-    self.visit(ctx.getChild(0))
+    self.visit(ctx.getChild(0, stateful_aluParser.GuardContext))
     self.mainFunction += ")"
     self.mainFunction += "{\n\t"
-    self.visit(ctx.getChild(2))
+    self.visit(ctx.getChild(0, stateful_aluParser.UpdateContext))
     self.mainFunction += ";\n}"
 
   @overrides
   def visitExprWithOp(self, ctx):
-    self.visit(ctx.getChild(0))
+    self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
     self.mainFunction += ctx.getChild(1).getText()
-    self.visit(ctx.getChild(2))
+    self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
 
   def generateMux2(self):
     self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "Mux2_" + str(self.mux2Count) +  """(int op1, int op2, int choice) {
