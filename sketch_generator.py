@@ -3,9 +3,9 @@ from jinja2 import Template
 import math
 import sys
 from pathlib import Path
-from aluLexer import aluLexer
-from aluParser import aluParser
-from alu_sketch_generator import AluSketchGenerator
+from stateful_aluLexer import stateful_aluLexer
+from stateful_aluParser import stateful_aluParser
+from stateful_alu_sketch_generator import StatefulAluSketchGenerator
 from antlr4 import *
 
 class Hole:
@@ -79,15 +79,15 @@ class SketchGenerator:
   # Updates the state in place and returns the old value of the state
   def generate_stateful_alu(self, alu_name):
     input_stream = FileStream(self.alu_file_)
-    lexer = aluLexer(input_stream)
+    lexer = stateful_aluLexer(input_stream)
     stream = CommonTokenStream(lexer)
-    parser = aluParser(stream)
-    tree = parser.alu()
-    alu_sketch_generator = AluSketchGenerator(self.alu_file_, self.sketch_name_ + "_" + alu_name)
-    alu_sketch_generator.visit(tree)
-    self.add_holes(alu_sketch_generator.globalholes)
-    self.stateful_alu_hole_arguments_ = [x for x in sorted(alu_sketch_generator.alu_args)]
-    return alu_sketch_generator.helperFunctionStrings + alu_sketch_generator.mainFunction
+    parser = stateful_aluParser(stream)
+    tree = parser.stateful_alu()
+    stateful_alu_sketch_generator = StatefulAluSketchGenerator(self.alu_file_, self.sketch_name_ + "_" + alu_name)
+    stateful_alu_sketch_generator.visit(tree)
+    self.add_holes(stateful_alu_sketch_generator.globalholes)
+    self.stateful_alu_hole_arguments_ = [x for x in sorted(stateful_alu_sketch_generator.stateful_alu_args)]
+    return stateful_alu_sketch_generator.helperFunctionStrings + stateful_alu_sketch_generator.mainFunction
 
   def generate_state_allocator(self):
     for i in range(self.num_pipeline_stages_):
