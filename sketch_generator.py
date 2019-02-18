@@ -35,6 +35,7 @@ class SketchGenerator:
     self.jinja2_env_ = jinja2_env
     self.jinja2_env_.filters["add_prefix_suffix"] = add_prefix_suffix
     self.alu_file_ = alu_file
+    self.num_operands_to_stateful_alu_ = 0
 
   # Write all holes to a single hole string for ease of debugging
   def add_hole(self, hole_name, hole_bit_width):
@@ -87,6 +88,7 @@ class SketchGenerator:
     stateful_alu_sketch_generator.visit(tree)
     self.add_holes(stateful_alu_sketch_generator.globalholes)
     self.stateful_alu_hole_arguments_ = [x for x in sorted(stateful_alu_sketch_generator.stateful_alu_args)]
+    self.num_operands_to_stateful_alu_ = stateful_alu_sketch_generator.num_packet_fields
     return stateful_alu_sketch_generator.helperFunctionStrings + stateful_alu_sketch_generator.mainFunction
 
   def generate_state_allocator(self):
@@ -125,9 +127,11 @@ class SketchGenerator:
   def generate_stateful_operand_muxes(self):
     ret = ""
     # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
+    assert(self.num_operands_to_stateful_alu_ > 0)
     for i in range(self.num_pipeline_stages_):
       for l in range(self.num_state_vars_):
-        ret += self.generate_mux(self.num_phv_containers_, "stateful_operand_mux_" + str(i) + "_" + str(l)) + "\n"
+        for k in range(self.num_operands_to_stateful_alu_):
+          ret += self.generate_mux(self.num_phv_containers_, "stateful_operand_mux_" + str(i) + "_" + str(l) + "_" + str(k)) + "\n"
     return ret
 
   # Output muxes to pick between stateful ALUs and stateless ALU
@@ -173,4 +177,5 @@ class SketchGenerator:
                            spec_as_sketch = Path(program_file).read_text(),
                            all_assertions = self.asserts_,
                            hole_arguments = self.hole_arguments_,
-                           stateful_alu_hole_arguments = self.stateful_alu_hole_arguments_)
+                           stateful_alu_hole_arguments = self.stateful_alu_hole_arguments_,
+                           num_operands_to_stateful_alu = self.num_operands_to_stateful_alu_)

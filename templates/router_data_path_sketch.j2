@@ -57,7 +57,8 @@
 
   // Stateful operands
   {% for state_number in range(num_state_vars) %}
-  int packet_operand_salu{{stage_number}}_{{state_number}} = {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_number}}(
+  {% for operand_number in range(num_operands_to_stateful_alu) %}
+  int packet_operand_salu{{stage_number}}_{{state_number}}_{{operand_number}} = {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_number}}_{{operand_number}}(
   {% for container_number in range(num_phv_containers) %}
   {% if container_number != num_phv_containers - 1 %}
   input_{{stage_number}}_{{container_number}},
@@ -65,7 +66,8 @@
   input_{{stage_number}}_{{container_number}}
   {% endif %}
   {% endfor %}
-  , {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_number}}_ctrl);
+  , {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_number}}_{{operand_number}}_ctrl);
+  {% endfor %}
   {% endfor %}
 
   // Read stateful ALU slots from allocated state vars.
@@ -79,7 +81,10 @@
 
   // Stateful ALUs
   {% for state_number in range(num_state_vars) %}
-  int old_state_{{stage_number}}_{{state_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_number}}(state_operand_salu_{{stage_number}}_{{state_number}}, packet_operand_salu{{stage_number}}_{{state_number}},
+  int old_state_{{stage_number}}_{{state_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_number}}(state_operand_salu_{{stage_number}}_{{state_number}},
+  {% for operand_number in range(num_operands_to_stateful_alu) %}
+  packet_operand_salu{{stage_number}}_{{state_number}}_{{operand_number}},
+  {% endfor %}
   {% set prefix_string = sketch_name + "_stateful_alu_" + (stage_number|string) + "_" + (state_number|string) + "_" %}
   {{stateful_alu_hole_arguments|map('add_prefix_suffix', prefix_string, "_global")|join(',')}});
   {% endfor %}
