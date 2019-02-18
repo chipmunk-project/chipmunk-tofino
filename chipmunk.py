@@ -34,10 +34,10 @@ env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUn
 # Create an object for sketch generation
 sketch_generator = SketchGenerator(sketch_name = sketch_name, num_pipeline_stages = num_pipeline_stages, num_alus_per_stage = num_alus_per_stage, num_phv_containers = num_phv_containers, num_state_vars = num_state_vars, num_fields_in_prog = num_fields_in_prog, jinja2_env = env, alu_file = alu_file)
 
-# Create operand muxes for stateful ALUs, output muxes, and stateless and stateful ALUs
+# Create stateless and stateful ALUs, operand muxes for stateful ALUs, and output muxes.
+alu_definitions                  = sketch_generator.generate_alus()
 stateful_operand_mux_definitions = sketch_generator.generate_stateful_operand_muxes()
 output_mux_definitions           = sketch_generator.generate_output_muxes()
-alu_definitions                  = sketch_generator.generate_alus()
 
 # Create allocator to ensure each state var is assigned to exactly stateful ALU and vice versa.
 sketch_generator.generate_state_allocator()
