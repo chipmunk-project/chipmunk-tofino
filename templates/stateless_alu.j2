@@ -8,7 +8,18 @@ int {{ alu_name }}({{arg_list|join(',')}}, int opcode_hole_local, int immediate_
 
   if (opcode == 0) {
     return (alu_mode == 0 ? x + y : (alu_mode == 1 ? x + immediate_operand : immediate_operand));
-  } else {
+  } else if (opcode == 1) {
     return (alu_mode == 0 ? x - y : (alu_mode == 1 ? immediate_operand - y : x - immediate_operand));
+  } else if (opcode == 2) {
+    return (alu_mode == 0 ? (x != 0) || (y != 0)
+                          : (alu_mode == 1 ? (immediate_operand != 0) || (y != 0)
+                                           : (x != 0) || (immediate_operand != 0)));
+  } else if (opcode == 3) {
+    return (alu_mode == 0 ? (x != 0) && (y != 0)
+                          : (alu_mode == 1 ? (immediate_operand != 0) && (y != 0)
+                                           : (x != 0) && (immediate_operand != 0)));
+  } else if (opcode == 4) {
+    return (alu_mode == 0 ? ! (x != 0)
+                          : ! (y != 0));
   }
 }
