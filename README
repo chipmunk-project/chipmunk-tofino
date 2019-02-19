@@ -1,4 +1,4 @@
-Install overrides package for python: pip3 install overrides
+Install overrides package for python: pip3 install --user overrides
 
 Example of code generation:
 
@@ -12,4 +12,4 @@ python3 optverify.py sample1 sample2 example_transforms/sample.transform
 
 Generating alu parser:
 
-antlr4 -Dlanguage=Python3 -visitor alu.g4
+antlr4 -Dlanguage=Python3 -visitor stateful_alu.g4
