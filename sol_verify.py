@@ -28,7 +28,7 @@ sketch_file.write(sketch_file_with_hole_value)
 sketch_file.close()
 
 # Call sketch on it
-(ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-parallel --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
+(ret_code, output) = subprocess.getstatusoutput("sketch --bnd-inbits=10 " + sketch_file.name)
 if (ret_code != 0):
   print("Sketch failed.")
   sys.exit(1)
