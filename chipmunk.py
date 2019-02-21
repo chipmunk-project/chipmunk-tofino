@@ -1,3 +1,5 @@
+__version__ = "0.2.0"
+
 from jinja2 import Template, Environment, FileSystemLoader, StrictUndefined
 import pickle
 from pathlib import Path
