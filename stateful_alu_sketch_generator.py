@@ -143,17 +143,15 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
   def generateMux2(self):
     self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "Mux2_" + str(self.mux2Count) +  """(int op1, int op2, int choice) {
     if (choice == 0) return op1;
-    else if (choice == 1) return op2;
-    else assert(false);
+    else return op2;
     } \n\n"""
-    self.add_hole("Mux2_" + str(self.mux2Count), 2);
+    self.add_hole("Mux2_" + str(self.mux2Count), 1);
 
   def generateMux3(self):
     self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "Mux3_" + str(self.mux3Count) + """(int op1, int op2, int op3, int choice) {
     if (choice == 0) return op1;
     else if (choice == 1) return op2;
-    else if (choice == 2) return op3;
-    else assert(false);
+    else return op3;
     } \n\n"""
     self.add_hole("Mux3_" + str(self.mux3Count), 2)
 
