@@ -5,6 +5,7 @@ WS : [ \n\t\r]+ -> channel(HIDDEN);
 
 // Keywords
 RELOP : 'rel_op'; // <, >, <=, >=, ==, !=
+ARITHOP: 'arith_op'; // +,-
 MUX3  : 'Mux3';   // 3-to-1 mux
 MUX2  : 'Mux2';   // 2-to-1 mux
 OPT   : 'Opt';    // Pick either the argument or 0
@@ -49,6 +50,7 @@ expr   : state_var #StateVar
        | MUX2 '(' expr ',' expr ')' #Mux2
        | OPT '(' expr ')' #Opt
        | CONSTANT #Constant
-       ; 
+       | ARITHOP '(' expr ',' expr ')' # ArithOp
+       ;
 
 stateful_alu: state_vars packet_fields alu_body;

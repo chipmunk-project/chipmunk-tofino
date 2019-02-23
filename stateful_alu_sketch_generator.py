@@ -10,6 +10,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.mux3Count = 0
     self.mux2Count = 0
     self.relopCount = 0
+    self.arithopCount = 0
     self.optCount = 0
     self.constCount = 0
     self.helperFunctionStrings = "\n\n\n"
@@ -135,6 +136,16 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.relopCount += 1
 
   @overrides
+  def visitArithOp(self, ctx):
+    self.mainFunction += self.stateful_alu_name + "_" + "arith_op_" + str(self.arithopCount) + "("
+    self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
+    self.mainFunction += ","
+    self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
+    self.mainFunction += "," + "arith_op_" + str(self.arithopCount) + ")"
+    self.generateArithOp()
+    self.arithopCount += 1
+
+  @overrides
   def visitTrue(self, ctx):
     self.mainFunction += "true"
 
@@ -187,6 +198,15 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     }
     } \n\n"""
     self.add_hole("rel_op_" + str(self.relopCount), 2)
+
+  def generateArithOp(self):
+    self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "arith_op_" + str(self.arithopCount) + """(int operand1, int operand2, int opcode) {
+    if (opcode == 0) {
+      return operand1 + operand2;
+    } else {
+      return operand1 - operand2;
+    }\n\n"""
+    self.add_hole("arith_op_" + str(self.arithopCount), 1)
 
   def generateConstant(self):
     self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "C_" + str(self.constCount) + """(int const) {
