@@ -13,8 +13,8 @@ def get_num_pkt_fields_and_state_vars(program):
   state_vars = [int(x) for x in re.findall("state_and_packet.state_(\d+)", program)]
   return (max(pkt_fields) + 1, max(state_vars) + 1)
 
-if (len(sys.argv) < 7):
-  print("Usage: python3 " + sys.argv[0] + " <program file> <alu file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)>")
+if (len(sys.argv) < 8):
+  print("Usage: python3 " + sys.argv[0] + " <program file> <alu file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)> <parallel/serial>")
   sys.exit(1)
 else:
   program_file         = str(sys.argv[1])
@@ -27,6 +27,8 @@ else:
   mode                 = str(sys.argv[5])
   assert((mode == "codegen") or (mode == "optverify"))
   sketch_name          = str(sys.argv[6])
+  parallel_or_serial   = str(sys.argv[7])
+  assert((parallel_or_serial == "parallel") or (parallel_or_serial == "serial"))
 
 # Initialize jinja2 environment for templates
 env = Environment(loader = FileSystemLoader('./templates'), undefined = StrictUndefined)
@@ -57,7 +59,10 @@ if (mode == "codegen"):
   # Call sketch on it
   print("Total number of hole bits is", sketch_generator.total_hole_bits_)
   print("Sketch file is ", sketch_file.name)
-  (ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-parallel --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
+  if (parallel_or_serial == "parallel"):
+    (ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --slv-parallel --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
+  else:
+    (ret_code, output) = subprocess.getstatusoutput("time sketch -V 12 --slv-seed=1 --bnd-inbits=2 --bnd-int-range=50 " + sketch_file.name)
   if (ret_code != 0):
     errors_file = open(sketch_name + ".errors", "w")
     errors_file.write(output)
