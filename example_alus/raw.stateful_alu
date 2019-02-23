@@ -1,4 +1,4 @@
 state_1
 pkt_1
 
-True : state_1 = Opt(state_1) + Mux2(pkt_1, C())
+state_1 = Opt(state_1) + Mux2(pkt_1, C())

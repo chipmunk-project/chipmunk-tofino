@@ -32,7 +32,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.mainFunction += ", "
     self.visit(ctx.getChild(0, stateful_aluParser.Packet_fieldsContext))
     self.mainFunction += ", %s) {\n int old_state = state_1;" # The %s is for hole arguments, which are added below.
-    self.visit(ctx.getChild(0, stateful_aluParser.Guarded_updatesContext))
+    self.visit(ctx.getChild(0, stateful_aluParser.Alu_bodyContext))
     self.mainFunction += "\n; return old_state;\n}"
     argument_string = ",".join(["int " + hole for hole in sorted(self.stateful_alu_args)])
     self.mainFunction = self.mainFunction%argument_string
@@ -67,6 +67,32 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.mainFunction += "int "
     assert(ctx.getChild(0).getText() == ",")
     self.mainFunction += ctx.getChild(1).getText() + ","
+
+  @overrides
+  def visitAlu_body(self, ctx):
+    if (ctx.getChildCount() == 1): # simple update
+      self.visit(ctx.alu_update)
+    else: # if-elif-else update
+      self.mainFunction += "if ("
+      self.visit(ctx.if_guard)
+      self.mainFunction += ") {"
+      self.visit(ctx.if_body)
+      self.mainFunction += "}"
+
+      # if there is an elif
+      if (ctx.getChildCount() > 7 and ctx.getChild(7).getText() == "elif"):
+        self.mainFunction += "else if ("
+        self.visit(ctx.elif_guard)
+        self.mainFunction += ") {"
+        self.visit(ctx.elif_body)
+        self.mainFunction += "}"
+
+      # if there is an else
+      if ((ctx.getChildCount() > 7 and ctx.getChild(7).getText() == "else") or \
+          (ctx.getChildCount() > 14 and ctx.getChild(14).getText() == "else")):
+        self.mainFunction += "else {"
+        self.visit(ctx.else_body)
+        self.mainFunction += "}"
 
   @overrides
   def visitMux2(self, ctx):
@@ -124,15 +150,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     self.visit(ctx.getChild(0, stateful_aluParser.State_varContext))
     self.mainFunction += " = "
     self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
-
-  @overrides
-  def visitGuarded_update(self, ctx):
-    self.mainFunction += "if("
-    self.visit(ctx.getChild(0, stateful_aluParser.GuardContext))
-    self.mainFunction += ")"
-    self.mainFunction += "{\n\t"
-    self.visit(ctx.getChild(0, stateful_aluParser.UpdateContext))
-    self.mainFunction += ";\n}"
+    self.mainFunction += ";"
 
   @overrides
   def visitExprWithOp(self, ctx):

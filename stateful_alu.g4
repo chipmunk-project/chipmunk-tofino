@@ -10,6 +10,9 @@ MUX2  : 'Mux2';   // 2-to-1 mux
 OPT   : 'Opt';    // Pick either the argument or 0
 CONSTANT : 'C()'; // Return a finite constant
 TRUE  : 'True';   // Guard corresponding to "always update"
+IF    : 'if';
+ELSE  : 'else';
+ELIF  : 'elif';
 
 // Identifiers
 ID : ('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
@@ -28,15 +31,15 @@ packet_field_with_comma : ',' packet_field;
 packet_fields : packet_field 
               | packet_field packet_field_with_comma+ ;
 
-// list of guarded_update
-guarded_update_with_comma : ',' guarded_update;
-guarded_updates : guarded_update
-                | guarded_update guarded_update_with_comma+;
-
-guarded_update : guard ':' update;
+// guard for if and elif statements
 guard  : RELOP '(' expr ',' expr ')' #RelOp
        | TRUE #True
        ;
+
+// alu_body
+alu_body : alu_update = update
+         | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')? (ELSE  '{' else_body = alu_body '}')?;
+
 update : state_var '=' expr;
 expr   : state_var #StateVar
        | packet_field #PacketField
@@ -48,4 +51,4 @@ expr   : state_var #StateVar
        | CONSTANT #Constant
        ; 
 
-stateful_alu: state_vars packet_fields guarded_updates;
+stateful_alu: state_vars packet_fields alu_body;
