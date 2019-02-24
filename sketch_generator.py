@@ -72,8 +72,6 @@ class SketchGenerator:
     self.add_assert("(" + self.sketch_name_ + "_" + alu_name + "_opcode == 1)" + "|| (" +
                     self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
                     self.sketch_name_ + "_" + alu_name + "_mux2_ctrl)") # symmetry breaking for commutativity
-    self.add_assert(self.sketch_name_ + "_" + alu_name + "_mode" + " < 3")
-    self.add_assert(self.sketch_name_ + "_" + alu_name + "_opcode" + " < 5")
     return mux_op_1 + mux_op_2 + stateless_alu
 
   # Generate Sketch code for a simple stateful alu (+,-,*,/)
@@ -121,7 +119,6 @@ class SketchGenerator:
                                            arg_list = ["int input" + str(i) for i in range(0, n)],
                                            num_operands = n)
     self.add_hole(self.sketch_name_ + "_" + mux_name + "_ctrl", num_bits)
-    self.add_assert(self.sketch_name_ + "_" + mux_name + "_ctrl" + " < " + str(n))
     return mux_code
 
   # Stateful operand muxes (stateless ones are part of generate_stateless_alu)
