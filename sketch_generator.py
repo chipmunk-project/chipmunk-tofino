@@ -14,7 +14,7 @@ class Hole:
     self.max  = max_value
 
 def add_prefix_suffix(text, prefix_string, suffix_string):
-  return prefix_string + text + suffix_string
+  return prefix_string + str(text) + suffix_string
 
 # Sketch Generator class
 class SketchGenerator:

@@ -1,5 +1,5 @@
 {% if mode == "codegen" %}
-|StateAndPacket| pipeline (|StateAndPacket| state_and_packet) implements program {
+|StateAndPacket| pipeline (|StateAndPacket| state_and_packet) {
 // Consolidate all constraints on holes here.
 {{all_assertions}}
 {% elif mode == "optverify" %}
@@ -119,3 +119,23 @@
   // Return updated packet fields and state vars
   return state_and_packet;
 }
+
+{% if mode == "codegen" %}
+harness void main(
+  {{range(num_fields_in_prog)|map('add_prefix_suffix', "int pkt_", "")|join(',')}},
+  {{range(num_state_vars)|map('add_prefix_suffix', "int state_", "")|join(',')}}) {
+
+  |StateAndPacket| x = |StateAndPacket|({% for field_number in range(num_fields_in_prog) %}
+    pkt_{{field_number}} = pkt_{{field_number}},
+  {% endfor %}
+  {% for state_number in range(num_state_vars) %}
+    {% if state_number == num_state_vars - 1 %}
+    state_{{state_number}} = state_{{state_number}}
+    {% else %}
+    state_{{state_number}} = state_{{state_number}},
+    {% endif %}
+  {% endfor %});
+
+assert(pipeline(x) == program(x));
+}
+{% endif %}
