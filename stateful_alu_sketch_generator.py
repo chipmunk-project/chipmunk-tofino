@@ -205,6 +205,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
       return operand1 + operand2;
     } else {
       return operand1 - operand2;
+    }
     }\n\n"""
     self.add_hole("arith_op_" + str(self.arithopCount), 1)
 
