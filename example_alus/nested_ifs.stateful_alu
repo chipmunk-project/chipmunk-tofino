@@ -1,10 +1,16 @@
 state_1
 pkt_1, pkt_2
 
-if (rel_op(Opt(state_1), Mux3(pkt_1, pkt_2, C()))) {
-  state_1 = Opt(state_1) +
-            arith_op(Mux3(pkt_1, pkt_2, C()), Mux3(pkt_1, pkt_2, C()));
+if (rel_op(Opt(state_1) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2, 0), C())) {
+  if (rel_op(Opt(state_1) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2, 0), C())) {
+    state_1 = Opt(state_1) + arith_op(Mux3(pkt_1, pkt_2, C()),  Mux3(pkt_1, pkt_2, C()));
+  } else {
+    state_1 = Opt(state_1) + arith_op(Mux3(pkt_1, pkt_2, C()),  Mux3(pkt_1, pkt_2, C()));
+  }
 } else {
-  state_1 = Opt(state_1) +
-            arith_op(Mux3(pkt_1, pkt_2, C()), Mux3(pkt_1, pkt_2, C()));
+  if (rel_op(Opt(state_1) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2, 0), C())) {
+    state_1 = Opt(state_1) + arith_op(Mux3(pkt_1, pkt_2, C()),  Mux3(pkt_1, pkt_2, C()));
+  } else {
+    state_1 = Opt(state_1) + arith_op(Mux3(pkt_1, pkt_2, C()),  Mux3(pkt_1, pkt_2, C()));
+  }
 }
