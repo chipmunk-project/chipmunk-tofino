@@ -18,6 +18,9 @@ ELIF  : 'elif';
 // Identifiers
 ID : ('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
 
+// Numerical constant
+NUM : ('0'..'9') | (('1'..'9')('0'..'9')+);
+
 // alias id to state_var and packet_field
 state_var    : ID;
 packet_field : ID;
@@ -29,7 +32,7 @@ state_vars : state_var
 
 // list of packet_field
 packet_field_with_comma : ',' packet_field;
-packet_fields : packet_field 
+packet_fields : packet_field
               | packet_field packet_field_with_comma+ ;
 
 // guard for if and elif statements
@@ -46,6 +49,7 @@ expr   : state_var #StateVar
        | packet_field #PacketField
        | expr op=('+'|'-'|'*'|'/') expr #ExprWithOp
        | '(' expr ')' #ExprWithParen
+       | MUX3 '(' expr ',' expr ',' NUM ')' #Mux3WithNum
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
        | MUX2 '(' expr ',' expr ')' #Mux2
        | OPT '(' expr ')' #Opt

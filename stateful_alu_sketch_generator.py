@@ -1,9 +1,11 @@
 from stateful_aluParser import stateful_aluParser
 from stateful_aluVisitor import stateful_aluVisitor
 from overrides import overrides
+from textwrap import dedent
 
 
-# Visitor class to generate Sketch code from a stateful_alu specification in a .stateful_alu file
+# Visitor class to generate Sketch code from a stateful_alu specification in a
+# .stateful_alu file
 class StatefulAluSketchGenerator(stateful_aluVisitor):
     def __init__(self, stateful_alu_file, stateful_alu_name):
         self.stateful_alu_name = stateful_alu_name
@@ -33,7 +35,8 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.visit(ctx.getChild(0, stateful_aluParser.State_varsContext))
         self.mainFunction += ", "
         self.visit(ctx.getChild(0, stateful_aluParser.Packet_fieldsContext))
-        self.mainFunction += ", %s) {\n int old_state = state_1;"  # The %s is for hole arguments, which are added below.
+        # The %s is for hole arguments, which are added below.
+        self.mainFunction += ", %s) {\n int old_state = state_1;"
         self.visit(ctx.getChild(0, stateful_aluParser.Alu_bodyContext))
         self.mainFunction += "\n; return old_state;\n}"
         argument_string = ",".join(
@@ -94,8 +97,10 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
                 self.mainFunction += "}"
 
             # if there is an else
-            if ((ctx.getChildCount() > 7 and ctx.getChild(7).getText() == "else") or \
-                (ctx.getChildCount() > 14 and ctx.getChild(14).getText() == "else")):
+            if ((ctx.getChildCount() > 7
+                 and ctx.getChild(7).getText() == "else")
+                    or (ctx.getChildCount() > 14
+                        and ctx.getChild(14).getText() == "else")):
                 self.mainFunction += "else {"
                 self.visit(ctx.else_body)
                 self.mainFunction += "}"
@@ -122,6 +127,22 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.visit(ctx.getChild(2, stateful_aluParser.ExprContext))
         self.mainFunction += "," + "Mux3_" + str(self.mux3Count) + ")"
         self.generateMux3()
+        self.mux3Count += 1
+
+    @overrides
+    def visitMux3WithNum(self, ctx):
+        self.mainFunction += self.stateful_alu_name + "_Mux3_" + str(
+            self.mux3Count) + "("
+        self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
+        self.mainFunction += ","
+        self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
+        self.mainFunction += "," + "Mux3_" + str(self.mux3Count) + ")"
+        # Here it's the child with index 6. The grammar parse for this
+        # expression as whole is following, NUM '(' expr ',' expr ',' NUM ')'
+        # Where NUM is not considered as an expr. Consider parsing NUM as expr
+        # so we could simply do ctx.getChild(2, stateful_aluParser.ExprContext)
+        # below.
+        self.generateMux3WithNum(ctx.getChild(6).getText())
         self.mux3Count += 1
 
     @overrides
@@ -195,6 +216,22 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     else if (choice == 1) return op2;
     else return op3;
     } \n\n"""
+        self.add_hole("Mux3_" + str(self.mux3Count), 2)
+
+    def generateMux3WithNum(self, num):
+        # NOTE: To escape curly brace, use double curly brace.
+        function_str = """\
+            int {0}_Mux3_{1}(int op1, int op2, int choice) {{
+                if (choice == 0) return op1;
+                else if (choice == 1) return op2;
+                else return {2};
+            }}\n
+        """
+        self.helperFunctionStrings += dedent(
+            function_str.format(self.stateful_alu_name, str(self.mux3Count),
+                                num))
+        # Add two bit width hole, to express 3 possible values for choice in the
+        # above code.
         self.add_hole("Mux3_" + str(self.mux3Count), 2)
 
     def generateRelOp(self):
