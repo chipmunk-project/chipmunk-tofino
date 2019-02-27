@@ -1,7 +1,6 @@
 Installation
 - Install [antlr](https://www.antlr.org/)
-- `pip3 install antlr4-python3-runtime`
-- `pip3 install overrides` or `pip3 install --user overrides`
+- `pip3 install antlr4-python3-runtime jinja2 overrides`
 - Generate ALU parser: `antlr4 -Dlanguage=Python3 -visitor stateful_alu.g4`
 
 Example of code generation:
