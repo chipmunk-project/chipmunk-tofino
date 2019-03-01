@@ -14,7 +14,10 @@ def get_num_pkt_fields_and_state_vars(program):
     Returns:
         A tuple of packet field numbers and state variables.
     """
-    pkt_fields = len(findall(r'\/\/ state_and_packet.pkt_(\d+) =', program))
-    state_vars = len(findall(r'\/\/ state_and_packet.state_(\d+) =', program))
-
-    return (pkt_fields, state_vars)
+    pkt_fields = [
+        int(x) for x in findall(r'state_and_packet.pkt_(\d+)', program)
+    ]
+    state_vars = [
+        int(x) for x in findall(r'state_and_packet.state_(\d+)', program)
+    ]
+    return (max(pkt_fields) + 1, max(state_vars) + 1)
