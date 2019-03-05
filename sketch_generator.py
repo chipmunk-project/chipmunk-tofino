@@ -76,7 +76,7 @@ class SketchGenerator:
             len(potential_operands), alu_name + "_mux1")
         mux_op_2 = self.generate_mux(
             len(potential_operands), alu_name + "_mux2")
-        self.add_hole(self.sketch_name_ + "_" + alu_name + "_opcode", 3)
+        self.add_hole(self.sketch_name_ + "_" + alu_name + "_opcode", 5)
         self.add_hole(self.sketch_name_ + "_" + alu_name + "_immediate", 2)
         self.add_hole(self.sketch_name_ + "_" + alu_name + "_mode", 2)
         self.add_assert(

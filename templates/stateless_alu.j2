@@ -18,8 +18,16 @@ int {{ alu_name }}({{arg_list|join(',')}}, int opcode_hole_local, int immediate_
     return (alu_mode == 0 ? (x != 0) && (y != 0)
                           : (alu_mode == 1 ? (immediate_operand != 0) && (y != 0)
                                            : (x != 0) && (immediate_operand != 0)));
-  } else {
+  } else if (opcode == 4) {
     return (alu_mode == 0 ? ! (x != 0)
                           : ! (y != 0));
+  } else if (opcode == 5) {
+    return x != y;
+  } else if (opcode == 6) {
+    return x == y;
+  } else if (opcode == 7) {
+    return x >= y;
+  } else {
+    return x < y;
   }
 }
