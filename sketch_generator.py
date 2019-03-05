@@ -144,7 +144,8 @@ class SketchGenerator:
     # Stateful operand muxes (stateless ones are part of generate_stateless_alu)
     def generate_stateful_operand_muxes(self):
         ret = ""
-        # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to support constant/immediate operands.
+        # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to
+        # support constant/immediate operands.
         assert (self.num_operands_to_stateful_alu_ > 0)
         for i in range(self.num_pipeline_stages_):
             for l in range(self.num_state_vars_):
@@ -156,12 +157,15 @@ class SketchGenerator:
 
     # Output muxes to pick between stateful ALUs and stateless ALU
     def generate_output_muxes(self):
-        # Note: We are generating a mux that takes as input all virtual stateful ALUs + corresponding stateless ALU
-        # The number of virtual stateful ALUs is more or less than the physical stateful ALUs because it equals the
-        # number of state variables in the program_file, but this doesn't affect correctness
-        # because we enforce that the total number of active virtual stateful ALUs is within the physical limit.
-        # It also doesn't affect the correctness of modeling the output mux because the virtual output mux setting can be
-        # translated into the physical output mux setting during post processing.
+        # Note: We are generating a mux that takes as input all virtual stateful
+        # ALUs + corresponding stateless ALU The number of virtual stateful ALUs
+        # is more or less than the physical stateful ALUs because it equals the
+        # number of state variables in the program_file, but this doesn't affect
+        # correctness because we enforce that the total number of active virtual
+        # stateful ALUs is within the physical limit.  It also doesn't affect
+        # the correctness of modeling the output mux because the virtual output
+        # mux setting can be translated into the physical output mux setting
+        # during post processing.
         ret = ""
         for i in range(self.num_pipeline_stages_):
             for k in range(self.num_phv_containers_):

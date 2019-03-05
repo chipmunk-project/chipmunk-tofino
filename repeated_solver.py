@@ -11,11 +11,13 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from sketch_generator import SketchGenerator
 from utils import get_num_pkt_fields_and_state_vars
 
-
 if (len(sys.argv) < 9):  # This part may need change with the chipmunk.py file
     print(
         "Usage: python3 " + sys.argv[0] +
-        " <program file> <alu file> <number of pipeline stages> <number of stateless/stateful ALUs per stage> <codegen/optverify> <sketch_name (w/o file extension)> <parallel/serial> <counter_example_mode/hole_elimination_mode>"
+        " <program file> <alu file> <number of pipeline stages> " + \
+        "<number of stateless/stateful ALUs per stage> <codegen/optverify> " + \
+        "<sketch_name (w/o file extension)> <parallel/serial> " + \
+        "<counter_example_mode/hole_elimination_mode>"
     )
     sys.exit(1)
 else:
@@ -28,13 +30,14 @@ else:
     num_alus_per_stage = int(sys.argv[4])
     num_phv_containers = num_alus_per_stage
     mode = str(sys.argv[5])
-    #Now I want to make sure the mode is codegen
-    assert (mode == "codegen")
+    # Now I want to make sure the mode is codegen
+    assert mode == "codegen"
     sketch_name = str(sys.argv[6])
     parallel_or_serial = str(sys.argv[7])
     version = str(sys.argv[8])
-    assert ((version == "counter_example_mode")
-            or (version == "hole_elimination_mode"))
+    assert (version == "counter_example_mode") or (
+        version == "hole_elimination_mode")
+
 # Initialize jinja2 environment for templates
 env = Environment(
     loader=FileSystemLoader('./templates'), undefined=StrictUndefined)
@@ -70,11 +73,10 @@ if (ret_code != 0):
     print("total time in seconds: ", end - start)
     sys.exit(1)
 else:
-    #generate the result file
-    result_file = open("/tmp/" + sketch_name + "_result.holes", "w")
-    result_file.write(output)
-    result_file.close()
-    #Step2:run sol_verify.py
+    # Generate the result file
+    with open("/tmp/" + sketch_name + "_result.holes", "w") as result_file:
+        result_file.write(output)
+    # Step2: run sol_verify.py
     (ret_code, output) = subprocess.getstatusoutput(
         "python3 sol_verify.py " + sketch_name + "_codegen.sk" + " " +
         "/tmp/" + sketch_name + "_result.holes ")
@@ -85,16 +87,14 @@ else:
         sys.exit(0)
     else:
         print("failed for larger size and need repeated testing by sketch")
-        #start to repeated run sketch until get the final result
-        #
-        original_sketch_file_string = open(sketch_name + "_codegen.sk",
-                                           "r").read()
+        # start to repeated run sketch until get the final result
+        original_sketch_file_string = Path(sketch_name +
+                                           "_codegen.sk").read_text()
         count = 0
         while (1):
             if (version == "hole_elimination_mode"):
-                hole_value_file_string = open(
-                    "/tmp/" + sketch_name + "_result.holes", "r").read()
-                open("/tmp/" + sketch_name + "_result.holes", "w").close()
+                hole_value_file_string = Path(
+                    "/tmp/" + sketch_name + "_result.holes").read_text()
                 begin_pos = hole_value_file_string.find('int')
                 end_pos = hole_value_file_string.rfind(';')
                 hole_value_file_string = hole_value_file_string[begin_pos:
@@ -116,12 +116,12 @@ else:
                     begin_pos] + "assert(!(" + hole_value_file_string + "));\n" + original_sketch_file_string[
                         begin_pos:]
             else:
-                #find the position of harness
+                # Find the position of harness
                 begin_pos = original_sketch_file_string.find('harness')
                 begin_pos = original_sketch_file_string.find(
                     'assert', begin_pos)
 
-                #add function assert here
+                # Add function assert here
                 if (count == 0):
                     (ret_code_sketch_with_counter_example,
                      output_with_counter_example) = subprocess.getstatusoutput(
@@ -163,7 +163,6 @@ else:
             new_sketch = open("/tmp/" + sketch_name + "_new_sketch.sk", "w")
             new_sketch.write(original_sketch_file_string)
             new_sketch.close()
-            #success      print("Hello")
             (ret_code1, output) = subprocess.getstatusoutput(
                 "sketch -V 3 --bnd-inbits=2 --bnd-int-range=50 " +
                 new_sketch.name)
@@ -179,8 +178,6 @@ else:
                     if (len(hits) != 1):
                         print(hits)
                         print(hole_name)
-                    #assert(len(hits) == 1)
-                    #assert(len(hits[0]) == 2)
                     else:
                         hole_value_string += "int " + hits[0][
                             0] + " = " + hits[0][1] + ";"
