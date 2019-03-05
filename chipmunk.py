@@ -1,6 +1,7 @@
 """Chipmunk Compiler"""
 from pathlib import Path
 import sys
+import re
 
 from compiler import Compiler
 from utils import get_num_pkt_fields_and_state_vars
@@ -35,9 +36,26 @@ def main(argv):
     # Now fill the appropriate template holes using the components created using
     # sketch_generator
     if mode == "codegen":
-        return compiler.codegen()
+        (ret_code, output) = compiler.codegen()
 
-    compiler.optverify()
+        if ret_code != 0:
+            with open(compiler.sketch_name + ".errors", "w") as errors_file:
+                errors_file.write(output)
+                print("Sketch failed. Output left in " + errors_file.name)
+            return 1
+
+        for hole_name in compiler.sketch_generator.hole_names_:
+            hits = re.findall("(" + hole_name + ")__" + r"\w+ = (\d+)", output)
+            assert len(hits) == 1
+            assert len(hits[0]) == 2
+            print("int ", hits[0][0], " = ", hits[0][1], ";")
+        with open(compiler.sketch_name + ".success", "w") as success_file:
+            success_file.write(output)
+            print("Sketch succeeded. Generated configuration is given " +
+                  "above. Output left in " + success_file.name)
+        return 0
+    else:
+        compiler.optverify()
 
 if __name__ == "__main__":
     main(sys.argv)

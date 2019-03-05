@@ -78,22 +78,7 @@ class Compiler:
                 "time sketch -V 12 --slv-seed=1 --bnd-inbits=2 " +
                 "--bnd-int-range=50 " + sketch_file_name)
 
-        if ret_code != 0:
-            with open(self.sketch_name + ".errors", "w") as errors_file:
-                errors_file.write(output)
-                print("Sketch failed. Output left in " + errors_file.name)
-            return 1
-
-        for hole_name in self.sketch_generator.hole_names_:
-            hits = re.findall("(" + hole_name + ")__" + r"\w+ = (\d+)", output)
-            assert len(hits) == 1
-            assert len(hits[0]) == 2
-            print("int ", hits[0][0], " = ", hits[0][1], ";")
-        with open(self.sketch_name + ".success", "w") as success_file:
-            success_file.write(output)
-            print("Sketch succeeded. Generated configuration is given " +
-                  "above. Output left in " + success_file.name)
-        return 0
+        return (ret_code, output)
 
     def optverify(self):
         """Opt Verify"""
