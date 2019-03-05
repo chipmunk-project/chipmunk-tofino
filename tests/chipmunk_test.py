@@ -23,7 +23,7 @@ class ChipmunkCodegenTest(unittest.TestCase):
             compiler = Compiler(
                 path.join(base_path, "../example_specs/simple.sk"),
                 path.join(alu_dir, alu), 2, 2, "simple", "serial")
-            self.assertEqual(compiler.codegen(), 0, "Compiling simple.sk failed for " + alu)
+            self.assertEqual(compiler.codegen()[0], 0, "Compiling simple.sk failed for " + alu)
             # TODO(taegyunkim): When all tests pass, clean up intermediary files
             # or at least have an option to keep intermediary files, with
             # default deleting them.
