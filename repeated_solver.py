@@ -139,9 +139,11 @@ else:
                 counter_example_definition = "|StateAndPacket| x_" + str(count) + " = |StateAndPacket|(\n"
                 for i in range(len(pkt_group)):
                   counter_example_definition += pkt_group[i][0] + " = " + pkt_group[i][1] + ','
-                for i in range(len(state_group)-1):
-                  counter_example_definition += state_group[i][0] + " = " + state_group[i][1] + ','
-                counter_example_definition += state_group[i][0] + " = " + state_group[i][1] + ");\n"
+                for i in range(len(state_group)):
+                  if (i < len(state_group) - 1):
+                    counter_example_definition += state_group[i][0] + " = " + state_group[i][1] + ','
+                  else:
+                    counter_example_definition += state_group[i][0] + " = " + state_group[i][1] + ");\n"
 
                 counter_example_assert = "assert pipeline(" + "x_" + str(
                     count) + ")" + " == " + "program(" + "x_" + str(
