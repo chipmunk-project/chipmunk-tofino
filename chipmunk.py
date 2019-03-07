@@ -42,7 +42,7 @@ def main(argv):
             with open(compiler.sketch_name + ".errors", "w") as errors_file:
                 errors_file.write(output)
                 print("Sketch failed. Output left in " + errors_file.name)
-            return 1
+            sys.exit(1)
 
         for hole_name in compiler.sketch_generator.hole_names_:
             hits = re.findall("(" + hole_name + ")__" + r"\w+ = (\d+)", output)
@@ -53,7 +53,7 @@ def main(argv):
             success_file.write(output)
             print("Sketch succeeded. Generated configuration is given " +
                   "above. Output left in " + success_file.name)
-        return 0
+        sys.exit(0)
     else:
         compiler.optverify()
 
