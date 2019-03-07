@@ -10,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from sketch_generator import SketchGenerator
 from utils import get_num_pkt_fields_and_state_vars
+from sol_verify import sol_verify
 
 if (len(sys.argv) < 9):  # This part may need change with the chipmunk.py file
     print(
@@ -77,9 +78,8 @@ else:
     with open("/tmp/" + sketch_name + "_result.holes", "w") as result_file:
         result_file.write(output)
     # Step2: run sol_verify.py
-    (ret_code, output) = subprocess.getstatusoutput(
-        "python3 sol_verify.py " + sketch_name + "_codegen.sk" + " " +
-        "/tmp/" + sketch_name + "_result.holes ")
+    ret_code = sol_verify(sketch_name + "_codegen.sk" , "/tmp/"+ sketch_name +
+                          "_result.holes")
     if (ret_code == 0):
         print("success")
         end = time.time()
@@ -132,25 +132,16 @@ else:
                      output_with_counter_example) = subprocess.getstatusoutput(
                          "sketch -V 3 --debug-cex --bnd-inbits=10 " + "/tmp/" +
                          sketch_name + "_new_sketch_with_hole_value.sk")
-                input_values = re.findall("has value \d+= " + '\((\d+)\)',
-                                          output_with_counter_example)
-                hits_pkt = re.findall("pkt_\d+", output_with_counter_example)
-                hits_state = re.findall("state_\d+",
-                                        output_with_counter_example)
-                print(input_values)
-                print("pkt: ", hits_pkt)
-                print("state: ", hits_state)
-                counter_example_definition = "|StateAndPacket| x_" + str(
-                    count) + " = |StateAndPacket|(\n"
-                for i in range(len(hits_pkt)):
-                    counter_example_definition += hits_pkt[
-                        i] + " = " + input_values[i] + ','
-                for i in range(len(hits_state) - 1):
-                    counter_example_definition += hits_state[
-                        i] + " = " + input_values[len(hits_pkt) + i] + ','
-                counter_example_definition += hits_state[
-                    len(hits_state) -
-                    1] + " = " + input_values[len(input_values) - 1] + ");\n"
+                pkt_group = re.findall("input (pkt_\d+)\w+ has value \d+= \((\d+)\)", output_with_counter_example)
+                state_group = re.findall("input (state_\d+)\w+ has value \d+= \((\d+)\)", output_with_counter_example)
+                print(pkt_group,"len= ", len(pkt_group))
+                print(state_group, "len= ", len(state_group))
+                counter_example_definition = "|StateAndPacket| x_" + str(count) + " = |StateAndPacket|(\n"
+                for i in range(len(pkt_group)):
+                  counter_example_definition += pkt_group[i][0] + " = " + pkt_group[i][1] + ','
+                for i in range(len(state_group)-1):
+                  counter_example_definition += state_group[i][0] + " = " + state_group[i][1] + ','
+                counter_example_definition += state_group[i][0] + " = " + state_group[i][1] + ");\n"
 
                 counter_example_assert = "assert pipeline(" + "x_" + str(
                     count) + ")" + " == " + "program(" + "x_" + str(
@@ -183,10 +174,7 @@ else:
                             0] + " = " + hits[0][1] + ";"
                 hole_value_file.write(hole_value_string)
                 hole_value_file.close()
-                (ret_code, output) = subprocess.getstatusoutput(
-                    "python3 sol_verify.py " + "/tmp/" + sketch_name +
-                    "_new_sketch.sk" + " " + "/tmp/" + sketch_name +
-                    "_result.holes ")
+                ret_code = sol_verify("/tmp/" + sketch_name + "_new_sketch.sk" , "/tmp/"+ sketch_name +"_result.holes")
                 if (ret_code == 0):
                     print("finally succeed")
                     end = time.time()
