@@ -12,13 +12,13 @@ from sketch_generator import SketchGenerator
 from utils import get_num_pkt_fields_and_state_vars
 from sol_verify import sol_verify
 
-if (len(sys.argv) < 9):  # This part may need change with the chipmunk.py file
+if (len(sys.argv) != 8):  # This part may need change with the chipmunk.py file
     print(
         "Usage: python3 " + sys.argv[0] +
         " <program file> <alu file> <number of pipeline stages> " + \
-        "<number of stateless/stateful ALUs per stage> <codegen/optverify> " + \
+        "<number of stateless/stateful ALUs per stage> " + \
         "<sketch_name (w/o file extension)> <parallel/serial> " + \
-        "<counter_example_mode/hole_elimination_mode>"
+        "<cex_mode/hole_elimination_mode>"
     )
     sys.exit(1)
 else:
@@ -30,14 +30,10 @@ else:
     num_pipeline_stages = int(sys.argv[3])
     num_alus_per_stage = int(sys.argv[4])
     num_phv_containers = num_alus_per_stage
-    mode = str(sys.argv[5])
-    # Now I want to make sure the mode is codegen
-    assert mode == "codegen"
-    sketch_name = str(sys.argv[6])
-    parallel_or_serial = str(sys.argv[7])
-    version = str(sys.argv[8])
-    assert (version == "counter_example_mode") or (
-        version == "hole_elimination_mode")
+    sketch_name = str(sys.argv[5])
+    parallel_or_serial = str(sys.argv[6])
+    mode = str(sys.argv[7])
+    assert (mode == "cex_mode") or (mode == "hole_elimination_mode")
 
 # Initialize jinja2 environment for templates
 env = Environment(
@@ -66,8 +62,8 @@ sketch_generator.generate_state_allocator()
 #Step1: run chipmunk to get the codegen
 (ret_code, output) = subprocess.getstatusoutput(
     "python3 chipmunk.py " + program_file + " " + alu_file + " " +
-    str(num_pipeline_stages) + " " + str(num_alus_per_stage) + " " + mode +
-    " " + sketch_name + " " + parallel_or_serial)
+    str(num_pipeline_stages) + " " + str(num_alus_per_stage) + " codegen " +
+    sketch_name + " " + parallel_or_serial)
 if (ret_code != 0):
     print("failed")
     end = time.time()
@@ -92,7 +88,7 @@ else:
                                            "_codegen.sk").read_text()
         count = 0
         while (1):
-            if (version == "hole_elimination_mode"):
+            if (mode == "hole_elimination_mode"):
                 hole_value_file_string = Path(
                     "/tmp/" + sketch_name + "_result.holes").read_text()
                 begin_pos = hole_value_file_string.find('int')
@@ -137,6 +133,22 @@ else:
                 print(pkt_group,"len= ", len(pkt_group))
                 print(state_group, "len= ", len(state_group))
                 counter_example_definition = "|StateAndPacket| x_" + str(count) + " = |StateAndPacket|(\n"
+                # Check if all packet fields are included in pkt_group as part of the counterexample.
+                # If not, set those packet fields to a default (0) since they don't matter for the counterexample.
+                for i in range(int(num_fields_in_prog)):
+                  if ("pkt_" + str(i) in [regex_match[0] for regex_match in pkt_group]):
+                    continue
+                  else:
+                    pkt_group.append(("pkt_" + str(i), str(0)))
+
+                # Check if all state vars are included in state_group as part of the counterexample.
+                # If not, set those state vars to a default (0) since they don't matter for the counterexample.
+                for i in range(int(num_state_vars)):
+                  if ("state_" + str(i) in [regex_match[0] for regex_match in state_group]):
+                    continue
+                  else:
+                    state_group.append(("state_" + str(i), str(0)))
+
                 for i in range(len(pkt_group)):
                   counter_example_definition += pkt_group[i][0] + " = " + pkt_group[i][1] + ','
                 for i in range(len(state_group)):

@@ -1,0 +1,34 @@
+/* 
+// Original program: 
+// Sample every 30th packet in a flow
+#define N 30
+
+struct Packet {
+  int sample;
+};
+
+int count = 0;
+
+void func(struct Packet pkt) {
+  if (count == N - 1) {
+    count = 0;
+  } else if (count == 8){
+    count = 2;
+  } else{
+    count = 1;
+  }
+  pkt.sample = 1;
+}
+ */
+
+// Output the rename map:
+// stateless variable rename list: 
+
+// state_and_packet.pkt_0 = pkt.sample
+
+// stateful variable rename list: 
+
+// state_and_packet.state_0 = count
+
+|StateAndPacket| program (|StateAndPacket| state_and_packet) {if (state_and_packet.state_0==30-1) {state_and_packet.state_0=0;}else {if (state_and_packet.state_0==8) {state_and_packet.state_0=2;}else {state_and_packet.state_0=1;}}state_and_packet.pkt_0=1; return state_and_packet;
+}
