@@ -21,3 +21,13 @@ def get_num_pkt_fields_and_state_vars(program):
         int(x) for x in findall(r'state_and_packet.state_(\d+)', program)
     ]
     return (max(pkt_fields) + 1, max(state_vars) + 1)
+
+
+def get_hole_dicts(sketch_file):
+    """Returns a dictionary from hole names to hole bit sizes given a sketch
+    file.
+    """
+    return {
+        name: bits
+        for name, bits in findall(r'(\w+)= \?\?\((\d+)\);', sketch_file)
+    }
