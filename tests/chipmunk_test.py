@@ -10,6 +10,12 @@ from chipmunk import Compiler
 class ChipmunkCodegenTest(unittest.TestCase):
     """Tests codegen method from chipmunk.Compiler."""
 
+    def setUp(self):
+        self.base_path = path.abspath(path.dirname(__file__))
+        self.data_dir = path.join(self.base_path, "data/")
+        self.alu_dir = path.join(self.base_path, "../example_alus/")
+        self.spec_dir = path.join(self.base_path, "../example_specs/")
+
     def test_codegen_with_simple_sketch_for_all_alus(self):
         base_path = path.abspath(path.dirname(__file__))
         alu_dir = path.join(base_path, "../example_alus/")
@@ -23,10 +29,21 @@ class ChipmunkCodegenTest(unittest.TestCase):
             compiler = Compiler(
                 path.join(base_path, "../example_specs/simple.sk"),
                 path.join(alu_dir, alu), 2, 2, "simple", "serial")
-            self.assertEqual(compiler.codegen()[0], 0, "Compiling simple.sk failed for " + alu)
+            self.assertEqual(compiler.codegen()[
+                             0], 0, "Compiling simple.sk failed for " + alu)
             # TODO(taegyunkim): When all tests pass, clean up intermediary files
             # or at least have an option to keep intermediary files, with
             # default deleting them.
+
+    def test_raise_assertion_for_grid_size(self):
+        spec_filename = "simple.sk"
+        alu_filename = "raw.stateful_alu"
+
+        with self.assertRaises(AssertionError):
+            Compiler(
+                path.join(self.spec_dir, spec_filename),
+                path.join(self.alu_dir, alu_filename), 1, 0, "simple_raw_1_2",
+                "serial")
 
 
 if __name__ == '__main__':

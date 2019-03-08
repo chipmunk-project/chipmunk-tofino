@@ -4,7 +4,7 @@ import sys
 import re
 
 from compiler import Compiler
-from utils import get_num_pkt_fields_and_state_vars
+
 
 def main(argv):
     """Main program."""
@@ -17,13 +17,9 @@ def main(argv):
         exit(1)
 
     program_file = str(argv[1])
-    (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(
-        Path(program_file).read_text())
     alu_file = str(argv[2])
     num_pipeline_stages = int(argv[3])
     num_alus_per_stage = int(argv[4])
-    num_phv_containers = num_alus_per_stage
-    assert num_fields_in_prog <= num_phv_containers
     mode = str(argv[5])
     assert mode in ["codegen", "optverify"]
     sketch_name = str(argv[6])
@@ -56,6 +52,7 @@ def main(argv):
         sys.exit(0)
     else:
         compiler.optverify()
+
 
 if __name__ == "__main__":
     main(sys.argv)
