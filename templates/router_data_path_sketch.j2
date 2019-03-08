@@ -9,7 +9,7 @@
   // Container i will be allocated to packet field i from the spec.
   {% for container_number in range(num_phv_containers) %}
     int input_0_{{container_number}} = 0;
-  {% endfor %} 
+  {% endfor %}
 
   // One variable for each stateful ALU's state operand
   // This will be allocated to a state variable from the program using indicator variables.
@@ -49,7 +49,6 @@
   {% endfor %},
   {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_opcode,
   {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_immediate,
-  {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mode,
   {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux1_ctrl,
   {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux2_ctrl
   );

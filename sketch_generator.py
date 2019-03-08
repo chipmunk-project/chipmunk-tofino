@@ -78,7 +78,6 @@ class SketchGenerator:
             len(potential_operands), alu_name + "_mux2")
         self.add_hole(self.sketch_name_ + "_" + alu_name + "_opcode", 5)
         self.add_hole(self.sketch_name_ + "_" + alu_name + "_immediate", 2)
-        self.add_hole(self.sketch_name_ + "_" + alu_name + "_mode", 2)
         self.add_assert(
             "(" + self.sketch_name_ + "_" + alu_name + "_opcode == 1)" + "|| ("
             + self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
