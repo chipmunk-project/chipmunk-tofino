@@ -21,7 +21,7 @@ def add_prefix_suffix(text, prefix_string, suffix_string):
 
 # Sketch Generator class
 class SketchGenerator:
-    def __init__(self, sketch_name, num_phv_containers, num_state_vars,
+    def __init__(self, sketch_name, num_phv_containers, num_state_groups,
                  num_alus_per_stage, num_pipeline_stages, num_fields_in_prog,
                  jinja2_env, alu_file):
         self.sketch_name_ = sketch_name
@@ -34,13 +34,14 @@ class SketchGenerator:
         self.constraints_ = []
         self.num_phv_containers_ = num_phv_containers
         self.num_pipeline_stages_ = num_pipeline_stages
-        self.num_state_vars_ = num_state_vars
+        self.num_state_groups_ = num_state_groups
         self.num_alus_per_stage_ = num_alus_per_stage
         self.num_fields_in_prog_ = num_fields_in_prog
         self.jinja2_env_ = jinja2_env
         self.jinja2_env_.filters["add_prefix_suffix"] = add_prefix_suffix
         self.alu_file_ = alu_file
         self.num_operands_to_stateful_alu_ = 0
+        self.num_state_slots_ = 0
 
     # Write all holes to a single hole string for ease of debugging
     def add_hole(self, hole_name, hole_bit_width):
@@ -102,24 +103,25 @@ class SketchGenerator:
             x for x in sorted(stateful_alu_sketch_generator.stateful_alu_args)
         ]
         self.num_operands_to_stateful_alu_ = stateful_alu_sketch_generator.num_packet_fields
+        self.num_state_slots_ = stateful_alu_sketch_generator.num_state_slots
         return stateful_alu_sketch_generator.helperFunctionStrings + stateful_alu_sketch_generator.mainFunction
 
     def generate_state_allocator(self):
         for i in range(self.num_pipeline_stages_):
-            for l in range(self.num_state_vars_):
+            for l in range(self.num_state_groups_):
                 self.add_hole(
                     self.sketch_name_ + "_" + "salu_config_" + str(i) + "_" +
                     str(l), 1)
 
         for i in range(self.num_pipeline_stages_):
             assert_predicate = "("
-            for l in range(self.num_state_vars_):
+            for l in range(self.num_state_groups_):
                 assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(
                     i) + "_" + str(l) + " + "
             assert_predicate += "0) <= " + str(self.num_alus_per_stage_)
             self.add_assert(assert_predicate)
 
-        for l in range(self.num_state_vars_):
+        for l in range(self.num_state_groups_):
             assert_predicate = "("
             for i in range(self.num_pipeline_stages_):
                 assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(
@@ -147,7 +149,7 @@ class SketchGenerator:
         # support constant/immediate operands.
         assert (self.num_operands_to_stateful_alu_ > 0)
         for i in range(self.num_pipeline_stages_):
-            for l in range(self.num_state_vars_):
+            for l in range(self.num_state_groups_):
                 for k in range(self.num_operands_to_stateful_alu_):
                     ret += self.generate_mux(
                         self.num_phv_containers_, "stateful_operand_mux_" +
@@ -169,7 +171,7 @@ class SketchGenerator:
         for i in range(self.num_pipeline_stages_):
             for k in range(self.num_phv_containers_):
                 ret += self.generate_mux(
-                    self.num_state_vars_ + 1,
+                    self.num_state_groups_ * self.num_state_slots_ + 1,
                     "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
         return ret
 
@@ -183,7 +185,7 @@ class SketchGenerator:
                         "input" + str(k)
                         for k in range(0, self.num_phv_containers_)
                     ]) + "\n"
-            for l in range(self.num_state_vars_):
+            for l in range(self.num_state_groups_):
                 ret += self.generate_stateful_alu("stateful_alu_" + str(i) +
                                                   "_" + str(l)) + "\n"
         return ret
@@ -206,9 +208,10 @@ class SketchGenerator:
             output_mux_definitions=output_mux_definitions,
             alu_definitions=alu_definitions,
             num_fields_in_prog=self.num_fields_in_prog_,
-            num_state_vars=self.num_state_vars_,
+            num_state_groups=self.num_state_groups_,
             spec_as_sketch=Path(program_file).read_text(),
             all_assertions=self.asserts_,
             hole_arguments=self.hole_arguments_,
             stateful_alu_hole_arguments=self.stateful_alu_hole_arguments_,
-            num_operands_to_stateful_alu=self.num_operands_to_stateful_alu_)
+            num_operands_to_stateful_alu=self.num_operands_to_stateful_alu_,
+            num_state_slots = self.num_state_slots_)

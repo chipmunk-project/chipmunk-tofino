@@ -9,7 +9,7 @@ import time
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from sketch_generator import SketchGenerator
-from utils import get_num_pkt_fields_and_state_vars
+from utils import get_num_pkt_fields_and_state_groups
 from sol_verify import sol_verify
 
 if (len(sys.argv) != 8):  # This part may need change with the chipmunk.py file
@@ -24,7 +24,7 @@ if (len(sys.argv) != 8):  # This part may need change with the chipmunk.py file
 else:
     start = time.time()
     program_file = str(sys.argv[1])
-    (num_fields_in_prog, num_state_vars) = get_num_pkt_fields_and_state_vars(
+    (num_fields_in_prog, num_state_groups) = get_num_pkt_fields_and_state_groups(
         Path(program_file).read_text())
     alu_file = str(sys.argv[2])
     num_pipeline_stages = int(sys.argv[3])
@@ -45,7 +45,7 @@ sketch_generator = SketchGenerator(
     num_pipeline_stages=num_pipeline_stages,
     num_alus_per_stage=num_alus_per_stage,
     num_phv_containers=num_phv_containers,
-    num_state_vars=num_state_vars,
+    num_state_groups=num_state_groups,
     num_fields_in_prog=num_fields_in_prog,
     jinja2_env=env,
     alu_file=alu_file)

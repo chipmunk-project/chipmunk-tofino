@@ -8,7 +8,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from chipmunk_pickle import ChipmunkPickle
 from sketch_generator import SketchGenerator
-from utils import get_num_pkt_fields_and_state_vars
+from utils import get_num_pkt_fields_and_state_groups
 
 
 class Compiler:
@@ -22,21 +22,21 @@ class Compiler:
         self.parallel_or_serial = parallel_or_serial
 
         (self.num_fields_in_prog,
-         self.num_state_vars) = get_num_pkt_fields_and_state_vars(
+         self.num_state_groups) = get_num_pkt_fields_and_state_groups(
              Path(program_file).read_text())
 
         assert self.num_fields_in_prog <= num_alus_per_stage
 
         # Initialize jinja2 environment for templates
         self.jinja2_env = Environment(
-            loader=FileSystemLoader('./templates'), undefined=StrictUndefined)
+            loader=FileSystemLoader('./templates'), undefined=StrictUndefined, trim_blocks = True, lstrip_blocks = True)
         # Create an object for sketch generation
         self.sketch_generator = SketchGenerator(
             sketch_name=sketch_name,
             num_pipeline_stages=num_pipeline_stages,
             num_alus_per_stage=num_alus_per_stage,
             num_phv_containers=num_alus_per_stage,
-            num_state_vars=self.num_state_vars,
+            num_state_groups=self.num_state_groups,
             num_fields_in_prog=self.num_fields_in_prog,
             jinja2_env=self.jinja2_env,
             alu_file=alu_file)
@@ -52,6 +52,9 @@ class Compiler:
         # Create allocator to ensure each state var is assigned to exactly
         # stateful ALU and vice versa.
         self.sketch_generator.generate_state_allocator()
+
+        # Get number of state slots in stateful ALU from sketch_generator
+        self.num_state_slots = self.sketch_generator.num_state_slots_
 
     def codegen(self):
         """Codegeneration"""
@@ -107,7 +110,8 @@ class Compiler:
                     hole_arguments=self.sketch_generator.hole_arguments_,
                     constraints=self.sketch_generator.constraints_,
                     num_fields_in_prog=self.num_fields_in_prog,
-                    num_state_vars=self.num_state_vars), pickle_file)
+                    num_state_groups=self.num_state_groups,
+                    num_state_slots=self.num_state_slots), pickle_file)
             print("Pickle file is ", pickle_file.name)
 
         print("Total number of hole bits is",

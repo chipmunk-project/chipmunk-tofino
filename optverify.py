@@ -25,12 +25,14 @@ else:
         sketch1_name + ".pickle", "rb")).num_fields_in_prog_ == pickle.load(
             open(sketch2_name + ".pickle", "rb")).num_fields_in_prog_)
     assert (pickle.load(open(
-        sketch1_name + ".pickle", "rb")).num_state_vars_ == pickle.load(
-            open(sketch2_name + ".pickle", "rb")).num_state_vars_)
+        sketch1_name + ".pickle", "rb")).num_state_groups_ == pickle.load(
+            open(sketch2_name + ".pickle", "rb")).num_state_groups_)
     num_fields_in_prog = pickle.load(open(sketch1_name + ".pickle",
                                           "rb")).num_fields_in_prog_
-    num_state_vars = pickle.load(open(sketch1_name + ".pickle",
-                                      "rb")).num_state_vars_
+    num_state_groups = pickle.load(open(sketch1_name + ".pickle",
+                                      "rb")).num_state_groups_
+    num_state_slots = pickle.load(open(sketch1_name + ".pickle",
+                                      "rb")).num_state_slots_
     opt_verify_template = env.get_template("opt_verify.j2")
     opt_verifier = opt_verify_template.render(
         sketch1_name=sketch1_name,
@@ -48,8 +50,9 @@ else:
         sketch2_asserts=pickle.load(open(sketch2_name + ".pickle",
                                          "rb")).constraints_,
         num_fields_in_prog=num_fields_in_prog,
-        num_state_vars=num_state_vars,
-        transform_function=file_to_str(transform_file))
+        num_state_groups=num_state_groups,
+        transform_function=file_to_str(transform_file),
+        num_state_slots=num_state_slots)
     print("Verifier file is ",
           sketch1_name + "_" + sketch2_name + "_verifier.sk")
     verifier_file = sketch1_name + "_" + sketch2_name + "_verifier.sk"

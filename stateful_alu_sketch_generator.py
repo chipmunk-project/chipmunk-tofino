@@ -21,6 +21,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.stateful_alu_args = dict()
         self.mainFunction = ""
         self.num_packet_fields = 0
+        self.num_state_slots = 0
 
     def add_hole(self, hole_name, hole_width):
         prefixed_hole = self.stateful_alu_name + "_" + hole_name
@@ -31,32 +32,39 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
 
     @overrides
     def visitStateful_alu(self, ctx):
-        self.mainFunction += "int " + self.stateful_alu_name + "("
+        self.mainFunction += "|StateGroup| " + self.stateful_alu_name + "("
         self.visit(ctx.getChild(0, stateful_aluParser.State_varsContext))
-        self.mainFunction += ", "
+        self.mainFunction += "ref |StateGroup| state_group, "
         self.visit(ctx.getChild(0, stateful_aluParser.Packet_fieldsContext))
+
         # The %s is for hole arguments, which are added below.
-        self.mainFunction += ", %s) {\n int old_state = state_1;"
+        self.mainFunction += ", %s) {\n |StateGroup| old_state_group = state_group;"
+
+        # Copy over state_group members into state_i scalar variables
+        assert(self.num_state_slots > 0)
+        for slot in range(self.num_state_slots):
+          self.mainFunction += "\nint state_" + str(slot) + " = state_group.state_" + str(slot) + ";"
+
+        # Now get into alu body
         self.visit(ctx.getChild(0, stateful_aluParser.Alu_bodyContext))
-        self.mainFunction += "\n; return old_state;\n}"
+        for slot in range(self.num_state_slots):
+          self.mainFunction += "\nstate_group.state_" + str(slot) + " = state_" + str(slot) + ";"
+        self.mainFunction += "\n; return old_state_group;\n}"
         argument_string = ",".join(
             ["int " + hole for hole in sorted(self.stateful_alu_args)])
         self.mainFunction = self.mainFunction % argument_string
-
-    @overrides
-    def visitState_var(self, ctx):
-        self.mainFunction += ctx.getText()
 
     @overrides
     def visitPacket_field(self, ctx):
         self.mainFunction += ctx.getText()
 
     @overrides
+    def visitState_var(self,ctx):
+        self.mainFunction += ctx.getText()
+
+    @overrides
     def visitState_vars(self, ctx):
-        self.mainFunction += "ref int "
-        self.visit(ctx.getChild(0, stateful_aluParser.State_varContext))
-        assert (ctx.getChildCount() == 1
-                ), "We currently only handle 1 state variable in an atom."
+        self.num_state_slots = ctx.getChildCount()
 
     @overrides
     def visitPacket_fields(self, ctx):

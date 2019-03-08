@@ -10,14 +10,14 @@
 ### Codegen
 
 ```shell
-python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 2 2 codegen sample1
+python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 2 2 codegen sample1 serial
 ```
 
 ### Optimization Verification
 
 ```shell
-python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample1
-python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample2
+python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample1 serial
+python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample2 serial
 python3 optverify.py sample1 sample2 example_transforms/very_simple.transform
 ```
 

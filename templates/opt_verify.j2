@@ -1,10 +1,19 @@
+// Data type for holding result from spec and implementation
+struct StateGroup {
+  {% for state_number in range(num_state_slots) %}
+    int state_{{state_number}};
+  {% endfor %}
+}
+
 // Data type for holding result from both sketches
 struct StateAndPacket {
   {% for field_number in range(num_fields_in_prog) %}
     int pkt_{{field_number}};
   {% endfor %}
-  {% for state_number in range(num_state_vars) %}
-    int state_{{state_number}};
+  {% for group_number in range(num_state_groups) %}
+    {% for slot_number in range(num_state_slots) %}
+      int state_group_{{group_number}}_state_{{slot_number}};
+    {% endfor %}
   {% endfor %}
 }
 
@@ -15,8 +24,10 @@ harness void main(
   {% for field_number in range(num_fields_in_prog) %}
     int sanp_pkt_{{field_number}},
   {% endfor %}
-  {% for state_number in range(num_state_vars) %}
-    int sanp_state_{{state_number}},
+  {% for state_group_number in range(num_state_groups) %}
+    {% for slot_number in range(num_state_slots) %}
+      int sanp_state_group_{{state_group_number}}_{{slot_number}} ,
+    {% endfor %}
   {% endfor %}
   {{hole1_arguments|join(',')}},
   {{hole2_arguments|join(',')}}) {
@@ -24,23 +35,25 @@ harness void main(
   // Preconditions:
 
   {% for hole in sketch1_holes %}
-  assume(({{hole.name}} >= 0) && ({{hole.name}} <= {{hole.max}}));
+    assume(({{hole.name}} >= 0) && ({{hole.name}} <= {{hole.max}}));
   {% endfor %}
 
   {% for predicate in sketch1_asserts %}
-  assume({{predicate}});
+    assume({{predicate}});
   {% endfor %}
 
   // Transformation from sketch 1's holes to sketch 2's holes
   {{ transform_function }}
 
   // Check that sketches are equivalent.
-  |StateAndPacket| state_and_packet;
+  StateAndPacket state_and_packet = new StateAndPacket();
   {% for field_number in range(num_fields_in_prog) %}
     state_and_packet.pkt_{{field_number}} = sanp_pkt_{{field_number}};
   {% endfor %}
-  {% for state_number in range(num_state_vars) %}
-    state_and_packet.state_{{state_number}} = sanp_state_{{state_number}};
+  {% for state_group_number in range(num_state_groups) %}
+    {% for slot_number in range(num_state_slots) %}
+      state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = sanp_state_group_{{state_group_number}}_{{slot_number}};
+    {% endfor %}
   {% endfor %}
 
   assert(pipeline@{{sketch1_name}}(state_and_packet, {{sketch1_holes|map(attribute='name')|join(',')}}) == pipeline@{{sketch2_name}}(state_and_packet, {{sketch2_holes|map(attribute='name')|join(',')}}));
@@ -48,10 +61,10 @@ harness void main(
   // Postconditions:
 
   {% for hole in sketch2_holes %}
-  assert(({{hole.name}} >= 0) && ({{hole.name}} <= {{hole.max}}));
+    assert(({{hole.name}} >= 0) && ({{hole.name}} <= {{hole.max}}));
   {% endfor %}
 
   {% for predicate in sketch2_asserts %}
-  assert({{predicate}});
+    assert({{predicate}});
   {% endfor %}
 }

@@ -5,7 +5,6 @@ import re
 
 from compiler import Compiler
 
-
 def main(argv):
     """Main program."""
     if len(argv) < 8:
