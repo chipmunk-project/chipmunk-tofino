@@ -3,8 +3,8 @@ pkt_0, pkt_1
 
 if (rel_op(Opt(state_0), Mux3(pkt_0, pkt_1, C()))) {
   state_0 = Opt(state_0) +
-            arith_op(Mux3(pkt_0, pkt_1, C()), Mux3(pkt_0, pkt_1, C()))
+            arith_op(Mux3(pkt_0, pkt_1, C()), Mux3(pkt_0, pkt_1, C()));
 } else {
   state_0 = Opt(state_0) +
-            arith_op(Mux3(pkt_0, pkt_1, C()), Mux3(pkt_0, pkt_1, C()))
+            arith_op(Mux3(pkt_0, pkt_1, C()), Mux3(pkt_0, pkt_1, C()));
 }

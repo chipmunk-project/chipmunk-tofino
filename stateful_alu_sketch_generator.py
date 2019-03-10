@@ -198,6 +198,11 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
 
     @overrides
     def visitUpdate(self, ctx):
+        
+        #Make sure every update ends with a semicolon
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ";", \
+                   "Every update must end with a semicolon."
+
         self.visit(ctx.getChild(0, stateful_aluParser.State_varContext))
         self.mainFunction += " = "
         self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))

@@ -45,7 +45,7 @@ alu_body : alu_update = updates
          | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')? (ELSE  '{' else_body = alu_body '}')?;
 
 updates: update+;
-update : state_var '=' expr;
+update : state_var '=' expr ';';
 expr   : state_var #StateVar
        | packet_field #PacketField
        | expr op=('+'|'-'|'*'|'/') expr #ExprWithOp
