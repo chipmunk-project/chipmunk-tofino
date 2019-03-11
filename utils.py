@@ -22,11 +22,28 @@ def get_num_pkt_fields_and_state_groups(program):
     ]
     return (max(pkt_fields) + 1, max(state_groups) + 1)
 
-def get_hole_dicts(sketch_file):
-    """Returns a dictionary from hole names to hole bit sizes given a sketch
-    file.
+
+def get_hole_dicts(sketch):
+    """Returns a dictionary from hole names to hole bit sizes given a sketch.
     """
     return {
         name: bits
-        for name, bits in findall(r'(\w+)= \?\?\((\d+)\);', sketch_file)
+        for name, bits in findall(r'(\w+)= \?\?\((\d+)\);', sketch)
     }
+
+
+def get_hole_value_assignments(hole_names, sketch):
+    """Returns a dictionary from hole names to hole value assignments given a
+    list of hole names and a completed sketch.
+    """
+
+    holes_to_values = {}
+
+    for name in hole_names:
+        values = findall("" + name + "__" + r"\w+ = (\d+)", sketch)
+        assert len(values) == 1, (
+            "Unexpected number of assignment statements found for hole %s, " \
+            "with values %s" % (name, values))
+        holes_to_values[name] = values[0]
+
+    return holes_to_values

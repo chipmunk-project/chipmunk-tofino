@@ -4,6 +4,8 @@ import sys
 import re
 
 from compiler import Compiler
+from utils import get_hole_value_assignments
+
 
 def main(argv):
     """Main program."""
@@ -39,11 +41,12 @@ def main(argv):
                 print("Sketch failed. Output left in " + errors_file.name)
             sys.exit(1)
 
-        for hole_name in compiler.sketch_generator.hole_names_:
-            hits = re.findall("(" + hole_name + ")__" + r"\w+ = (\d+)", output)
-            assert len(hits) == 1
-            assert len(hits[0]) == 2
-            print("int ", hits[0][0], " = ", hits[0][1], ";")
+        holes_to_values = get_hole_value_assignments(
+            compiler.sketch_generator.hole_names_, output)
+
+        for hole, value in holes_to_values.items():
+            print("int ", hole, " = ", value, ";")
+
         with open(compiler.sketch_name + ".success", "w") as success_file:
             success_file.write(output)
             print("Sketch succeeded. Generated configuration is given " +
