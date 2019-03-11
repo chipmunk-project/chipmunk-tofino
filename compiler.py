@@ -63,11 +63,11 @@ class Compiler:
         if self.parallel_or_serial == "parallel":
             (ret_code, output) = subprocess.getstatusoutput(
                 "time sketch -V 12 --slv-seed=1 --slv-parallel " +
-                "--bnd-inbits=2 --bnd-int-range=50 " + sketch_file_name)
+                "--bnd-inbits=2 " + sketch_file_name)
         else:
             (ret_code, output) = subprocess.getstatusoutput(
                 "time sketch -V 12 --slv-seed=1 --bnd-inbits=2 " +
-                "--bnd-int-range=50 " + sketch_file_name)
+                sketch_file_name)
 
         return (ret_code, output, self.sketch_generator.hole_names_)
 
