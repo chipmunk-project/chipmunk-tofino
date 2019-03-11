@@ -6,4 +6,4 @@ class ChipmunkPickle():
         self.constraints_ = constraints
         self.num_fields_in_prog_ = num_fields_in_prog
         self.num_state_groups_ = num_state_groups
-        self.num_state_slots_  = num_state_slots
+        self.num_state_slots_ = num_state_slots
