@@ -51,7 +51,7 @@ class ChipmunkCodegenTest(unittest.TestCase):
         compiler = Compiler(
             path.join(SPEC_DIR, spec_filename), path.join(
                 ALU_DIR, alu_filename), 2, 2, "simple_raw_2_2", "serial")
-        (ret_code, _) = compiler.codegen()
+        (ret_code, _, _) = compiler.codegen()
         self.assertEqual(
             ret_code, 0,
             "Compiling " + spec_filename + " failed for " + alu_filename)
@@ -72,7 +72,7 @@ class ChipmunkCodegenTest(unittest.TestCase):
         compiler = Compiler(
             path.join(SPEC_DIR, spec_filename), path.join(
                 ALU_DIR, alu_filename), 1, 2, "simple_raw_1_2", "serial")
-        (ret_code, _) = compiler.codegen()
+        (ret_code, _, _) = compiler.codegen()
         self.assertEqual(
             1, ret_code, "Compiling " + spec_filename + " used to fail for " +
             alu_filename + ", but it succeeded, please check and upate " + \
@@ -85,7 +85,7 @@ class ChipmunkCodegenTest(unittest.TestCase):
         compiler = Compiler(
             path.join(SPEC_DIR, spec_filename), path.join(
                 ALU_DIR, alu_filename), 3, 3, "test_raw_3_3", "parallel")
-        (ret_code, _) = compiler.codegen()
+        (ret_code, _, _) = compiler.codegen()
         self.assertEqual(
             1, ret_code, "Compiling " + spec_filename + " used to fail for " +
             alu_filename + ", but it succeeded, please check and upate " + \
@@ -94,7 +94,7 @@ class ChipmunkCodegenTest(unittest.TestCase):
         compiler = Compiler(
             path.join(SPEC_DIR, spec_filename), path.join(
                 ALU_DIR, alu_filename), 4, 4, "test_raw_4_4", "parallel")
-        (ret_code, _) = compiler.codegen()
+        (ret_code, _, _) = compiler.codegen()
         self.assertEqual(
             ret_code, 0,
             "Compiling " + spec_filename + " failed for " + alu_filename)

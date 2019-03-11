@@ -33,7 +33,7 @@ def main(argv):
     # Now fill the appropriate template holes using the components created using
     # sketch_generator
     if mode == "codegen":
-        (ret_code, output) = compiler.codegen()
+        (ret_code, output, _) = compiler.codegen()
 
         if ret_code != 0:
             with open(compiler.sketch_name + ".errors", "w") as errors_file:

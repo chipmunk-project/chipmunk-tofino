@@ -1,5 +1,8 @@
 {% if mode == "codegen" %}
   |StateAndPacket| pipeline (|StateAndPacket| state_and_packet) {
+  // Any additional constraints to speed up synthesis through parallel execution.
+  {{additional_constraints}}
+
   // Consolidate all constraints on holes here.
   {{all_assertions}}
 {% elif mode == "optverify" %}

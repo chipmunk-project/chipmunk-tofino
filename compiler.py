@@ -29,7 +29,10 @@ class Compiler:
 
         # Initialize jinja2 environment for templates
         self.jinja2_env = Environment(
-            loader=FileSystemLoader('./templates'), undefined=StrictUndefined, trim_blocks = True, lstrip_blocks = True)
+            loader=FileSystemLoader('./templates'),
+            undefined=StrictUndefined,
+            trim_blocks=True,
+            lstrip_blocks=True)
         # Create an object for sketch generation
         self.sketch_generator = SketchGenerator(
             sketch_name=sketch_name,
@@ -41,30 +44,12 @@ class Compiler:
             jinja2_env=self.jinja2_env,
             alu_file=alu_file)
 
-        # Create stateless and stateful ALUs, operand muxes for stateful ALUs,
-        # and output muxes.
-        self.alu_definitions = self.sketch_generator.generate_alus()
-        self.stateful_operand_mux_definitions = (
-            self.sketch_generator.generate_stateful_operand_muxes())
-        self.output_mux_definitions = (
-            self.sketch_generator.generate_output_muxes())
-
-        # Create allocator to ensure each state var is assigned to exactly
-        # stateful ALU and vice versa.
-        self.sketch_generator.generate_state_allocator()
-
-        # Get number of state slots in stateful ALU from sketch_generator
-        self.num_state_slots = self.sketch_generator.num_state_slots_
-
-    def codegen(self):
+    def codegen(self, additional_constraints=[]):
         """Codegeneration"""
         codegen_code = self.sketch_generator.generate_sketch(
             program_file=self.program_file,
-            alu_definitions=self.alu_definitions,
-            stateful_operand_mux_definitions=self.
-            stateful_operand_mux_definitions,
             mode="codegen",
-            output_mux_definitions=self.output_mux_definitions)
+            additional_constraints=additional_constraints)
 
         # Create file and write sketch_harness into it.
         sketch_file_name = self.sketch_name + "_codegen.sk"
@@ -84,17 +69,14 @@ class Compiler:
                 "time sketch -V 12 --slv-seed=1 --bnd-inbits=2 " +
                 "--bnd-int-range=50 " + sketch_file_name)
 
-        return (ret_code, output)
+        return (ret_code, output, self.sketch_generator.hole_names_)
 
     def optverify(self):
         """Opt Verify"""
         optverify_code = self.sketch_generator.generate_sketch(
             program_file=self.program_file,
-            alu_definitions=self.alu_definitions,
-            stateful_operand_mux_definitions=self.
-            stateful_operand_mux_definitions,
             mode="optverify",
-            output_mux_definitions=self.output_mux_definitions)
+            additional_constraints=[])
 
         # Create file and write sketch_function into it
         with open(self.sketch_name + "_optverify.sk", "w") as sketch_file:
@@ -111,7 +93,8 @@ class Compiler:
                     constraints=self.sketch_generator.constraints_,
                     num_fields_in_prog=self.num_fields_in_prog,
                     num_state_groups=self.num_state_groups,
-                    num_state_slots=self.num_state_slots), pickle_file)
+                    num_state_slots=self.sketch_generator.num_state_slots_),
+                pickle_file)
             print("Pickle file is ", pickle_file.name)
 
         print("Total number of hole bits is",
