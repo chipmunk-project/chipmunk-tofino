@@ -28,7 +28,7 @@ void func(struct Packet pkt) {
 
 // stateful variable rename list: 
 
-// state_and_packet.state_0 = count
+// state_and_packet.state_group_0_state_0 = count
 
-|StateAndPacket| program (|StateAndPacket| state_and_packet) {if (state_and_packet.state_0==30-1) {state_and_packet.state_0=0;}else {if (state_and_packet.state_0==8) {state_and_packet.state_0=2;}else {state_and_packet.state_0=1;}}state_and_packet.pkt_0=1; return state_and_packet;
+|StateAndPacket| program (|StateAndPacket| state_and_packet) {if (state_and_packet.state_group_0_state_0==30-1) {state_and_packet.state_group_0_state_0=0;}else {if (state_and_packet.state_group_0_state_0==8) {state_and_packet.state_group_0_state_0=2;}else {state_and_packet.state_group_0_state_0=1;}}state_and_packet.pkt_0=1; return state_and_packet;
 }
