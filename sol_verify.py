@@ -28,6 +28,8 @@ def sol_verify(original_sketch_file, hole_value_file):
     sketch_file.close()
 
     # Call sketch on it
+    # NOTE: The choice of 10 is somewhat random and we should probably want to
+    # extend this to 32 bits.
     (ret_code, _) = subprocess.getstatusoutput("sketch --bnd-inbits=10 " +
                                                sketch_file.name)
     return ret_code
