@@ -2,18 +2,15 @@
 
 ## Installation
 - Install [antlr](https://www.antlr.org/)
-- `pip3 install chipc` or in this directory `pip3 install .`
+- Install [sketch](https://people.csail.mit.edu/asolar/sketch-1.7.5.tar.gz)
+- `pip3 install -r requirements.txt && pip3 install .`(from this directory)
 
 ## How to
-
-### Generate Parser
-
-`antlr chipc/stateful_alu.g4 -Dlanguage=Python3 -visitor -package chipc`
 
 ### Codegen
 
 ```shell
-python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 2 2 codegen sample1 serial
+chipmunk example_specs/simple.sk example_alus/raw.stateful_alu 2 2 codegen sample1 serial
 ```
 
 ### Optimization Verification
