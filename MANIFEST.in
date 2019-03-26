@@ -1,0 +1,2 @@
+include chipc/stateful_alu.g4
+include chipc/templates/*.j2

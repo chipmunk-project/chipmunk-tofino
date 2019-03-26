@@ -7,9 +7,9 @@ import sys
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
-from chipmunk_pickle import ChipmunkPickle
-from sketch_generator import SketchGenerator
-from utils import get_num_pkt_fields_and_state_groups
+from chipc.chipmunk_pickle import ChipmunkPickle
+from chipc.sketch_generator import SketchGenerator
+from chipc.utils import get_num_pkt_fields_and_state_groups
 
 
 class Compiler:

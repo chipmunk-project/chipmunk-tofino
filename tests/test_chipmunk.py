@@ -1,20 +1,21 @@
 """Simple unit tests for chipmunk."""
 
-from os import path, listdir
+from os import path, listdir, getcwd
 from pathlib import Path
 import unittest
 
-from chipmunk import Compiler
-from optverify import optverify
-from utils import get_hole_dicts
+from chipc.chipmunk import Compiler
+from chipc.optverify import optverify
+from chipc.utils import get_hole_dicts
 
 BASE_PATH = path.abspath(path.dirname(__file__))
 DATA_DIR = path.join(BASE_PATH, "data/")
 ALU_DIR = path.join(BASE_PATH, "../example_alus/")
 SPEC_DIR = path.join(BASE_PATH, "../example_specs/")
+TRANSFORM_DIR = path.join(BASE_PATH, "../example_transforms/")
 
 
-class ChipmunkCodegenTest(unittest.TestCase):
+class TestChipmunkCodegen(unittest.TestCase):
     """Tests codegen method from chipmunk.Compiler."""
 
     def test_codegen_with_simple_sketch_for_all_alus(self):
@@ -26,7 +27,7 @@ class ChipmunkCodegenTest(unittest.TestCase):
             # TODO(taegyunkim): Instead of writing to the same success and
             # failure files, use different files for each ALU.
             compiler = Compiler(
-                path.join(BASE_PATH, "../example_specs/simple.sk"),
+                path.join(SPEC_DIR, "simple.sk"),
                 path.join(ALU_DIR, alu), 2, 2, "simple", "serial")
             self.assertEqual(compiler.codegen()[0], 0,
                              "Compiling simple.sk failed for " + alu)
@@ -60,8 +61,8 @@ class ChipmunkCodegenTest(unittest.TestCase):
             Path(path.join(DATA_DIR, "simple_raw_2_2_codegen.sk")).read_text())
 
         output_holes = get_hole_dicts(
-            Path(path.join(BASE_PATH,
-                           "../simple_raw_2_2_codegen.sk")).read_text())
+            Path(path.join(getcwd(),
+                           "simple_raw_2_2_codegen.sk")).read_text())
 
         self.assertEqual(sorted(expected_holes), sorted(output_holes))
 
@@ -101,33 +102,26 @@ class ChipmunkCodegenTest(unittest.TestCase):
 
 
 class OptverifyTest(unittest.TestCase):
-    def setUp(self):
-        self.base_path = path.abspath(path.dirname(__file__))
-        self.alu_dir = path.join(self.base_path, "../example_alus/")
-        self.spec_dir = path.join(self.base_path, "../example_specs/")
-        self.transform_dir = path.join(self.base_path,
-                                       "../example_transforms/")
-
     def test_simple_sketch_same_config(self):
         spec_filename = "simple.sk"
         alu_filename = "raw.stateful_alu"
 
         compiler = Compiler(
-            path.join(self.spec_dir, spec_filename),
-            path.join(self.alu_dir, alu_filename), 1, 1, "sample1", "serial")
+            path.join(SPEC_DIR, spec_filename),
+            path.join(ALU_DIR, alu_filename), 1, 1, "sample1", "serial")
 
         compiler.optverify()
 
         compiler = Compiler(
-            path.join(self.spec_dir, spec_filename),
-            path.join(self.alu_dir, alu_filename), 1, 1, "sample2", "serial")
+            path.join(SPEC_DIR, spec_filename),
+            path.join(ALU_DIR, alu_filename), 1, 1, "sample2", "serial")
 
         compiler.optverify()
 
         self.assertEqual(
             0,
             optverify("sample1", "sample2",
-                      path.join(self.transform_dir, "very_simple.transform")))
+                      path.join(TRANSFORM_DIR, "very_simple.transform")))
 
 
 if __name__ == '__main__':

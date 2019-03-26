@@ -3,15 +3,15 @@ from pathlib import Path
 import sys
 import re
 
-from compiler import Compiler
-from utils import get_hole_value_assignments
+from chipc.compiler import Compiler
+from chipc.utils import get_hole_value_assignments
 
 
 def main(argv):
     """Main program."""
     if len(argv) < 8:
-        print("Usage: python3 " + argv[0] +
-              " <program file> <alu file> <number of pipeline stages> " +
+        print("Usage: chipmunk <program file> <alu file> " +
+              "<number of pipeline stages> " +
               "<number of stateless/stateful ALUs per stage> " +
               "<codegen/optverify> <sketch_name (w/o file extension)> " +
               "<parallel/serial>")
@@ -56,5 +56,9 @@ def main(argv):
         compiler.optverify()
 
 
+def run_main():
+    sys.exit(main(sys.argv))
+
+
 if __name__ == "__main__":
-    main(sys.argv)
+    run_main()

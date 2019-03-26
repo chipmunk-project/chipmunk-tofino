@@ -1,7 +1,8 @@
-from stateful_aluParser import stateful_aluParser
-from stateful_aluVisitor import stateful_aluVisitor
 from overrides import overrides
 from textwrap import dedent
+
+from chipc.stateful_aluParser import stateful_aluParser
+from chipc.stateful_aluVisitor import stateful_aluVisitor
 
 
 # Visitor class to generate Sketch code from a stateful_alu specification in a

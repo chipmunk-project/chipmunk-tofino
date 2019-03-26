@@ -2,10 +2,13 @@
 
 ## Installation
 - Install [antlr](https://www.antlr.org/)
-- `pip3 install -r requirements.txt`
-- Generate ALU parser: `antlr4 -Dlanguage=Python3 -visitor stateful_alu.g4`
+- `pip3 install chipc` or in this directory `pip3 install .`
 
 ## How to
+
+### Generate Parser
+
+`antlr chipc/stateful_alu.g4 -Dlanguage=Python3 -visitor -package chipc`
 
 ### Codegen
 
@@ -26,7 +29,7 @@ python3 optverify.py sample1 sample2 example_transforms/very_simple.transform
 Simply run `nosetests`, after installing
 [nose](https://nose.readthedocs.io/en/latest/).
 
-Can also run: `python3 -m unittest tests/chipmunk_test.py`
+Can also run: `python3 -m unittest`
 
 If you want to add a test, add a new file in [tests](tests/) directory or add
-test cases in existing `*_test.py` file.
+test cases in existing `test_*.py` file.

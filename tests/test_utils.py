@@ -1,7 +1,7 @@
 from pathlib import Path
 import unittest
 
-from utils import get_hole_dicts, get_hole_value_assignments
+from chipc.utils import get_hole_dicts, get_hole_value_assignments
 
 
 class GetHoleValueAssignmentsTest(unittest.TestCase):
