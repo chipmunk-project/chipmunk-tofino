@@ -1,4 +1,5 @@
 from pathlib import Path
+from os import path
 import pickle
 import re
 import subprocess
@@ -29,7 +30,8 @@ class Compiler:
 
         # Initialize jinja2 environment for templates
         self.jinja2_env = Environment(
-            loader=FileSystemLoader('./templates'),
+            loader=FileSystemLoader(
+                path.join(path.dirname(__file__), './templates')),
             undefined=StrictUndefined,
             trim_blocks=True,
             lstrip_blocks=True)

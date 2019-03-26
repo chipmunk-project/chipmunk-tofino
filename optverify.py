@@ -1,4 +1,5 @@
 from pathlib import Path
+from os import path
 import pickle
 import subprocess
 import sys
@@ -14,7 +15,9 @@ def read_file(filename):
 
 def optverify(sketch1_name, sketch2_name, transform_file):
     env = Environment(
-        loader=FileSystemLoader('./templates'), undefined=StrictUndefined)
+        loader=FileSystemLoader(
+            path.join(path.dirname(__file__), './templates')),
+        undefined=StrictUndefined)
 
     with open(sketch1_name + PICKLE_EXT, "rb") as pickle_file:
         pickle1 = pickle.load(pickle_file)
