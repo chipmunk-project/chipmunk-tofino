@@ -27,7 +27,7 @@ def single_compiler_run(compiler_input):
 def main(argv):
     """Main program."""
     if len(argv) != 6:
-        print("Usage: python3 " + argv[0] +
+        print("Usage: chipmunk_parallel" +
               " <program file> <alu file> <number of pipeline stages> " +
               "<number of stateless/stateful ALUs per stage> " +
               "<sketch_name (w/o file extension)> ")
@@ -104,6 +104,9 @@ def main(argv):
         print("Sketch failed. Output left in " + errors_file.name)
     sys.exit(1)
 
+def run_main():
+    sys.exit(main(sys.argv))
+
 
 if __name__ == "__main__":
-    main(sys.argv)
+    run_main()

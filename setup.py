@@ -59,5 +59,7 @@ setup(
     cmdclass={"build_py": BuildByWrapper},
     entry_points={
         "console_scripts":
-        ["chipmunk=" + _PACKAGE_NAME + ".chipmunk:run_main"]
+        ["chipmunk=" + _PACKAGE_NAME + ".chipmunk:run_main",
+         "chipmunk_parallel=" + _PACKAGE_NAME + ".parallel_compile:run_main",
+         "optverify=" + _PACKAGE_NAME + ".optverify:run_main"]
     })

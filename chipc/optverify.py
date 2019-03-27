@@ -81,7 +81,7 @@ def optverify(sketch1_name, sketch2_name, transform_file):
 def main(argv):
     """Main routine for optimization verifier."""
     if (len(argv) < 4):
-        print("Usage: " + argv[0] +
+        print("Usage: optverify" +
               " sketch1_name sketch2_name transform_file")
         sys.exit(1)
 
@@ -91,6 +91,9 @@ def main(argv):
 
     sys.exit(optverify(sketch1_name, sketch2_name, transform_file))
 
+def run_main():
+    sys.exit(main(sys.argv))
+
 
 if __name__ == "__main__":
-    main(sys.argv)
+    run_main()

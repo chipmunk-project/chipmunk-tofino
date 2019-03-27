@@ -4,6 +4,7 @@
 - Install [antlr](https://www.antlr.org/)
 - Install [sketch](https://people.csail.mit.edu/asolar/sketch-1.7.5.tar.gz)
 - `pip3 install -r requirements.txt && pip3 install .`(from this directory)
+(Add sudo if you want to install system wide.)
 
 ## How to
 
@@ -13,20 +14,31 @@
 chipmunk example_specs/simple.sk example_alus/raw.stateful_alu 2 2 codegen sample1 serial
 ```
 
+or
+```shell
+chipmunk example_specs/simple.sk example_alus/raw.stateful_alu 2 2 codegen sample1 parallel
+```
+
+### Parallel codegen
+
+```shell
+chipmunk_parallel example_specs/simple.sk example_alus/raw.stateful_alu 2 2 codegen
+```
+
 ### Optimization Verification
 
 ```shell
-python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample1 serial
-python3 chipmunk.py example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample2 serial
-python3 optverify.py sample1 sample2 example_transforms/very_simple.transform
+chipmunk example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample1 serial
+chipmunk example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample2 serial
+optverify sample1 sample2 example_transforms/very_simple.transform
 ```
 
 ### Test
 
-Simply run `nosetests`, after installing
-[nose](https://nose.readthedocs.io/en/latest/).
+Run:
 
-Can also run: `python3 -m unittest`
+`antlr4 chipc/stateful_alu.g4 -Dlanguage=Python3 -visitor -package chipc`
+`python3 -m unittest`
 
 If you want to add a test, add a new file in [tests](tests/) directory or add
 test cases in existing `test_*.py` file.
