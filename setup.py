@@ -61,5 +61,6 @@ setup(
         "console_scripts":
         ["chipmunk=" + _PACKAGE_NAME + ".chipmunk:run_main",
          "chipmunk_parallel=" + _PACKAGE_NAME + ".parallel_compile:run_main",
-         "optverify=" + _PACKAGE_NAME + ".optverify:run_main"]
+         "optverify=" + _PACKAGE_NAME + ".optverify:run_main",
+         "repeated_solver=" + _PACKAGE_NAME + ".repeated_solver:run_main"]
     })
