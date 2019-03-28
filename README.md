@@ -39,8 +39,10 @@ optverify sample1 sample2 example_transforms/very_simple.transform
 
 Run:
 
-`antlr4 chipc/stateful_alu.g4 -Dlanguage=Python3 -visitor -package chipc`
-`python3 -m unittest`
+```shell
+antlr4 chipc/stateful_alu.g4 -Dlanguage=Python3 -visitor -package chipc
+python3 -m unittest
+```
 
 If you want to add a test, add a new file in [tests](tests/) directory or add
 test cases in existing `test_*.py` file.
