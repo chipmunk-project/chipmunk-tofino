@@ -13,6 +13,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from chipc.chipmunk_pickle import ChipmunkPickle
 from chipc.sketch_generator import SketchGenerator
 from chipc.utils import get_num_pkt_fields_and_state_groups
+from chipc.utils import get_hole_value_assignments
 
 def kill_child_processes(parent_pid, sig=signal.SIGTERM):
     try:
@@ -87,10 +88,26 @@ class Compiler:
         return (ret_code, output, self.sketch_generator.hole_names_)
 
     def serial_codegen(self):
-        return self.single_compiler_run(([], self.sketch_name + "_codegen.sk"))
+        (ret_code, output, _) = self.single_compiler_run(([], self.sketch_name + "_codegen.sk"))
+        if ret_code != 0:
+            with open(self.sketch_name + ".errors", "w") as errors_file:
+                errors_file.write(output)
+                print("Sketch failed. Output left in " + errors_file.name)
+            return 1
+
+        holes_to_values = get_hole_value_assignments(
+            self.sketch_generator.hole_names_, output)
+
+        for hole, value in holes_to_values.items():
+            print("int ", hole, " = ", value, ";")
+
+        with open(self.sketch_name + ".success", "w") as success_file:
+            success_file.write(output)
+            print("Sketch succeeded. Generated configuration is given " +
+                  "above. Output left in " + success_file.name)
+        return 0
 
     def parallel_codegen(self):
-
         # For each state_group, pick a pipeline_stage exhaustively.
         # Note that some of these assignments might be infeasible, but that's OK. Sketch will reject these anyway.
         count = 0
