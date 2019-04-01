@@ -13,7 +13,7 @@ from chipc.sol_verify import sol_verify
 
 def main(argv):
     if len(argv) != 8:
-        print("Usage: repeated_solver " +
+        print("Usage: iterative_solver " +
               " <program file> <alu file> <number of pipeline stages> " +
               "<number of stateless/stateful ALUs per stage> " +
               "<sketch_name (w/o file extension)> <parallel/serial> " +
@@ -36,7 +36,7 @@ def main(argv):
     # First try to compile with default number (2) of bits.
     compiler = Compiler(program_file, alu_file, num_pipeline_stages,
                         num_alus_per_stage, sketch_name, parallel_or_serial)
-    (ret_code, output, _) = compiler.codegen()
+    (ret_code, output, _) = compiler.serial_codegen()
 
     if ret_code != 0:
         print("failed to compile with 2 bits.")
