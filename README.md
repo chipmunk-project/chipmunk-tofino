@@ -10,6 +10,33 @@
 
 ## How to
 
+### Develop
+
+If you have installed it as above, first uninstall and re-install via following
+command.
+
+```shell
+pip uninstall chipc && pip install -e .
+```
+
+Note that there is `-e` in install command. It will install this package in
+development mode, and simply link actual chipc directory to your Python's
+site-packages directory.
+
+1. Make changes to python code
+2. Consider implementing tests and run tests `python -m unittest`
+3. Run your desired binary like `python chipc/chipmunk.py ...`
+
+This way you don't have to keep installing and uninstalling whenever you make a
+change and test. However, still you have to run via `python chipc/chipmunk.py`
+instead of using the installed binary.
+
+Also consider using [venv](https://docs.python.org/3/library/venv.html),
+[virtualenv](https://virtualenv.pypa.io/en/latest/) or
+[pipenv](https://pipenv.readthedocs.io/en/latest/) to create an isolated Python
+development environment.
+
+
 ### Codegen
 
 ```shell

@@ -14,5 +14,6 @@ __pycache__
 *Parser.py
 *Visitor.py
 *Listener.py
+*.egg-info
 
 !tests/data/*.sk
