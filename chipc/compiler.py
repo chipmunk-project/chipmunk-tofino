@@ -21,7 +21,11 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
         return
     children = parent.children(recursive=True)
     for process in children:
-        process.send_signal(sig)
+        try:
+            process.send_signal(sig)
+        except psutil.NoSuchProcess as e:
+            print("send_signal didn't have any effect because process didn't exist")
+            print(e)
 
 class Compiler:
     def __init__(self, program_file, alu_file, num_pipeline_stages,
