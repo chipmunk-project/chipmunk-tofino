@@ -1,6 +1,6 @@
 version: 1.0.{build}
 image: Ubuntu1604
-build_script:
+init:
 - sh: >-
     set -e
 
@@ -62,10 +62,8 @@ build_script:
 
     cd ~
 
-    git clone https://github.com/anirudhSK/chipmunk
-
-    cd chipmunk
-
+build_script:
+- sh: >-
     sudo pip3 install -r requirements.txt
 
     sudo pip3 install .
