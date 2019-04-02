@@ -2,6 +2,8 @@ version: 1.0.{build}
 image: Ubuntu1604
 init:
 - sh: >-
+    old_dir=`pwd`
+
     set -e
 
     sudo apt-get update
@@ -60,7 +62,7 @@ init:
 
     export SKETCH_HOME="`pwd`/runtime"
 
-    cd ~
+    cd $old_dir
 
 build_script:
 - sh: >-
