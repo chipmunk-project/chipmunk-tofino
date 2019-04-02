@@ -57,8 +57,8 @@ direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 parallel
 ### Optimization Verification
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample1 serial
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 1 1 optverify sample2 serial
+optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu 1 1 sample1
+optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu 1 1 sample2
 optverify sample1 sample2 example_transforms/very_simple.transform
 ```
 
