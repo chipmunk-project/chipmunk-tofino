@@ -36,6 +36,9 @@ def main(argv):
     # First try to compile with default number (2) of bits.
     compiler = Compiler(program_file, alu_file, num_pipeline_stages,
                         num_alus_per_stage, sketch_name, parallel_or_serial)
+
+    # Can swap this out for compiler.parallel_codegen() instead
+    # TODO: But we need to do this in all iterations below as well.
     (ret_code, output, _) = compiler.serial_codegen()
 
     if ret_code != 0:
