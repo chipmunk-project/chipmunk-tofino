@@ -23,6 +23,7 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
     for process in children:
         try:
             process.send_signal(sig)
+            print("send_signal killed a child process", process)
         except psutil.NoSuchProcess as e:
             print("send_signal didn't have any effect because process didn't exist")
             print(e)
