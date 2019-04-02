@@ -128,29 +128,13 @@ class Compiler:
                 compiler_output = f.result()
                 if (compiler_output[0] == 0):
                     print("Success")
-                    for hole_name in compiler_output[2]:
-                        hits = re.findall("(" + hole_name + ")__" + r"\w+ = (\d+)",
-                                          compiler_output[1])
-                        assert len(hits) == 1
-                        assert len(hits[0]) == 2
-                        print("int ", hits[0][0], " = ", hits[0][1], ";")
-                    with open(self.sketch_name + ".success", "w") as success_file:
-                        success_file.write(compiler_output[1])
-                        print("Sketch succeeded. Generated configuration is given "
-                              + "above. Output left in " + success_file.name)
                     # TODO: Figure out the right way to do this in the future.
                     executor.shutdown(wait=False)
                     kill_child_processes(os.getpid())
-                    sys.exit(0)
-
+                    return compiler_output
                 else:
                     print("One run failed, waiting for others.")
-
-        # If all runs failed
-        with open(self.sketch_name + ".errors", "w") as errors_file:
-            errors_file.write(compiler_output[1])
-            print("Sketch failed. Output left in " + errors_file.name)
-        sys.exit(1)
+        return compiler_output
 
     def optverify(self):
         """Opt Verify"""

@@ -34,24 +34,26 @@ def main(argv):
     if mode == "serial_codegen" or mode == "parallel_codegen":
         if mode == "serial_codegen":
             (ret_code, output, hole_names) = compiler.serial_codegen()
-            if ret_code != 0:
-                with open(sketch_name + ".errors", "w") as errors_file:
-                    errors_file.write(output)
-                    print("Sketch failed. Output left in " + errors_file.name)
-                sys.exit(1)
-
-            holes_to_values = get_hole_value_assignments(hole_names, output)
-    
-            for hole, value in holes_to_values.items():
-                print("int ", hole, " = ", value, ";")
-    
-            with open(sketch_name + ".success", "w") as success_file:
-                success_file.write(output)
-                print("Sketch succeeded. Generated configuration is given " +
-                      "above. Output left in " + success_file.name)
-            sys.exit(0)
         else:
-            compiler.parallel_codegen()
+            (ret_code, output, hole_names) = compiler.parallel_codegen()
+
+        # print results
+        if ret_code != 0:
+            with open(sketch_name + ".errors", "w") as errors_file:
+                errors_file.write(output)
+                print("Sketch failed. Output left in " + errors_file.name)
+            sys.exit(1)
+
+        holes_to_values = get_hole_value_assignments(hole_names, output)
+    
+        for hole, value in holes_to_values.items():
+            print("int ", hole, " = ", value, ";")
+    
+        with open(sketch_name + ".success", "w") as success_file:
+            success_file.write(output)
+            print("Sketch succeeded. Generated configuration is given " +
+                  "above. Output left in " + success_file.name)
+        sys.exit(0)
     else:
         compiler.optverify()
 
