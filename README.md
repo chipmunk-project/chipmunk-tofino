@@ -16,7 +16,7 @@ If you have installed it as above, first uninstall and re-install via following
 command.
 
 ```shell
-pip uninstall chipc && pip install -e .
+pip3 uninstall chipc && pip3 install -e .
 ```
 
 Note that there is `-e` in install command. It will install this package in
