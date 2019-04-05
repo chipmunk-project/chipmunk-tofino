@@ -42,7 +42,10 @@ class Compiler:
          self.num_state_groups) = get_num_pkt_fields_and_state_groups(
              Path(program_file).read_text())
 
-        assert self.num_fields_in_prog <= num_alus_per_stage
+        assert self.num_fields_in_prog <= num_alus_per_stage, (
+            "Number of fields in program %d is greater than number of "
+            "alus per stage %d. Try increasing number of alus per stage." % (
+                self.num_fields_in_prog, num_alus_per_stage))
 
         # Initialize jinja2 environment for templates
         self.jinja2_env = Environment(
