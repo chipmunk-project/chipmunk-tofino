@@ -70,9 +70,9 @@ build_script:
 
     sudo pip3 install .
 
-    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 serial_codegen sample1 serial
+    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1
 
-    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 serial_codegen sample1 parallel
+    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 --parallel-sketch
 
     optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu 1 1 sample1
 
@@ -82,9 +82,9 @@ build_script:
 
     $antlr4 chipc/stateful_alu.g4 -Dlanguage=Python3 -visitor -package chipc
 
-    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 parallel_codegen sample1 serial
+    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 --parallel
 
-    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 parallel_codegen sample1 parallel
+    direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 --parallel --parallel-sketch
 
     python3 -m unittest
 

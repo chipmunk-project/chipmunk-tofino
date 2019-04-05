@@ -25,7 +25,7 @@ def add_prefix_suffix(text, prefix_string, suffix_string):
 class SketchGenerator:
     def __init__(self, sketch_name, num_phv_containers, num_state_groups,
                  num_alus_per_stage, num_pipeline_stages, num_fields_in_prog,
-                 jinja2_env, alu_file):
+                 pkt_fields_to_check, jinja2_env, alu_file):
         self.sketch_name_ = sketch_name
         self.total_hole_bits_ = 0
         self.hole_names_ = []
@@ -39,6 +39,7 @@ class SketchGenerator:
         self.num_state_groups_ = num_state_groups
         self.num_alus_per_stage_ = num_alus_per_stage
         self.num_fields_in_prog_ = num_fields_in_prog
+        self.pkt_fields_to_check_ = pkt_fields_to_check
         self.jinja2_env_ = jinja2_env
         self.jinja2_env_.filters["add_prefix_suffix"] = add_prefix_suffix
         self.alu_file_ = alu_file
@@ -220,6 +221,7 @@ class SketchGenerator:
             output_mux_definitions=output_mux_definitions,
             alu_definitions=alu_definitions,
             num_fields_in_prog=self.num_fields_in_prog_,
+            pkt_fields_to_check=self.pkt_fields_to_check_,
             num_state_groups=self.num_state_groups_,
             spec_as_sketch=Path(program_file).read_text(),
             all_assertions=self.asserts_,

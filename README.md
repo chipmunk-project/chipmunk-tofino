@@ -40,18 +40,18 @@ development environment.
 ### Codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 serial_codegen sample1 serial
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1
 ```
 
 or
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 serial_codegen sample1 parallel
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 --parallel-sketch
 ```
 
 ### Parallel codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 parallel_codegen sample1 parallel
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 --parallel --parallel-sketch
 ```
 
 ### Optimization Verification

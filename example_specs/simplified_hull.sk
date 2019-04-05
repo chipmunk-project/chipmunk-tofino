@@ -1,0 +1,56 @@
+/*
+// Original program:
+#define ECN_THRESH 20
+
+int counter   = ECN_THRESH;
+int last_time = 0;
+
+struct Packet {
+  int bytes;
+  int time;
+  int mark;
+};
+
+void func(struct Packet p) {
+  // Decrement counter according to drain rate
+  counter = counter - (p.time - last_time);
+  if (counter < 0) counter = 0;
+
+  // Increment counter
+  counter += p.bytes;
+
+  // If we are above the ECN_THRESH, mark
+  if (counter > ECN_THRESH) p.mark = 1;
+
+  // Store last time
+  last_time = p.time;
+}
+ */
+
+// Output the rename map:
+// stateless variable rename list:
+
+// state_and_packet.pkt_0 = p.time
+// state_and_packet.pkt_1 = p.bytes
+// Only this matters
+// state_and_packet.pkt_2 = p.mark
+
+// stateful variable rename list:
+
+// state_and_packet.state_group_0_state_0 = counter
+// state_and_packet.state_group_1_state_0 = last_time
+
+| StateAndPacket | program(| StateAndPacket | state_and_packet) {
+  state_and_packet.state_group_0_state_0 =
+      state_and_packet.state_group_0_state_0 -
+      (state_and_packet.pkt_0 - state_and_packet.state_group_1_state_0);
+  if (state_and_packet.state_group_0_state_0 < 0) {
+    state_and_packet.state_group_0_state_0 = 0;
+  };
+  state_and_packet.state_group_0_state_0 += state_and_packet.pkt_1;
+  if (state_and_packet.state_group_0_state_0 > 20) {
+    state_and_packet.pkt_2 = 1;
+  };
+  state_and_packet.state_group_1_state_0 = state_and_packet.pkt_0;
+  return state_and_packet;
+}

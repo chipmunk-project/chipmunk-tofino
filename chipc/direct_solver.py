@@ -1,42 +1,58 @@
 """Chipmunk Compiler"""
 from pathlib import Path
+import argparse
 import sys
 import re
 
 from chipc.compiler import Compiler
 from chipc.utils import get_hole_value_assignments
 
+
 def main(argv):
     """Main program."""
-    if len(argv) < 8:
-        print("Usage: direct_solver <program file> <alu file> " +
-              "<number of pipeline stages> " +
-              "<number of stateless/stateful ALUs per stage> " +
-              "<parallel_codegen/serial_codegen/optverify> <sketch_name (w/o file extension)> " +
-              "<parallel/serial>")
-        exit(1)
+    parser = argparse.ArgumentParser(description="Chipmunk compiler.")
+    parser.add_argument(
+        "program_file", help="Program specification in .sk file")
+    parser.add_argument("alu_file", help="ALU file to use.")
+    parser.add_argument(
+        "num_pipeline_stages", type=int, help="Number of pipeline stages")
+    parser.add_argument(
+        "num_alus_per_stage",
+        type=int,
+        help="Number of stateless/stateful ALUs per stage")
+    parser.add_argument(
+        "sketch_name", help="Output sketch filename without extension")
+    parser.add_argument(
+        "--pkt-fields",
+        type=int,
+        nargs='+',
+        help="Packet fields to check correctness")
+    parser.add_argument(
+        "-p",
+        "--parallel",
+        action="store_const",
+        const="parallel_codegen",
+        default="serial_codegen",
+        help="Whether to run multiple sketches in parallel.")
+    parser.add_argument(
+        "--parallel-sketch",
+        action="store_true",
+        help="Whether sketch process uses parallelism")
 
-    program_file = str(argv[1])
-    alu_file = str(argv[2])
-    num_pipeline_stages = int(argv[3])
-    num_alus_per_stage = int(argv[4])
-    mode = str(argv[5])
-    assert mode in ["parallel_codegen", "serial_codegen"]
-    sketch_name = str(argv[6])
-    parallel_or_serial = str(argv[7])
-    assert parallel_or_serial in ["parallel", "serial"]
+    args = parser.parse_args()
 
-    compiler = Compiler(program_file, alu_file, num_pipeline_stages,
-                        num_alus_per_stage, sketch_name, parallel_or_serial)
+    compiler = Compiler(args.program_file, args.alu_file,
+                        args.num_pipeline_stages, args.num_alus_per_stage,
+                        args.sketch_name, args.parallel_sketch, args.pkt_fields)
 
-    if mode == "serial_codegen":
+    if args.parallel == "serial_codegen":
         (ret_code, output, hole_names) = compiler.serial_codegen()
     else:
         (ret_code, output, hole_names) = compiler.parallel_codegen()
 
     # print results
     if ret_code != 0:
-        with open(sketch_name + ".errors", "w") as errors_file:
+        with open(args.sketch_name + ".errors", "w") as errors_file:
             errors_file.write(output)
             print("Sketch failed. Output left in " + errors_file.name)
         sys.exit(1)
@@ -46,7 +62,7 @@ def main(argv):
     for hole, value in holes_to_values.items():
         print("int ", hole, " = ", value, ";")
 
-    with open(sketch_name + ".success", "w") as success_file:
+    with open(args.sketch_name + ".success", "w") as success_file:
         success_file.write(output)
         print("Sketch succeeded. Generated configuration is given " +
               "above. Output left in " + success_file.name)

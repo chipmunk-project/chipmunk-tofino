@@ -57,7 +57,7 @@
       {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux2_ctrl
       );
     {% endfor %}
-  
+
     // Stateful operands
     {% for state_group_number in range(num_state_groups) %}
       {% for operand_number in range(num_operands_to_stateful_alu) %}
@@ -72,7 +72,7 @@
       , {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_group_number}}_{{operand_number}}_ctrl);
       {% endfor %}
     {% endfor %}
-  
+
     // Read stateful ALU slots from allocated state vars.
     {% for state_group_number in range(num_state_groups) %}
       {% if state_group_number == 0 %}
@@ -97,7 +97,7 @@
                        {%endfor%});}
       {% endif %}
     {% endfor %}
-  
+
     // Stateful ALUs
     {% for state_group_number in range(num_state_groups) %}
       |StateGroup| old_state_group_{{stage_number}}_{{state_group_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}(state_operand_salu_{{stage_number}}_{{state_group_number}},
@@ -107,7 +107,7 @@
       {% set prefix_string = sketch_name + "_stateful_alu_" + (stage_number|string) + "_" + (state_group_number|string) + "_" %}
       {{stateful_alu_hole_arguments|map('add_prefix_suffix', prefix_string, "_global")|join(',')}});
     {% endfor %}
-  
+
     // Outputs
     {% for container_number in range(num_phv_containers) %}
       int output_{{stage_number}}_{{container_number}} = {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}(
@@ -120,7 +120,7 @@
       {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}_ctrl
       );
     {% endfor %}
-  
+
     {% for state_group_number in range(num_state_groups) %}
       // Write state_{{state_group_number}}
       {% if state_group_number == 0 %}
@@ -157,7 +157,7 @@
         , int state_group_{{state_group_number}}_state_{{slot_number}}
       {% endfor %}
     {% endfor %}) {
-  
+
     |StateAndPacket| x = |StateAndPacket|({% for field_number in range(num_fields_in_prog) %}
       pkt_{{field_number}} = pkt_{{field_number}},
     {% endfor %}
@@ -170,7 +170,20 @@
         {% endif %}
       {% endfor %}
     {% endfor %});
-  
-  assert(pipeline(x) == program(x));
+
+  |StateAndPacket| pipeline_result = pipeline(x);
+  |StateAndPacket| program_result = program(x);
+
+  {% for state_group_number in range(num_state_groups) %}
+    {% for slot_number in range(num_state_slots) %}
+      assert(pipeline_result.state_group_{{state_group_number}}_state_{{slot_number}}
+      == program_result.state_group_{{state_group_number}}_state_{{slot_number}});
+    {% endfor %}
+  {% endfor %}
+
+  {% for field_number in pkt_fields_to_check %}
+    assert(pipeline_result.pkt_{{field_number}} == program_result.pkt_{{field_number}});
+  {% endfor %}
+
   }
 {% endif %}

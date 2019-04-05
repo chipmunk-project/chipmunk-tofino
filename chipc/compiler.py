@@ -30,7 +30,8 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
 
 class Compiler:
     def __init__(self, program_file, alu_file, num_pipeline_stages,
-                 num_alus_per_stage, sketch_name, parallel_or_serial):
+                 num_alus_per_stage, sketch_name, parallel_or_serial,
+                 pkt_fields_to_check=[]):
         self.program_file = program_file
         self.alu_file = alu_file
         self.num_pipeline_stages = num_pipeline_stages
@@ -54,6 +55,10 @@ class Compiler:
             undefined=StrictUndefined,
             trim_blocks=True,
             lstrip_blocks=True)
+
+        if not pkt_fields_to_check:
+            pkt_fields_to_check = list(range(self.num_fields_in_prog))
+
         # Create an object for sketch generation
         self.sketch_generator = SketchGenerator(
             sketch_name=sketch_name,
@@ -62,6 +67,7 @@ class Compiler:
             num_phv_containers=num_alus_per_stage,
             num_state_groups=self.num_state_groups,
             num_fields_in_prog=self.num_fields_in_prog,
+            pkt_fields_to_check=pkt_fields_to_check,
             jinja2_env=self.jinja2_env,
             alu_file=alu_file)
 
