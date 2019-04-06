@@ -4,8 +4,10 @@ import subprocess
 
 
 def sol_verify(original_sketch_file, hole_value_file):
-    original_sketch_file_string = open(str(original_sketch_file), "r").read()
-    hole_value_file_string = open(str(hole_value_file), "r").read()
+    with open(original_sketch_file, "r") as sketch_file_handle:
+        original_sketch_file_string = sketch_file_handle.read()
+    with open(hole_value_file, "r") as hole_value_file_handle:
+        hole_value_file_string = hole_value_file_handle.read()
 
     #remove the hole definition in original_sketch_file
     original_sketch_file_string = original_sketch_file_string[

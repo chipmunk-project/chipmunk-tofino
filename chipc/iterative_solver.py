@@ -18,7 +18,7 @@ def main(argv):
               "<number of stateless/stateful ALUs per stage> " +
               "<sketch_name (w/o file extension)> <parallel/serial> " +
               "<cex_mode/hole_elimination_mode>")
-        sys.exit(1)
+        return 1
 
     start_time = time.time()
     program_file = str(argv[1])
@@ -39,13 +39,13 @@ def main(argv):
 
     # Can swap this out for compiler.parallel_codegen() instead
     # TODO: But we need to do this in all iterations below as well.
-    (ret_code, output, _) = compiler.serial_codegen()
+    (ret_code, output, hole_names) = compiler.serial_codegen()
 
     if ret_code != 0:
         print("failed to compile with 2 bits.")
         end_time = time.time()
         print("total time in seconds: ", end_time - start_time)
-        sys.exit(1)
+        return 1
 
     # Generate the result file
     with open("/tmp/" + sketch_name + "_result.holes", "w") as result_file:
@@ -53,11 +53,12 @@ def main(argv):
     # Step2: run sol_verify.py
     ret_code = sol_verify(sketch_name + "_codegen.sk",
                           "/tmp/" + sketch_name + "_result.holes")
+    # ret_code = 0 means sol_verify success
     if ret_code == 0:
         print("success")
         end_time = time.time()
         print("total time in seconds: ", end_time - start_time)
-        sys.exit(0)
+        return 0
 
     print("failed for larger size and need repeated testing by sketch")
     # start to repeated run sketch until get the final result
@@ -65,17 +66,13 @@ def main(argv):
     count = 0
     while 1:
         if mode == "hole_elimination_mode":
-            hole_value_file_string = Path("/tmp/" + sketch_name +
-                                          "_result.holes").read_text()
-            begin_pos = hole_value_file_string.find('int')
-            end_pos = hole_value_file_string.rfind(';')
-            hole_value_file_string = hole_value_file_string[begin_pos:end_pos +
-                                                            1]
-            #rearrange the format (int x=1; int y=2;) to (x==1 && y==2 && 1)
-            hole_value_file_string = hole_value_file_string.replace("int", "")
-            hole_value_file_string = hole_value_file_string.replace("=", "==")
-            hole_value_file_string = hole_value_file_string.replace(";", "&&")
-            hole_value_file_string = hole_value_file_string + "1"
+            # holes_to_values is in the format {'hole_name':'hole_value'} i.e{'sample1_stateless_alu_0_0_mux1_ctrl': '0'}
+            holes_to_values = get_hole_value_assignments(hole_names, output)
+            hole_value_file_string = ""
+            # hole_value_file_string has the format hole_1==1 && hole_2==2 && 1
+            for hole, value in holes_to_values.items():
+                hole_value_file_string += hole + " == " + value + " && "
+            hole_value_file_string += "1"
             #find the position of harness
             begin_pos = original_sketch_file_string.find('harness')
             begin_pos = original_sketch_file_string.find('assert', begin_pos)
@@ -185,7 +182,7 @@ def main(argv):
                 print("finally succeed")
                 end_time = time.time()
                 print("total time in seconds: ", end_time - start_time)
-                exit(0)
+                return 0
             else:
                 count = count + 1
                 continue
@@ -195,7 +192,7 @@ def main(argv):
             end_time = time.time()
             print("total time in seconds: ", end_time - start_time)
             print("total while loop: ", count)
-            sys.exit(1)
+            return 1
 
 
 def run_main():
