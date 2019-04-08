@@ -5,7 +5,6 @@ import sys
 import re
 
 from chipc.compiler import Compiler
-from chipc.utils import get_hole_value_assignments
 
 
 def main(argv):
@@ -46,9 +45,9 @@ def main(argv):
                         args.sketch_name, args.parallel_sketch, args.pkt_fields)
 
     if args.parallel == "serial_codegen":
-        (ret_code, output, hole_names) = compiler.serial_codegen()
+        (ret_code, output, hole_assignments) = compiler.serial_codegen()
     else:
-        (ret_code, output, hole_names) = compiler.parallel_codegen()
+        (ret_code, output, hole_assignments) = compiler.parallel_codegen()
 
     # print results
     if ret_code != 0:
@@ -56,18 +55,15 @@ def main(argv):
             errors_file.write(output)
             print("Sketch failed. Output left in " + errors_file.name)
         sys.exit(1)
+    else:
+        for hole, value in hole_assignments.items():
+            print("int ", hole, " = ", value, ";")
 
-    holes_to_values = get_hole_value_assignments(hole_names, output)
-
-    for hole, value in holes_to_values.items():
-        print("int ", hole, " = ", value, ";")
-
-    with open(args.sketch_name + ".success", "w") as success_file:
-        success_file.write(output)
-        print("Sketch succeeded. Generated configuration is given " +
-              "above. Output left in " + success_file.name)
-    sys.exit(0)
-
+        with open(args.sketch_name + ".success", "w") as success_file:
+            success_file.write(output)
+            print("Sketch succeeded. Generated configuration is given " +
+                  "above. Output left in " + success_file.name)
+        sys.exit(0)
 
 def run_main():
     sys.exit(main(sys.argv))

@@ -66,6 +66,8 @@ init:
 
 build_script:
 - sh: >-
+    set -e
+
     sudo pip3 install -r requirements.txt
 
     sudo pip3 install .
