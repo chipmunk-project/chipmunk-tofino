@@ -59,6 +59,11 @@ direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --parall
 iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --hole-elimination
 ```
 
+```shell
+iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --parallel --parallel-sketch --hole-elimination
+```
+
+
 ### Optimization Verification
 
 ```shell
