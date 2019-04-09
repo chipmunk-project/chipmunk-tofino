@@ -66,11 +66,11 @@ def generate_additional_testcases(hole_assignments, compiler, num_fields_in_prog
     return counter_example_definition + counter_example_assert
 
 def main(argv):
-    if len(argv) != 8:
+    if len(argv) != 7:
         print("Usage: iterative_solver " +
               " <program file> <alu file> <number of pipeline stages> " +
               "<number of stateless/stateful ALUs per stage> " +
-              "<sketch_name (w/o file extension)> <parallel/serial> " +
+              " <parallel/serial> " +
               "<cex_mode/hole_elimination_mode>")
         return 1
 
@@ -81,12 +81,14 @@ def main(argv):
     alu_file = str(argv[2])
     num_pipeline_stages = int(argv[3])
     num_alus_per_stage = int(argv[4])
-    sketch_name = str(argv[5])
-    parallel_or_serial = str(argv[6])
-    mode = str(argv[7])
+    parallel_or_serial = str(argv[5])
+    mode = str(argv[6])
     assert mode in ["cex_mode", "hole_elimination_mode"], "Unknown mode " + mode
 
     # First try to compile with default number (2) of bits.
+
+    sketch_name = program_file.split('/')[-1].split('.')[0] + "_" + alu_file.split('/')[-1].split('.')[0] + \
+                  "_" + str(num_pipeline_stages) + "_" + str(num_alus_per_stage)
     compiler = Compiler(program_file, alu_file, num_pipeline_stages,
                         num_alus_per_stage, sketch_name, parallel_or_serial)
 

@@ -20,8 +20,6 @@ def main(argv):
         type=int,
         help="Number of stateless/stateful ALUs per stage")
     parser.add_argument(
-        "sketch_name", help="Output sketch filename without extension")
-    parser.add_argument(
         "--pkt-fields",
         type=int,
         nargs='+',
@@ -40,9 +38,11 @@ def main(argv):
 
     args = parser.parse_args()
 
+    sketch_name = args.program_file.split('/')[-1].split('.')[0] + "_" + args.alu_file.split('/')[-1].split('.')[0] + \
+                  "_" + str(args.num_pipeline_stages) + "_" + str(args.num_alus_per_stage)
     compiler = Compiler(args.program_file, args.alu_file,
                         args.num_pipeline_stages, args.num_alus_per_stage,
-                        args.sketch_name, args.parallel_sketch, args.pkt_fields)
+                        sketch_name, args.parallel_sketch, args.pkt_fields)
 
     if args.parallel == "serial_codegen":
         (ret_code, output, hole_assignments) = compiler.serial_codegen()
@@ -51,7 +51,7 @@ def main(argv):
 
     # print results
     if ret_code != 0:
-        with open(args.sketch_name + ".errors", "w") as errors_file:
+        with open(sketch_name + ".errors", "w") as errors_file:
             errors_file.write(output)
             print("Sketch failed. Output left in " + errors_file.name)
         sys.exit(1)
@@ -59,7 +59,7 @@ def main(argv):
         for hole, value in hole_assignments.items():
             print("int ", hole, " = ", value, ";")
 
-        with open(args.sketch_name + ".success", "w") as success_file:
+        with open(sketch_name + ".success", "w") as success_file:
             success_file.write(output)
             print("Sketch succeeded. Generated configuration is given " +
                   "above. Output left in " + success_file.name)

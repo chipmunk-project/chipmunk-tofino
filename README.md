@@ -40,23 +40,23 @@ development environment.
 ### Codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2
 ```
 
 or
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 --parallel-sketch
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --parallel-sketch
 ```
 
 ### Parallel codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 --parallel --parallel-sketch
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --parallel --parallel-sketch
 ```
 
 ### Iterative solver
 ```shell
-iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 sample1 serial hole_elimination_mode
+iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 serial hole_elimination_mode
 ```
 
 ### Optimization Verification
