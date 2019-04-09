@@ -3,6 +3,7 @@ from os import path
 import pickle
 import subprocess
 import sys
+import argparse
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
@@ -80,16 +81,18 @@ def optverify(sketch1_name, sketch2_name, transform_file):
 
 def main(argv):
     """Main routine for optimization verifier."""
-    if (len(argv) < 4):
-        print("Usage: optverify" +
-              " sketch1_name sketch2_name transform_file")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Sketch generator for optimization verification.")
+    parser.add_argument(
+        "sketch1",
+        help="Name of first sketch")
+    parser.add_argument(
+        "sketch2",
+        help="Name of second sketch")
+    parser.add_argument(
+        "transform_file", help="Transform file to assist in optimization verification")
 
-    sketch1_name = str(argv[1])
-    sketch2_name = str(argv[2])
-    transform_file = str(argv[3])
-
-    sys.exit(optverify(sketch1_name, sketch2_name, transform_file))
+    args = parser.parse_args(argv[1:])
+    sys.exit(optverify(args.sketch1, args.sketch2, args.transform_file))
 
 def run_main():
     sys.exit(main(sys.argv))

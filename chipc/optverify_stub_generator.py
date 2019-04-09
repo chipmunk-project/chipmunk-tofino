@@ -2,26 +2,30 @@
 from pathlib import Path
 import sys
 import re
+import argparse
 
 from chipc.compiler import Compiler
 from chipc.utils import get_hole_value_assignments
 
 def main(argv):
     """Main program."""
-    if len(argv) < 6:
-        print("Usage: optverify_stub_generator <program file> <alu file> " +
-              "<number of pipeline stages> " +
-              "<number of stateless/stateful ALUs per stage> " +
-              "<sketch_name (w/o file extension)> ")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Stub generator for optimization verification.")
+    parser.add_argument(
+        "program_file", help="Program specification in .sk file")
+    parser.add_argument("alu_file", help="ALU file to use.")
+    parser.add_argument(
+        "num_pipeline_stages", type=int, help="Number of pipeline stages")
+    parser.add_argument(
+        "num_alus_per_stage",
+        type=int,
+        help="Number of stateless/stateful ALUs per stage")
+    parser.add_argument(
+        "sketch_name",
+        help="Name of sketch")
 
-    program_file = str(argv[1])
-    alu_file = str(argv[2])
-    num_pipeline_stages = int(argv[3])
-    num_alus_per_stage = int(argv[4])
-    sketch_name = str(argv[5])
-    compiler = Compiler(program_file, alu_file, num_pipeline_stages,
-                        num_alus_per_stage, sketch_name, "serial")
+    args = parser.parse_args(argv[1:])
+    compiler = Compiler(args.program_file, args.alu_file, args.num_pipeline_stages,
+                        args.num_alus_per_stage, args.sketch_name, "serial")
     compiler.optverify()
 
 
