@@ -36,7 +36,7 @@ def main(argv):
         action="store_true",
         help="Whether sketch process uses parallelism")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv[1:])
 
     sketch_name = args.program_file.split('/')[-1].split('.')[0] + "_" + args.alu_file.split('/')[-1].split('.')[0] + \
                   "_" + str(args.num_pipeline_stages) + "_" + str(args.num_alus_per_stage)

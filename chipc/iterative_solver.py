@@ -100,7 +100,7 @@ def main(argv):
         default="cex_mode",
         help="Whether to iterate by eliminating holes or using counterexamples") 
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv[1:])
     (num_fields_in_prog, num_state_groups) = get_num_pkt_fields_and_state_groups(
         Path(args.program_file).read_text())
 
