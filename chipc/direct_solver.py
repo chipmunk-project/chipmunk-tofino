@@ -9,7 +9,7 @@ from chipc.compiler import Compiler
 
 def main(argv):
     """Main program."""
-    parser = argparse.ArgumentParser(description="Chipmunk compiler.")
+    parser = argparse.ArgumentParser(description="Direct solver.")
     parser.add_argument(
         "program_file", help="Program specification in .sk file")
     parser.add_argument("alu_file", help="ALU file to use.")
