@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import argparse
 
 from chipc.compiler import Compiler
 from chipc.utils import get_num_pkt_fields_and_state_groups, get_hole_value_assignments
@@ -66,31 +67,48 @@ def generate_additional_testcases(hole_assignments, compiler, num_fields_in_prog
     return counter_example_definition + counter_example_assert
 
 def main(argv):
-    if len(argv) != 7:
-        print("Usage: iterative_solver " +
-              " <program file> <alu file> <number of pipeline stages> " +
-              "<number of stateless/stateful ALUs per stage> " +
-              " <parallel/serial> " +
-              "<cex_mode/hole_elimination_mode>")
-        return 1
+    parser = argparse.ArgumentParser(description="Iterative solver.")
+    parser.add_argument(
+        "program_file", help="Program specification in .sk file")
+    parser.add_argument("alu_file", help="ALU file to use.")
+    parser.add_argument(
+        "num_pipeline_stages", type=int, help="Number of pipeline stages")
+    parser.add_argument(
+        "num_alus_per_stage",
+        type=int,
+        help="Number of stateless/stateful ALUs per stage")
+    parser.add_argument(
+        "--pkt-fields",
+        type=int,
+        nargs='+',
+        help="Packet fields to check correctness")
+    parser.add_argument(
+        "-p",
+        "--parallel",
+        action="store_const",
+        const="parallel_codegen",
+        default="serial_codegen",
+        help="Whether to run multiple sketches in parallel.")
+    parser.add_argument(
+        "--parallel-sketch",
+        action="store_true",
+        help="Whether sketch process uses parallelism")
+    parser.add_argument(
+        "--hole-elimination",
+        action="store_const",
+        const="hole_elimination_mode",
+        default="cex_mode",
+        help="Whether to iterate by eliminating holes or using counterexamples") 
 
-    program_file = str(argv[1])
-    (num_fields_in_prog,
-     num_state_groups) = get_num_pkt_fields_and_state_groups(
-         Path(program_file).read_text())
-    alu_file = str(argv[2])
-    num_pipeline_stages = int(argv[3])
-    num_alus_per_stage = int(argv[4])
-    parallel_or_serial = str(argv[5])
-    mode = str(argv[6])
-    assert mode in ["cex_mode", "hole_elimination_mode"], "Unknown mode " + mode
+    args = parser.parse_args()
+    (num_fields_in_prog, num_state_groups) = get_num_pkt_fields_and_state_groups(
+        Path(args.program_file).read_text())
 
-    # First try to compile with default number (2) of bits.
-
-    sketch_name = program_file.split('/')[-1].split('.')[0] + "_" + alu_file.split('/')[-1].split('.')[0] + \
-                  "_" + str(num_pipeline_stages) + "_" + str(num_alus_per_stage)
-    compiler = Compiler(program_file, alu_file, num_pipeline_stages,
-                        num_alus_per_stage, sketch_name, parallel_or_serial)
+    sketch_name = args.program_file.split('/')[-1].split('.')[0] + "_" + args.alu_file.split('/')[-1].split('.')[0] + \
+                  "_" + str(args.num_pipeline_stages) + "_" + str(args.num_alus_per_stage)
+    compiler = Compiler(args.program_file, args.alu_file,
+                        args.num_pipeline_stages, args.num_alus_per_stage,
+                        sketch_name, args.parallel_sketch, args.pkt_fields)
 
     # Repeatedly run synthesis at 2 bits and verification at 10 bits until either
     # verification succeeds at 10 bits or synthesis fails at 2 bits. Synthesis is
@@ -100,12 +118,12 @@ def main(argv):
     hole_elimination_assert = []
     additional_testcases = ""
     while 1:
-        if mode == "hole_elimination_mode":
+        if args.hole_elimination == "hole_elimination_mode":
             (synthesis_ret_code, output, hole_assignments) = compiler.serial_codegen(
                 additional_constraints = hole_elimination_assert)
             hole_elimination_assert = generate_hole_elimination_assert(hole_assignments)
         else:
-            assert(mode == "cex_mode")
+            assert(args.hole_elimination == "cex_mode")
             (synthesis_ret_code, output, hole_assignments) = \
                 compiler.serial_codegen(additional_testcases = additional_testcases)
             additional_testcases    = generate_additional_testcases(hole_assignments, compiler,
