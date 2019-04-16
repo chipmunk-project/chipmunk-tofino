@@ -212,7 +212,7 @@ class Compiler:
 
         # Use --debug-cex mode and get counter examples.
         (ret_code, output) = subprocess.getstatusoutput(
-            "sketch -V 3 --debug-cex --bnd-inbits=" + str(bits_val) + " " + self.sketch_name + "_cexgen.sk")
+            "sketch -V 3 --slv-seed=1 --debug-cex --bnd-inbits=" + str(bits_val) + " " + self.sketch_name + "_cexgen.sk")
 
         # Extract counterexample using regular expression.
         pkt_group = re.findall(
