@@ -3,6 +3,15 @@
 from re import findall
 
 
+def get_info_of_state_groups(program):
+    """Returns the information of all state vars
+    i.e state_and_packet.state_group_1_state_0 we will get the information (1,0)
+    """
+    state_group_info = findall(
+        r'state_and_packet.state_group_(\d+)_state_(\d+)', program)
+    return state_group_info
+
+
 def get_num_pkt_fields_and_state_groups(program):
     """Returns number of packet fields and state groups.
     Use a regex to scan the program and extract the largest packet field index
@@ -42,7 +51,7 @@ def get_hole_value_assignments(hole_names, sketch):
     for name in hole_names:
         values = findall("" + name + "__" + r"\w+ = (\d+)", sketch)
         assert len(values) == 1, (
-            "Unexpected number of assignment statements found for hole %s, " \
+            "Unexpected number of assignment statements found for hole %s, "
             "with values %s" % (name, values))
         holes_to_values[name] = values[0]
 
