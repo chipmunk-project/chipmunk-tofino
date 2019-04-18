@@ -53,8 +53,6 @@ build_script:
 - sh: >-
     set -e
 
-    sudo pip3 install -r requirements.txt
-
     sudo pip3 install .
 
     direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2
