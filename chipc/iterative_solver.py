@@ -1,12 +1,11 @@
 """Repeated Solver"""
-from pathlib import Path
-import re
-import subprocess
-import sys
 import argparse
+import sys
+from pathlib import Path
 
 from chipc.compiler import Compiler
-from chipc.utils import get_num_pkt_fields_and_state_groups, get_hole_value_assignments, get_info_of_state_groups
+from chipc.utils import get_info_of_state_groups
+from chipc.utils import get_num_pkt_fields_and_state_groups
 
 
 # Create hole_elimination_assert from hole_assignments
@@ -52,7 +51,7 @@ def generate_additional_testcases(hole_assignments, compiler,
             if ("state_group_" + state_group_info[i][0] + "_state_" +
                     state_group_info[i][1] in [
                         regex_match[0] for regex_match in state_group
-                    ]):
+            ]):
                 continue
             else:
                 state_group.append(
@@ -112,7 +111,8 @@ def main(argv):
     )
 
     args = parser.parse_args(argv[1:])
-    # Use program_content to store the program file text rather than use it twice
+    # Use program_content to store the program file text rather than use it
+    # twice
     program_content = Path(args.program_file).read_text()
     (num_fields_in_prog,
      num_state_groups) = get_num_pkt_fields_and_state_groups(program_content)
@@ -120,24 +120,26 @@ def main(argv):
     # Get the state vars information
     state_group_info = get_info_of_state_groups(program_content)
 
-    sketch_name = args.program_file.split('/')[-1].split('.')[0] + "_" + args.alu_file.split('/')[-1].split('.')[0] + \
+    sketch_name = args.program_file.split('/')[-1].split('.')[0] + \
+        "_" + args.alu_file.split('/')[-1].split('.')[0] + \
         "_" + str(args.num_pipeline_stages) + \
         "_" + str(args.num_alus_per_stage)
     compiler = Compiler(args.program_file, args.alu_file,
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         sketch_name, args.parallel_sketch, args.pkt_fields)
 
-    # Repeatedly run synthesis at 2 bits and verification at 10 bits until either
-    # verification succeeds at 10 bits or synthesis fails at 2 bits. Synthesis is
-    # much faster at a smaller bit width, while verification needs to run at a larger
-    # bit width for soundness.
+    # Repeatedly run synthesis at 2 bits and verification at 10 bits until
+    # either verification succeeds at 10 bits or synthesis fails at 2 bits.
+    # Synthesis is much faster at a smaller bit width, while verification needs
+    # to run at a larger bit width for soundness.
     count = 1
     hole_elimination_assert = []
     additional_testcases = ""
     while 1:
         if args.hole_elimination == "hole_elimination_mode":
             (synthesis_ret_code, output, hole_assignments) = \
-                compiler.serial_codegen(additional_constraints=hole_elimination_assert) \
+                compiler.serial_codegen(
+                additional_constraints=hole_elimination_assert) \
                 if args.parallel == "serial_codegen" else \
                 compiler.parallel_codegen(
                     additional_constraints=hole_elimination_assert)
@@ -147,7 +149,8 @@ def main(argv):
         else:
             assert (args.hole_elimination == "cex_mode")
             (synthesis_ret_code, output, hole_assignments) = \
-                compiler.serial_codegen(additional_testcases=additional_testcases) \
+                compiler.serial_codegen(
+                additional_testcases=additional_testcases) \
                 if args.parallel == "serial_codegen" else \
                 compiler.parallel_codegen(
                     additional_testcases=additional_testcases)
@@ -157,9 +160,8 @@ def main(argv):
 
         print("Iteration #" + str(count))
         if synthesis_ret_code == 0:
-            print(
-                "Synthesis succeeded with 2 bits, proceeding to 10-bit verification."
-            )
+            print("Synthesis succeeded with 2 bits, proceeding to 10-bit "
+                  "verification.")
             verification_ret_code = compiler.sol_verify(
                 hole_assignments, num_input_bits=10)
             if verification_ret_code == 0:

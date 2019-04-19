@@ -1,8 +1,9 @@
 """Simple unit tests for chipmunk."""
-
-from os import path, listdir, getcwd
-from pathlib import Path
 import unittest
+from os import getcwd
+from os import listdir
+from os import path
+from pathlib import Path
 
 from chipc import iterative_solver
 from chipc.compiler import Compiler
@@ -32,8 +33,8 @@ class TestDirectSolver(unittest.TestCase):
                 2, "simple", "serial")
             self.assertEqual(compiler.serial_codegen()[0], 0,
                              "Compiling simple.sk failed for " + alu)
-            # TODO(taegyunkim): When all tests pass, clean up intermediary files
-            # or at least have an option to keep intermediary files, with
+            # TODO(taegyunkim): When all tests pass, clean up intermediary
+            # files or at least have an option to keep intermediary files, with
             # default deleting them.
 
     def test_raise_assertion_for_grid_size(self):
@@ -76,7 +77,7 @@ class TestDirectSolver(unittest.TestCase):
         (ret_code, _, _) = compiler.serial_codegen()
         self.assertEqual(
             1, ret_code, "Compiling " + spec_filename + " used to fail for " +
-            alu_filename + ", but it succeeded, please check and upate " + \
+            alu_filename + ", but it succeeded, please check and upate " +
             "this test accordingly if this is expected.")
 
     def test_test_sketch(self):
@@ -89,7 +90,7 @@ class TestDirectSolver(unittest.TestCase):
         (ret_code, _, _) = compiler.serial_codegen()
         self.assertEqual(
             1, ret_code, "Compiling " + spec_filename + " used to fail for " +
-            alu_filename + ", but it succeeded, please check and upate " + \
+            alu_filename + ", but it succeeded, please check and upate " +
             "this test accordingly if this is expected.")
 
         compiler = Compiler(
@@ -138,9 +139,9 @@ class IterativeSolverTest(unittest.TestCase):
         self.assertEqual(
             0,
             iterative_solver.main([
-                "iterative_solver",
-                path.join(SPEC_DIR, "simple.sk"),
-                path.join(ALU_DIR, "raw.stateful_alu"), "2", "2", "--hole-elimination"]),
+                "iterative_solver", path.join(SPEC_DIR, "simple.sk"),
+                path.join(ALU_DIR, "raw.stateful_alu"), "2", "2",
+                "--hole-elimination"]),
         )
 
     def test_sampling_revised_2_2_raw_cex_mode(self):
@@ -148,9 +149,10 @@ class IterativeSolverTest(unittest.TestCase):
             1,
             iterative_solver.main([
                 "iterative_solver",
-                path.join(SPEC_DIR,"sampling_revised.sk"),
+                path.join(SPEC_DIR, "sampling_revised.sk"),
                 path.join(ALU_DIR, "raw.stateful_alu"), "2", "2"]),
         )
+
 
 if __name__ == '__main__':
     unittest.main()

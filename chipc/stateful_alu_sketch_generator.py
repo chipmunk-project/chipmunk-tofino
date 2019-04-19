@@ -1,5 +1,6 @@
-from overrides import overrides
 from textwrap import dedent
+
+from overrides import overrides
 
 from chipc.stateful_aluParser import stateful_aluParser
 from chipc.stateful_aluVisitor import stateful_aluVisitor
@@ -39,7 +40,8 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.visit(ctx.getChild(0, stateful_aluParser.Packet_fieldsContext))
 
         # The %s is for hole arguments, which are added below.
-        self.mainFunction += ", %s) {\n |StateGroup| old_state_group = state_group;"
+        self.mainFunction += \
+            ", %s) {\n |StateGroup| old_state_group = state_group;"
 
         # Copy over state_group members into state_i scalar variables
         assert (self.num_state_slots > 0)
@@ -202,9 +204,9 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
     @overrides
     def visitUpdate(self, ctx):
 
-        #Make sure every update ends with a semicolon
+        # Make sure every update ends with a semicolon
         assert ctx.getChild(ctx.getChildCount() - 1).getText() == ";", \
-                   "Every update must end with a semicolon."
+            "Every update must end with a semicolon."
 
         self.visit(ctx.getChild(0, stateful_aluParser.State_varContext))
         self.mainFunction += " = "
@@ -218,16 +220,18 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
 
     def generateMux2(self):
-        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "Mux2_" + str(
-            self.mux2Count) + """(int op1, int op2, int choice) {
+        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + \
+            "Mux2_" + str(self.mux2Count) + \
+            """(int op1, int op2, int choice) {
     if (choice == 0) return op1;
     else return op2;
     } \n\n"""
         self.add_hole("Mux2_" + str(self.mux2Count), 1)
 
     def generateMux3(self):
-        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "Mux3_" + str(
-            self.mux3Count) + """(int op1, int op2, int op3, int choice) {
+        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + \
+            "Mux3_" + str(self.mux3Count) + \
+            """(int op1, int op2, int op3, int choice) {
     if (choice == 0) return op1;
     else if (choice == 1) return op2;
     else return op3;
@@ -246,13 +250,14 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.helperFunctionStrings += dedent(
             function_str.format(self.stateful_alu_name, str(self.mux3Count),
                                 num))
-        # Add two bit width hole, to express 3 possible values for choice in the
-        # above code.
+        # Add two bit width hole, to express 3 possible values for choice in
+        # the above code.
         self.add_hole("Mux3_" + str(self.mux3Count), 2)
 
     def generateRelOp(self):
-        self.helperFunctionStrings += "bit " + self.stateful_alu_name + "_" + "rel_op_" + str(
-            self.relopCount) + """(int operand1, int operand2, int opcode) {
+        self.helperFunctionStrings += "bit " + self.stateful_alu_name + "_" + \
+            "rel_op_" + str(self.relopCount) + \
+            """(int operand1, int operand2, int opcode) {
     if (opcode == 0) {
       return operand1 != operand2;
     } else if (opcode == 1) {
@@ -267,8 +272,9 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.add_hole("rel_op_" + str(self.relopCount), 2)
 
     def generateArithOp(self):
-        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "arith_op_" + str(
-            self.arithopCount) + """(int operand1, int operand2, int opcode) {
+        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + \
+            "arith_op_" + str(self.arithopCount) + \
+            """(int operand1, int operand2, int opcode) {
     if (opcode == 0) {
       return operand1 + operand2;
     } else {
@@ -278,15 +284,15 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.add_hole("arith_op_" + str(self.arithopCount), 1)
 
     def generateConstant(self):
-        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "C_" + str(
-            self.constCount) + """(int const) {
+        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + \
+            "C_" + str(self.constCount) + """(int const) {
     return const;
     }\n\n"""
         self.add_hole("const_" + str(self.constCount), 2)
 
     def generateOpt(self):
-        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + "Opt_" + str(
-            self.optCount) + """(int op1, int enable) {
+        self.helperFunctionStrings += "int " + self.stateful_alu_name + "_" + \
+            "Opt_" + str(self.optCount) + """(int op1, int enable) {
     if (enable != 0) return 0;
     return op1;
     } \n\n"""

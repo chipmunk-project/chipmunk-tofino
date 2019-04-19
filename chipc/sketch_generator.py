@@ -1,15 +1,14 @@
 # Helper functions to generate sketch code for synthesis
-from pathlib import Path
 import math
-import sys
+from pathlib import Path
 
-from antlr4 import *
-from jinja2 import Template
+from antlr4 import CommonTokenStream
+from antlr4 import FileStream
 
+from chipc.mode import Mode
+from chipc.stateful_alu_sketch_generator import StatefulAluSketchGenerator
 from chipc.stateful_aluLexer import stateful_aluLexer
 from chipc.stateful_aluParser import stateful_aluParser
-from chipc.stateful_alu_sketch_generator import StatefulAluSketchGenerator
-from chipc.mode import Mode
 
 
 class Hole:
@@ -77,7 +76,6 @@ class SketchGenerator:
 
     # Generate Sketch code for a simple stateless alu (+,-,*,/)
     def generate_stateless_alu(self, alu_name, potential_operands):
-        operand_mux_template = self.jinja2_env_.get_template("mux.j2")
         stateless_alu_template = self.jinja2_env_.get_template(
             "stateless_alu.j2")
         stateless_alu = stateless_alu_template.render(
@@ -115,9 +113,11 @@ class SketchGenerator:
         self.stateful_alu_hole_arguments_ = [
             x for x in sorted(stateful_alu_sketch_generator.stateful_alu_args)
         ]
-        self.num_operands_to_stateful_alu_ = stateful_alu_sketch_generator.num_packet_fields
+        self.num_operands_to_stateful_alu_ = (
+            stateful_alu_sketch_generator.num_packet_fields)
         self.num_state_slots_ = stateful_alu_sketch_generator.num_state_slots
-        return stateful_alu_sketch_generator.helperFunctionStrings + stateful_alu_sketch_generator.mainFunction
+        return (stateful_alu_sketch_generator.helperFunctionStrings +
+                stateful_alu_sketch_generator.mainFunction)
 
     def generate_state_allocator(self):
         for i in range(self.num_pipeline_stages_):
@@ -129,16 +129,16 @@ class SketchGenerator:
         for i in range(self.num_pipeline_stages_):
             assert_predicate = "("
             for l in range(self.num_state_groups_):
-                assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(
-                    i) + "_" + str(l) + " + "
+                assert_predicate += self.sketch_name_ + "_" + \
+                    "salu_config_" + str(i) + "_" + str(l) + " + "
             assert_predicate += "0) <= " + str(self.num_alus_per_stage_)
             self.add_assert(assert_predicate)
 
         for l in range(self.num_state_groups_):
             assert_predicate = "("
             for i in range(self.num_pipeline_stages_):
-                assert_predicate += self.sketch_name_ + "_" + "salu_config_" + str(
-                    i) + "_" + str(l) + " + "
+                assert_predicate += self.sketch_name_ + "_" + \
+                    "salu_config_" + str(i) + "_" + str(l) + " + "
             assert_predicate += "0) <= 1"
             self.add_assert(assert_predicate)
 
@@ -155,7 +155,7 @@ class SketchGenerator:
         self.add_hole(self.sketch_name_ + "_" + mux_name + "_ctrl", num_bits)
         return mux_code
 
-    # Stateful operand muxes (stateless ones are part of generate_stateless_alu)
+    # Stateful operand muxes, stateless ones are part of generate_stateless_alu
     def generate_stateful_operand_muxes(self):
         ret = ""
         # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to
@@ -171,15 +171,15 @@ class SketchGenerator:
 
     # Output muxes to pick between stateful ALUs and stateless ALU
     def generate_output_muxes(self):
-        # Note: We are generating a mux that takes as input all virtual stateful
-        # ALUs + corresponding stateless ALU The number of virtual stateful ALUs
-        # is more or less than the physical stateful ALUs because it equals the
-        # number of state variables in the program_file, but this doesn't affect
-        # correctness because we enforce that the total number of active virtual
-        # stateful ALUs is within the physical limit.  It also doesn't affect
-        # the correctness of modeling the output mux because the virtual output
-        # mux setting can be translated into the physical output mux setting
-        # during post processing.
+        # Note: We are generating a mux that takes as input all virtual
+        # stateful ALUs + corresponding stateless ALU The number of virtual
+        # stateful ALUs is more or less than the physical stateful ALUs because
+        # it equals the number of state variables in the program_file, but this
+        # doesn't affect correctness because we enforce that the total number
+        # of active virtual stateful ALUs is within the physical limit. It also
+        # doesn't affect the correctness of modeling the output mux because the
+        # virtual output mux setting can be translated into the physical output
+        # mux setting during post processing.
         ret = ""
         for i in range(self.num_pipeline_stages_):
             for k in range(self.num_phv_containers_):
@@ -203,20 +203,24 @@ class SketchGenerator:
                                                   "_" + str(l)) + "\n"
         return ret
 
-    def generate_sketch(self, program_file, mode, additional_constraints = [], hole_assignments = dict(),
-                        additional_testcases = "", input_offset = 0):
+    def generate_sketch(self, program_file, mode, additional_constraints=[],
+                        hole_assignments=dict(), additional_testcases="",
+                        input_offset=0):
         self.reset_holes_and_asserts()
-        if mode == Mode.CODEGEN or mode == Mode.SOL_VERIFY or mode == Mode.CEXGEN:
-            template = self.jinja2_env_.get_template("code_generator.j2")   # TODO: Need better name for j2 file.
+        if mode == Mode.CODEGEN or mode == Mode.SOL_VERIFY or \
+                mode == Mode.CEXGEN:
+            # TODO: Need better name for j2 file.
+            template = self.jinja2_env_.get_template("code_generator.j2")
         else:
             assert(mode == Mode.OPTVERIFY), "Found mode " + mode
-            template = self.jinja2_env_.get_template("sketch_functions.j2") # TODO: Need better name for j2 file.
+            # TODO: Need better name for j2 file.
+            template = self.jinja2_env_.get_template("sketch_functions.j2")
 
         # Create stateless and stateful ALUs, operand muxes for stateful ALUs,
         # and output muxes.
         alu_definitions = self.generate_alus()
-        stateful_operand_mux_definitions = self.generate_stateful_operand_muxes(
-        )
+        stateful_operand_mux_definitions = (
+            self.generate_stateful_operand_muxes())
         output_mux_definitions = self.generate_output_muxes()
 
         # Create allocator to ensure each state var is assigned to exactly
@@ -246,6 +250,7 @@ class SketchGenerator:
             additional_constraints="\n".join(
                 ["assert(" + str(x) + ");" for x in additional_constraints]),
             hole_assignments="\n".join(
-                ["int " + str(hole) + " = " + str(value) + ";" for hole, value in hole_assignments.items()]),
+                ["int " + str(hole) + " = " + str(value) + ";"
+                    for hole, value in hole_assignments.items()]),
             additional_testcases=additional_testcases,
-            input_offset = input_offset)
+            input_offset=input_offset)

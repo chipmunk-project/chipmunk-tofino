@@ -1,8 +1,6 @@
 """Chipmunk Compiler"""
-from pathlib import Path
 import argparse
 import sys
-import re
 
 from chipc.compiler import Compiler
 
@@ -38,8 +36,10 @@ def main(argv):
 
     args = parser.parse_args(argv[1:])
 
-    sketch_name = args.program_file.split('/')[-1].split('.')[0] + "_" + args.alu_file.split('/')[-1].split('.')[0] + \
-                  "_" + str(args.num_pipeline_stages) + "_" + str(args.num_alus_per_stage)
+    sketch_name = args.program_file.split('/')[-1].split('.')[0] + \
+        "_" + args.alu_file.split('/')[-1].split('.')[0] + \
+        "_" + str(args.num_pipeline_stages) + \
+        "_" + str(args.num_alus_per_stage)
     compiler = Compiler(args.program_file, args.alu_file,
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         sketch_name, args.parallel_sketch, args.pkt_fields)
@@ -64,6 +64,7 @@ def main(argv):
             print("Sketch succeeded. Generated configuration is given " +
                   "above. Output left in " + success_file.name)
         sys.exit(0)
+
 
 def run_main():
     sys.exit(main(sys.argv))

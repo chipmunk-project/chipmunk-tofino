@@ -1,11 +1,13 @@
-from pathlib import Path
-from os import path
+import argparse
 import pickle
 import subprocess
 import sys
-import argparse
+from os import path
+from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+from jinja2 import StrictUndefined
 
 PICKLE_EXT = ".pickle"
 
@@ -81,7 +83,8 @@ def optverify(sketch1_name, sketch2_name, transform_file):
 
 def main(argv):
     """Main routine for optimization verifier."""
-    parser = argparse.ArgumentParser(description="Sketch generator for optimization verification.")
+    parser = argparse.ArgumentParser(
+        description="Sketch generator for optimization verification.")
     parser.add_argument(
         "sketch1",
         help="Name of first sketch")
@@ -89,10 +92,12 @@ def main(argv):
         "sketch2",
         help="Name of second sketch")
     parser.add_argument(
-        "transform_file", help="Transform file to assist in optimization verification")
+        "transform_file",
+        help="Transform file to assist in optimization verification")
 
     args = parser.parse_args(argv[1:])
     sys.exit(optverify(args.sketch1, args.sketch2, args.transform_file))
+
 
 def run_main():
     sys.exit(main(sys.argv))

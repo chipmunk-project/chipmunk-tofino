@@ -1,15 +1,14 @@
 """Chipmunk Compiler"""
-from pathlib import Path
-import sys
-import re
 import argparse
+import sys
 
 from chipc.compiler import Compiler
-from chipc.utils import get_hole_value_assignments
+
 
 def main(argv):
     """Main program."""
-    parser = argparse.ArgumentParser(description="Stub generator for optimization verification.")
+    parser = argparse.ArgumentParser(
+        description="Stub generator for optimization verification.")
     parser.add_argument(
         "program_file", help="Program specification in .sk file")
     parser.add_argument("alu_file", help="ALU file to use.")
@@ -24,8 +23,9 @@ def main(argv):
         help="Name of sketch")
 
     args = parser.parse_args(argv[1:])
-    compiler = Compiler(args.program_file, args.alu_file, args.num_pipeline_stages,
-                        args.num_alus_per_stage, args.sketch_name, "serial")
+    compiler = Compiler(args.program_file, args.alu_file,
+                        args.num_pipeline_stages, args.num_alus_per_stage,
+                        args.sketch_name, "serial")
     compiler.optverify()
 
 

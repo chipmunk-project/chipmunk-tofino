@@ -1,20 +1,23 @@
-from pathlib import Path
-from os import path
+import concurrent.futures as cf
+import itertools
+import os
 import pickle
 import re
+import signal
 import subprocess
-import sys
-import itertools
-import concurrent.futures
-import signal, psutil, os
+from os import path
+from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+import psutil
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+from jinja2 import StrictUndefined
 
 from chipc.chipmunk_pickle import ChipmunkPickle
-from chipc.sketch_generator import SketchGenerator
-from chipc.utils import get_num_pkt_fields_and_state_groups
-from chipc.utils import get_hole_value_assignments
 from chipc.mode import Mode
+from chipc.sketch_generator import SketchGenerator
+from chipc.utils import get_hole_value_assignments
+from chipc.utils import get_num_pkt_fields_and_state_groups
 
 
 def kill_child_processes(parent_pid, sig=signal.SIGTERM):
@@ -28,8 +31,10 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
             process.send_signal(sig)
             print("send_signal killed a child process", process)
         except psutil.NoSuchProcess as e:
-            print("send_signal didn't have any effect because process didn't exist")
+            print("send_signal didn't have any effect because process didn't"
+                  "exist")
             print(e)
+
 
 class Compiler:
     def __init__(self, program_file, alu_file, num_pipeline_stages,
@@ -84,7 +89,7 @@ class Compiler:
             program_file=self.program_file,
             mode=Mode.CODEGEN,
             additional_constraints=additional_constraints,
-            additional_testcases = additional_testcases)
+            additional_testcases=additional_testcases)
 
         # Create file and write sketch_harness into it.
         with open(sketch_file_name, "w") as sketch_file:
@@ -103,22 +108,29 @@ class Compiler:
                 "time sketch -V 12 --slv-seed=1 --bnd-inbits=2 " +
                 sketch_file_name)
         if (ret_code == 0):
-            holes_to_values = get_hole_value_assignments(self.sketch_generator.hole_names_, output)
+            holes_to_values = get_hole_value_assignments(
+                self.sketch_generator.hole_names_, output)
         else:
             holes_to_values = dict()
         return (ret_code, output, holes_to_values)
 
-    def serial_codegen(self, additional_constraints = [], additional_testcases = ""):
-        return self.single_codegen_run((additional_constraints, additional_testcases, self.sketch_name + "_codegen.sk"))
+    def serial_codegen(self, additional_constraints=[],
+                       additional_testcases=""):
+        return self.single_codegen_run(
+            (additional_constraints, additional_testcases,
+             self.sketch_name + "_codegen.sk"))
 
-    def parallel_codegen(self, additional_constraints = [], additional_testcases = ""):
+    def parallel_codegen(self, additional_constraints=[],
+                         additional_testcases=""):
         # For each state_group, pick a pipeline_stage exhaustively.
-        # Note that some of these assignments might be infeasible, but that's OK. Sketch will reject these anyway.
+        # Note that some of these assignments might be infeasible, but that's
+        # OK. Sketch will reject these anyway.
         count = 0
         compiler_output = None
         compiler_inputs = []
         for assignment in itertools.product(
-                list(range(self.num_pipeline_stages)), repeat=self.num_state_groups):
+                list(range(self.num_pipeline_stages)),
+                repeat=self.num_state_groups):
             constraint_list = additional_constraints.copy()
             count = count + 1
             print("Now in assignment # ", count, " assignment is ", assignment)
@@ -135,15 +147,17 @@ class Compiler:
                             self.sketch_name + "_salu_config_" +
                             str(stage) + "_" + str(state_group) + " == 0"
                         ]
-            compiler_inputs += [(constraint_list, additional_testcases, self.sketch_name + "_" + str(count) + "_codegen.sk")]
+            compiler_inputs += [(constraint_list, additional_testcases,
+                                 self.sketch_name + "_" + str(count) +
+                                 "_codegen.sk")]
 
-        with concurrent.futures.ProcessPoolExecutor(max_workers=count) as executor:
+        with cf.ProcessPoolExecutor(max_workers=count) as executor:
             futures = []
             for compiler_input in compiler_inputs:
                 futures.append(
                     executor.submit(self.single_codegen_run, compiler_input))
 
-            for f in concurrent.futures.as_completed(futures):
+            for f in cf.as_completed(futures):
                 compiler_output = f.result()
                 if (compiler_output[0] == 0):
                     print("Success")
@@ -167,8 +181,8 @@ class Compiler:
             sketch_file.write(optverify_code)
             print("Sketch file is ", sketch_file.name)
 
-        # Put the rest (holes, hole arguments, constraints, etc.) into a .pickle
-        # file.
+        # Put the rest (holes, hole arguments, constraints, etc.) into a
+        # .pickle file.
         with open(self.sketch_name + ".pickle", "wb") as pickle_file:
             pickle.dump(
                 ChipmunkPickle(
@@ -189,30 +203,34 @@ class Compiler:
         for hole in self.sketch_generator.hole_names_:
             assert(hole in hole_assignments)
 
-        # Generate and run sketch that verifies these holes on a large input range (num_input_bits)
+        # Generate and run sketch that verifies these holes on a large input
+        # range (num_input_bits)
         sol_verify_code = self.sketch_generator.generate_sketch(
             program_file=self.program_file,
-            mode = Mode.SOL_VERIFY,
+            mode=Mode.SOL_VERIFY,
             hole_assignments=hole_assignments
         )
         with open(self.sketch_name + "_sol_verify.sk", "w") as sketch_file:
             sketch_file.write(sol_verify_code)
-        (ret_code, output) = subprocess.getstatusoutput("sketch -V 12 --slv-seed=1 --bnd-inbits=" +
-                             str(num_input_bits) + " " + self.sketch_name + "_sol_verify.sk")
+        (ret_code, output) = subprocess.getstatusoutput(
+            "sketch -V 12 --slv-seed=1 --bnd-inbits=" +
+            str(num_input_bits) + " " + self.sketch_name +
+            "_sol_verify.sk")
         return ret_code
 
     def counter_example_generator(self, bits_val, hole_assignments):
         cex_code = self.sketch_generator.generate_sketch(
             program_file=self.program_file,
             mode=Mode.CEXGEN,
-            hole_assignments = hole_assignments,
-            input_offset = 2**bits_val)
+            hole_assignments=hole_assignments,
+            input_offset=2**bits_val)
         with open(self.sketch_name + "_cexgen.sk", "w") as sketch_file:
             sketch_file.write(cex_code)
 
         # Use --debug-cex mode and get counter examples.
         (ret_code, output) = subprocess.getstatusoutput(
-            "sketch -V 3 --slv-seed=1 --debug-cex --bnd-inbits=" + str(bits_val) + " " + self.sketch_name + "_cexgen.sk")
+            "sketch -V 3 --slv-seed=1 --debug-cex --bnd-inbits=" +
+            str(bits_val) + " " + self.sketch_name + "_cexgen.sk")
 
         # Extract counterexample using regular expression.
         pkt_group = re.findall(
