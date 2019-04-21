@@ -128,8 +128,10 @@ def main(argv):
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         sketch_name, args.parallel_sketch, args.pkt_fields)
 
-    # Repeatedly run synthesis at 2 bits and verification at 10 bits until
-    # either verification succeeds at 10 bits or synthesis fails at 2 bits.
+    # Repeatedly run synthesis at 2 bits and verification using all valid ints
+    # until either verification succeeds or synthesis fails at 2 bits. Note
+    # that the verification with all ints, might not work because sketch only
+    # considers positive integers.
     # Synthesis is much faster at a smaller bit width, while verification needs
     # to run at a larger bit width for soundness.
     count = 1
@@ -160,15 +162,14 @@ def main(argv):
 
         print("Iteration #" + str(count))
         if synthesis_ret_code == 0:
-            print("Synthesis succeeded with 2 bits, proceeding to 10-bit "
+            print("Synthesis succeeded with 2 bits, proceeding to "
                   "verification.")
-            verification_ret_code = compiler.sol_verify(
-                hole_assignments, num_input_bits=10)
+            verification_ret_code = compiler.sol_verify(hole_assignments)
             if verification_ret_code == 0:
-                print("SUCCESS: Verification succeeded at 10 bits.")
+                print("SUCCESS: Verification succeeded.")
                 return 0
             else:
-                print("Verification failed at 10 bits. Trying again.")
+                print("Verification failed. Trying again.")
                 count = count + 1
                 continue
         else:

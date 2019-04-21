@@ -17,5 +17,6 @@ __pycache__
 *Visitor.py
 *Listener.py
 *.egg-info
+*.smt2
 
 !tests/data/*.sk

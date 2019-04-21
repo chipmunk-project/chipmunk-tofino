@@ -1,13 +1,13 @@
-from distutils import log
-from pathlib import Path
 import glob
 import os
 import subprocess
+from distutils import log
+from pathlib import Path
 
-from setuptools import setup
 from setuptools import find_packages
-from setuptools.command.develop import develop
+from setuptools import setup
 from setuptools.command.build_py import build_py
+from setuptools.command.develop import develop
 
 _PACKAGE_NAME = "chipc"
 
@@ -62,7 +62,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'antlr4-python3-runtime>=4.7.2', 'Jinja2>=2.10', 'overrides>=1.9',
-        'psutil>=5.6.1'
+        'psutil>=5.6.1', 'z3-solver>=4.8.0.0'
     ],
     cmdclass={
         "build_py": BuildPyWrapper,
