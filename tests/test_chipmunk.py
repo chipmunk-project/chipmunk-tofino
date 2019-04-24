@@ -60,10 +60,12 @@ class TestDirectSolver(unittest.TestCase):
             "Compiling " + spec_filename + " failed for " + alu_filename)
 
         expected_holes = get_hole_dicts(
-            Path(path.join(DATA_DIR, "simple_raw_2_2_codegen.sk")).read_text())
+            Path(path.join(DATA_DIR, "simple_raw_2_2_codegen_iteration_1.sk"
+                           )).read_text())
 
         output_holes = get_hole_dicts(
-            Path(path.join(getcwd(), "simple_raw_2_2_codegen.sk")).read_text())
+            Path(path.join(getcwd(), "simple_raw_2_2_codegen_iteration_1.sk"
+                           )).read_text())
 
         self.assertEqual(sorted(expected_holes), sorted(output_holes))
 

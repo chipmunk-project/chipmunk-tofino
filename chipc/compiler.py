@@ -108,6 +108,10 @@ class Compiler:
             (ret_code, output) = subprocess.getstatusoutput(
                 "time sketch -V 12 --slv-seed=1 --bnd-inbits=2 " +
                 sketch_file_name)
+        # Store sketch output
+        with open(sketch_file_name[:sketch_file_name.find(".sk")] +
+                  "_output.txt", 'w') as output_file:
+            output_file.write(output)
         if (ret_code == 0):
             holes_to_values = get_hole_value_assignments(
                 self.sketch_generator.hole_names_, output)
@@ -115,12 +119,13 @@ class Compiler:
             holes_to_values = dict()
         return (ret_code, output, holes_to_values)
 
-    def serial_codegen(self,
-                       additional_constraints=[],
+    def serial_codegen(self, iter_cnt=1, additional_constraints=[],
                        additional_testcases=""):
-        return self.single_codegen_run(
-            (additional_constraints, additional_testcases,
-             self.sketch_name + "_codegen.sk"))
+        return self.single_codegen_run((additional_constraints,
+                                        additional_testcases,
+                                        self.sketch_name +
+                                        "_codegen_iteration_" +
+                                        str(iter_cnt) + ".sk"))
 
     def parallel_codegen(self,
                          additional_constraints=[],
@@ -202,7 +207,7 @@ class Compiler:
         print("Total number of hole bits is",
               self.sketch_generator.total_hole_bits_)
 
-    def sol_verify(self, hole_assignments):
+    def sol_verify(self, hole_assignments, iter_cnt=1):
         """Verify hole value assignments with z3"""
         # Check that all holes are filled.
         for hole in self.sketch_generator.hole_names_:
@@ -214,18 +219,23 @@ class Compiler:
             program_file=self.program_file,
             mode=Mode.SOL_VERIFY,
             hole_assignments=hole_assignments)
-        with open(self.sketch_name + "_sol_verify.sk", "w") as sketch_file:
+        with open(self.sketch_name + "_sol_verify_iteration_" +
+                  str(iter_cnt) + ".sk", "w") as sketch_file:
             sketch_file.write(sol_verify_code)
+
         # Set --slv-timeout=0.001 to quit sketch immediately, we only want the
         # SMT file.
         (ret_code, output) = subprocess.getstatusoutput(
             "sketch -V 12 --slv-seed=1 --slv-timeout=0.001 " +
-            "--beopt:writeSMT " + self.sketch_name + ".smt2 " +
-            self.sketch_name + "_sol_verify.sk")
+            "--beopt:writeSMT " + self.sketch_name + "_iteration_" +
+            str(iter_cnt) + ".smt2 " +
+            self.sketch_name + "_sol_verify_iteration_" +
+            str(iter_cnt) + ".sk")
 
         z3_slv = z3.Solver()
         # We expect there is only one assert from smt2 file.
-        formula = z3.parse_smt2_file(self.sketch_name + ".smt2")[0]
+        formula = z3.parse_smt2_file(self.sketch_name + "_iteration_" +
+                                     str(iter_cnt) + ".smt2")[0]
 
         variables = [z3.Int(formula.var_name(i))
                      for i in range(0, formula.num_vars())]
@@ -242,20 +252,26 @@ class Compiler:
             return 0
         return -1
 
-    def counter_example_generator(self, bits_val, hole_assignments):
+    def counter_example_generator(self, bits_val,
+                                  hole_assignments, iter_cnt=1):
         cex_code = self.sketch_generator.generate_sketch(
             program_file=self.program_file,
             mode=Mode.CEXGEN,
             hole_assignments=hole_assignments,
             input_offset=2**bits_val)
-        with open(self.sketch_name + "_cexgen.sk", "w") as sketch_file:
+        with open(self.sketch_name + "_cexgen_iteration_" +
+                  str(iter_cnt) + ".sk", "w") as sketch_file:
             sketch_file.write(cex_code)
 
         # Use --debug-cex mode and get counter examples.
         (ret_code, output) = subprocess.getstatusoutput(
-            "sketch -V 3 --slv-seed=1 --debug-cex --bnd-inbits=" +
-            str(bits_val) + " " + self.sketch_name + "_cexgen.sk")
-
+            "sketch -V 3 --debug-cex --bnd-inbits=" + str(bits_val) + " " +
+            self.sketch_name + "_cexgen_iteration_" +
+            str(iter_cnt) + ".sk")
+        # Store the output of running sketch
+        with open(self.sketch_name + "_cexgen_iteration_" +
+                  str(iter_cnt) + "_output.txt", "w") as sketch_file:
+            sketch_file.write(output)
         # Extract counterexample using regular expression.
         pkt_group = re.findall(
             r"input (pkt_\d+)\w+ has value \d+= \((\d+)\)",
