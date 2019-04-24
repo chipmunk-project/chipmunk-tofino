@@ -147,8 +147,6 @@ def main(argv):
                 compiler.parallel_codegen(
                     additional_constraints=hole_elimination_assert)
 
-            hole_elimination_assert = generate_hole_elimination_assert(
-                hole_assignments)
         else:
             assert (args.hole_elimination == "cex_mode")
             (synthesis_ret_code, output, hole_assignments) = \
@@ -158,9 +156,6 @@ def main(argv):
                 if args.parallel == "serial_codegen" else \
                 compiler.parallel_codegen(
                     additional_testcases=additional_testcases)
-            additional_testcases = generate_additional_testcases(
-                hole_assignments, compiler, num_fields_in_prog,
-                num_state_groups, state_group_info, count)
 
         print("Iteration #" + str(count))
         if synthesis_ret_code == 0:
@@ -173,6 +168,14 @@ def main(argv):
                 return 0
             else:
                 print("Verification failed. Trying again.")
+                if args.hole_elimination == "hole_elimination_mode":
+                    hole_elimination_assert = generate_hole_elimination_assert(
+                        hole_assignments)
+                else:
+                    assert (args.hole_elimination == "cex_mode")
+                    additional_testcases = generate_additional_testcases(
+                        hole_assignments, compiler, num_fields_in_prog,
+                        num_state_groups, state_group_info, count)
                 count = count + 1
                 continue
         else:
