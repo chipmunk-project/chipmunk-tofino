@@ -19,7 +19,12 @@
   // This will be allocated to a state variable from the program using indicator variables.
   {% for stage_number in range(num_pipeline_stages) %}
     {% for state_group_number in range(num_state_groups) %}
-      |StateGroup| state_operand_salu_{{stage_number}}_{{state_group_number}};
+      |StateGroup| state_operand_salu_{{stage_number}}_{{state_group_number}} =  |StateGroup|(
+                                                                                    {% for slot_number in range(num_state_slots-1) %}
+                                                                                       state_{{slot_number}} = 0,
+                                                                                    {% endfor %}
+                                                                                       state_{{num_state_slots-1}} = 0
+                                                                                 );
     {% endfor %}
   {% endfor %}
 
