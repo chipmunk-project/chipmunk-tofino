@@ -120,7 +120,6 @@ class OptverifyTest(unittest.TestCase):
                 ALU_DIR, alu_filename), 1, 1, "sample2", "serial")
 
         compiler.optverify()
-
         self.assertEqual(
             0,
             optverify("sample1", "sample2",

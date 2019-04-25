@@ -1,5 +1,6 @@
 # Helper functions to generate sketch code for synthesis
 import math
+import re
 from pathlib import Path
 
 from antlr4 import CommonTokenStream
@@ -83,19 +84,40 @@ class SketchGenerator:
             arg_list=["int " + x for x in potential_operands],
             alu_name=self.sketch_name_ + "_" + alu_name,
             mux1=self.sketch_name_ + "_" + alu_name + "_mux1",
-            mux2=self.sketch_name_ + "_" + alu_name + "_mux2")
+            mux2=self.sketch_name_ + "_" + alu_name + "_mux2",
+            mux3=self.sketch_name_ + "_" + alu_name + "_mux3")
+        # TODO: now fix # of mux to be 3 and will later make them flexible
+        # according to the number of mux used in stateless_alu
         mux_op_1 = self.generate_mux(
             len(potential_operands), alu_name + "_mux1")
         mux_op_2 = self.generate_mux(
             len(potential_operands), alu_name + "_mux2")
-        self.add_hole(self.sketch_name_ + "_" + alu_name + "_opcode", 5)
+        mux_op_3 = self.generate_mux(
+            len(potential_operands), alu_name + "_mux3")
+
+        # Two ways to get the max value of opcode
+        # one is through read comment line //
+        # the other one is through find the number of opcode ==
+        # these two should be exactly the same
+        max_value_of_opcode = stateless_alu.count("opcode ==")
+        max_value = int(
+            re.search(r"// Max value of opcode is (\d+)",
+                      stateless_alu).group(1)
+        )
+        assert (max_value == max_value_of_opcode), \
+            "Number of opcodes in stateless ALU doesn't match up with" + \
+            " the number at the beginning of the stateless ALU file."
+        bit_of_opcode = math.ceil(math.log(max_value_of_opcode, 2))
+
+        self.add_hole(self.sketch_name_ + "_" +
+                      alu_name + "_opcode", bit_of_opcode)
         self.add_hole(self.sketch_name_ + "_" + alu_name + "_immediate", 2)
         self.add_assert(
             "(" + self.sketch_name_ + "_" + alu_name + "_opcode == 1)" + "|| ("
             + self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
             self.sketch_name_ + "_" + alu_name +
             "_mux2_ctrl)")  # symmetry breaking for commutativity
-        return mux_op_1 + mux_op_2 + stateless_alu
+        return mux_op_1 + mux_op_2 + mux_op_3 + stateless_alu
 
     # Generate Sketch code for a simple stateful alu (+,-,*,/)
     # Takes one state and one packet operand (or immediate operand) as inputs

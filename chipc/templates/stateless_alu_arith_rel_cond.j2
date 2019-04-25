@@ -1,4 +1,4 @@
-// Max value of opcode is 20
+// Max value of opcode is 15
 int {{ alu_name }}({{arg_list|join(',')}}, int opcode_hole_local, int immediate_operand_hole_local, int mux1_ctrl_hole_local, int mux2_ctrl_hole_local, int mux3_ctrl_hole_local) {
   int opcode = opcode_hole_local;
   int immediate_operand = immediate_operand_hole_local;
@@ -37,17 +37,7 @@ int {{ alu_name }}({{arg_list|join(',')}}, int opcode_hole_local, int immediate_
     return x < immediate_operand;
   } else if (opcode == 14) {
     return ( x != 0 ) ? (y) : (z);
-  } else if (opcode == 15) {
-    return ( x != 0 ) ? (y) : immediate_operand;
-  } else if (opcode == 16) {
-    return (x != 0) || (y != 0);
-  } else if (opcode == 17) {
-    return (x != 0) || (immediate_operand != 0);
-  } else if (opcode == 18) {
-    return (x != 0) && (y != 0);
-  } else if (opcode == 19) {
-    return (x != 0) && (immediate_operand != 0);
   } else {
-    return ! (x != 0);
+    return ( x != 0 ) ? (y) : immediate_operand;
   }
 }

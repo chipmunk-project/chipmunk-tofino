@@ -1,5 +1,6 @@
 sample2_stateless_alu_0_0_mux1_ctrl     = sample1_stateless_alu_0_0_mux1_ctrl;
 sample2_stateless_alu_0_0_mux2_ctrl     = sample1_stateless_alu_0_0_mux2_ctrl;
+sample2_stateless_alu_0_0_mux3_ctrl     = sample1_stateless_alu_0_0_mux3_ctrl;
 sample2_stateless_alu_0_0_opcode        = sample1_stateless_alu_0_0_opcode;
 sample2_stateless_alu_0_0_immediate     = sample1_stateless_alu_0_0_immediate;
 sample2_stateful_alu_0_0_Mux2_0_global  = sample1_stateful_alu_0_0_Mux2_0_global;
