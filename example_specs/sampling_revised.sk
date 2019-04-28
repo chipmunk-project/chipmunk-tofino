@@ -1,5 +1,5 @@
-/* 
-// Original program: 
+/*
+// Original program:
 // Sample every 30th packet in a flow
 #define N 30
 
@@ -22,11 +22,11 @@ void func(struct Packet pkt) {
  */
 
 // Output the rename map:
-// stateless variable rename list: 
+// stateless variable rename list:
 
 // state_and_packet.pkt_0 = pkt.sample
 
-// stateful variable rename list: 
+// stateful variable rename list:
 
 // state_and_packet.state_group_0_state_0 = count
 

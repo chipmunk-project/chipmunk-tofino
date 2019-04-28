@@ -1,9 +1,9 @@
 state_0
 pkt_0, pkt_1
 
-if (rel_op(Opt(state_0), Mux3(pkt_0, pkt_1, C()))) { 
+if (rel_op(Opt(state_0), Mux3(pkt_0, pkt_1, C()))) {
     state_0 = Opt(state_0) + Mux3(pkt_0, pkt_1, C());
 }
-else { 
+else {
     state_0 = Opt(state_0) + Mux3(pkt_0, pkt_1, C());
 }

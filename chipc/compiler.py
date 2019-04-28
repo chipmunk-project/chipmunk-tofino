@@ -38,11 +38,12 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
 
 
 class Compiler:
-    def __init__(self, program_file, alu_file, num_pipeline_stages,
-                 num_alus_per_stage, sketch_name, parallel_or_serial,
-                 pkt_fields_to_check=[]):
+    def __init__(self, program_file, stateful_alu_file, stateless_alu_file,
+                 num_pipeline_stages, num_alus_per_stage, sketch_name,
+                 parallel_or_serial, pkt_fields_to_check=[]):
         self.program_file = program_file
-        self.alu_file = alu_file
+        self.stateful_alu_file = stateful_alu_file
+        self.stateless_alu_file = stateless_alu_file
         self.num_pipeline_stages = num_pipeline_stages
         self.num_alus_per_stage = num_alus_per_stage
         self.sketch_name = sketch_name
@@ -60,7 +61,10 @@ class Compiler:
         # Initialize jinja2 environment for templates
         self.jinja2_env = Environment(
             loader=FileSystemLoader(
-                path.join(path.dirname(__file__), './templates')),
+                [path.join(path.dirname(__file__), './templates'),
+                 path.join(os.getcwd(),
+                           stateless_alu_file[:stateless_alu_file.rfind('/')]),
+                 ".", "/"]),
             undefined=StrictUndefined,
             trim_blocks=True,
             lstrip_blocks=True)
@@ -78,7 +82,8 @@ class Compiler:
             num_fields_in_prog=self.num_fields_in_prog,
             pkt_fields_to_check=pkt_fields_to_check,
             jinja2_env=self.jinja2_env,
-            alu_file=alu_file)
+            stateful_alu_file=stateful_alu_file,
+            stateless_alu_file=stateless_alu_file)
 
     def single_codegen_run(self, compiler_input):
         additional_constraints = compiler_input[0]

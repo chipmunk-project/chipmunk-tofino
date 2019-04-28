@@ -1,11 +1,11 @@
 """Utilities for Chipmunk"""
-
 from re import findall
 
 
 def get_info_of_state_groups(program):
     """Returns the information of all state vars
-    i.e state_and_packet.state_group_1_state_0 we will get the information (1,0)
+    i.e state_and_packet.state_group_1_state_0
+    we will get the information (1,0)
     """
     state_group_info = findall(
         r'state_and_packet.state_group_(\d+)_state_(\d+)', program)

@@ -6,8 +6,9 @@
 - Install [antlr](https://www.antlr.org/)
 - Install [sketch](https://people.csail.mit.edu/asolar/sketch-1.7.5.tar.gz)
 - `pip3 install -r requirements-dev.txt -e . && pre-commit install` (if you want to make changes to
-  this repo), `pip3 install -e .` (if you wantt o simply use this.). Add sudo if
-  you want to install system wide.
+  this repo),
+- `pip3 install -e .` (if you want to simply use chipmunk.).
+- Add sudo if you want to install system wide.
 
 ## How to
 
@@ -41,35 +42,35 @@ development environment.
 ### Codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2
 ```
 
 or
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --parallel-sketch
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --parallel-sketch
 ```
 
 ### Parallel codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --parallel --parallel-sketch
+direct_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --parallel --parallel-sketch
 ```
 
 ### Iterative solver
 ```shell
-iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --hole-elimination
 ```
 
 ```shell
-iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu 2 2 --parallel --parallel-sketch --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --parallel --parallel-sketch --hole-elimination
 ```
 
 
 ### Optimization Verification
 
 ```shell
-optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu 1 1 sample1
-optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu 1 1 sample2
+optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 1 1 sample1
+optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 1 1 sample2
 optverify sample1 sample2 example_transforms/very_simple.transform
 ```
 

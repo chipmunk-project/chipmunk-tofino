@@ -26,7 +26,8 @@ def add_prefix_suffix(text, prefix_string, suffix_string):
 class SketchGenerator:
     def __init__(self, sketch_name, num_phv_containers, num_state_groups,
                  num_alus_per_stage, num_pipeline_stages, num_fields_in_prog,
-                 pkt_fields_to_check, jinja2_env, alu_file):
+                 pkt_fields_to_check, jinja2_env, stateful_alu_file,
+                 stateless_alu_file):
         self.sketch_name_ = sketch_name
         self.total_hole_bits_ = 0
         self.hole_names_ = []
@@ -43,7 +44,8 @@ class SketchGenerator:
         self.pkt_fields_to_check_ = pkt_fields_to_check
         self.jinja2_env_ = jinja2_env
         self.jinja2_env_.filters["add_prefix_suffix"] = add_prefix_suffix
-        self.alu_file_ = alu_file
+        self.stateful_alu_file_ = stateful_alu_file
+        self.stateless_alu_file_ = stateless_alu_file
         self.num_operands_to_stateful_alu_ = 0
         self.num_state_slots_ = 0
 
@@ -77,8 +79,10 @@ class SketchGenerator:
 
     # Generate Sketch code for a simple stateless alu (+,-,*,/)
     def generate_stateless_alu(self, alu_name, potential_operands):
+        # Grab the stateless alu file name by using
+        # self.stateless_alu_file_[self.stateless_alu_file_.rfind('/')+1:]
         stateless_alu_template = self.jinja2_env_.get_template(
-            "stateless_alu.j2")
+            self.stateless_alu_file_[self.stateless_alu_file_.rfind('/')+1:])
         stateless_alu = stateless_alu_template.render(
             potential_operands=potential_operands,
             arg_list=["int " + x for x in potential_operands],
@@ -123,13 +127,13 @@ class SketchGenerator:
     # Takes one state and one packet operand (or immediate operand) as inputs
     # Updates the state in place and returns the old value of the state
     def generate_stateful_alu(self, alu_name):
-        input_stream = FileStream(self.alu_file_)
+        input_stream = FileStream(self.stateful_alu_file_)
         lexer = stateful_aluLexer(input_stream)
         stream = CommonTokenStream(lexer)
         parser = stateful_aluParser(stream)
         tree = parser.stateful_alu()
         stateful_alu_sketch_generator = StatefulAluSketchGenerator(
-            self.alu_file_, self.sketch_name_ + "_" + alu_name)
+            self.stateful_alu_file_, self.sketch_name_ + "_" + alu_name)
         stateful_alu_sketch_generator.visit(tree)
         self.add_holes(stateful_alu_sketch_generator.globalholes)
         self.stateful_alu_hole_arguments_ = [

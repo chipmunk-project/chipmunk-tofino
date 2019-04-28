@@ -10,7 +10,9 @@ def main(argv):
     parser = argparse.ArgumentParser(description="Direct solver.")
     parser.add_argument(
         "program_file", help="Program specification in .sk file")
-    parser.add_argument("alu_file", help="ALU file to use.")
+    parser.add_argument("stateful_alu_file", help="Stateful ALU file to use.")
+    parser.add_argument("stateless_alu_file",
+                        help="Stateless ALU file to use.")
     parser.add_argument(
         "num_pipeline_stages", type=int, help="Number of pipeline stages")
     parser.add_argument(
@@ -35,12 +37,13 @@ def main(argv):
         help="Whether sketch process uses parallelism")
 
     args = parser.parse_args(argv[1:])
-
     sketch_name = args.program_file.split('/')[-1].split('.')[0] + \
-        "_" + args.alu_file.split('/')[-1].split('.')[0] + \
+        "_" + args.stateful_alu_file.split('/')[-1].split('.')[0] + \
+        "_" + args.stateless_alu_file.split('/')[-1].split('.')[0] + \
         "_" + str(args.num_pipeline_stages) + \
         "_" + str(args.num_alus_per_stage)
-    compiler = Compiler(args.program_file, args.alu_file,
+    compiler = Compiler(args.program_file, args.stateful_alu_file,
+                        args.stateless_alu_file,
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         sketch_name, args.parallel_sketch, args.pkt_fields)
 
