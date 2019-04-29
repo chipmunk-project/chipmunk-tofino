@@ -5,7 +5,6 @@ from os import listdir
 from os import path
 from pathlib import Path
 
-from chipc import iterative_solver
 from chipc.compiler import Compiler
 from chipc.optverify import optverify
 from chipc.utils import get_hole_dicts
@@ -141,41 +140,6 @@ class OptverifyTest(unittest.TestCase):
             0,
             optverify("sample1", "sample2",
                       path.join(TRANSFORM_DIR, "very_simple.transform")))
-
-
-class IterativeSolverTest(unittest.TestCase):
-    def test_simple_2_2_raw_cex_mode(self):
-        self.assertEqual(
-            0,
-            iterative_solver.main([
-                "iterative_solver",
-                path.join(SPEC_DIR, "simple.sk"),
-                path.join(STATEFUL_ALU_DIR, "raw.stateful_alu"),
-                path.join(STATELESS_ALU_DIR, "stateless_alu.j2"),
-                "2", "2"]),
-        )
-
-    def test_simple_2_2_raw_hole_elimination_mode(self):
-        self.assertEqual(
-            0,
-            iterative_solver.main([
-                "iterative_solver", path.join(SPEC_DIR, "simple.sk"),
-                path.join(STATEFUL_ALU_DIR, "raw.stateful_alu"),
-                path.join(STATELESS_ALU_DIR, "stateless_alu.j2"),
-                "2", "2",
-                "--hole-elimination"]),
-        )
-
-    def test_sampling_revised_2_2_raw_cex_mode(self):
-        self.assertEqual(
-            1,
-            iterative_solver.main([
-                "iterative_solver",
-                path.join(SPEC_DIR, "sampling_revised.sk"),
-                path.join(STATEFUL_ALU_DIR, "raw.stateful_alu"),
-                path.join(STATELESS_ALU_DIR, "stateless_alu.j2"),
-                "2", "2"]),
-        )
 
 
 if __name__ == '__main__':

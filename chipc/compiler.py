@@ -2,18 +2,17 @@ import concurrent.futures as cf
 import itertools
 import os
 import pickle
-import re
 import signal
 import subprocess
 from os import path
 from pathlib import Path
 
 import psutil
-import z3
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 from jinja2 import StrictUndefined
 
+from chipc import z3_utils
 from chipc.chipmunk_pickle import ChipmunkPickle
 from chipc.mode import Mode
 from chipc.sketch_generator import SketchGenerator
@@ -224,36 +223,28 @@ class Compiler:
             program_file=self.program_file,
             mode=Mode.SOL_VERIFY,
             hole_assignments=hole_assignments)
-        with open(self.sketch_name + "_sol_verify_iteration_" +
-                  str(iter_cnt) + ".sk", "w") as sketch_file:
-            sketch_file.write(sol_verify_code)
 
-        # Set --slv-timeout=0.001 to quit sketch immediately, we only want the
-        # SMT file.
-        (ret_code, output) = subprocess.getstatusoutput(
-            "sketch -V 12 --slv-seed=1 --slv-timeout=0.001 " +
-            "--beopt:writeSMT " + self.sketch_name + "_iteration_" +
-            str(iter_cnt) + ".smt2 " +
-            self.sketch_name + "_sol_verify_iteration_" +
-            str(iter_cnt) + ".sk")
+        sol_verify_basename = self.sketch_name + \
+            "_sol_verify_iteration_" + str(iter_cnt)
+        sketch_filename = sol_verify_basename + ".sk"
+        smt2_filename = sol_verify_basename + ".smt2"
+        Path(sketch_filename).write_text(sol_verify_code)
 
-        z3_slv = z3.Solver()
-        # We expect there is only one assert from smt2 file.
-        formula = z3.parse_smt2_file(self.sketch_name + "_iteration_" +
-                                     str(iter_cnt) + ".smt2")[0]
+        subprocess.run(
+            [
+                "sketch",
+                "--slv-seed=1"
+                # To quit sketch immediately, we only want the .smt2 file.
+                "--slv-timeout=0.001",
+                "--beopt:writeSMT",
+                smt2_filename,
+                sketch_filename
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
 
-        variables = [z3.Int(formula.var_name(i))
-                     for i in range(0, formula.num_vars())]
-        # The original formula's body is comprised of
-        # Implies(A, B) where A is usually range of inputs and B is where a
-        # condition that must hold for the program. We only want to get the B.
-        body = formula.body().children()[1]
-
-        formula_without_bounds = z3.ForAll(variables, body)
-
-        z3_slv.add(formula_without_bounds)
-
-        if z3_slv.check() == z3.sat:
+        if z3_utils.check_without_bnds(smt2_filename):
             return 0
         return -1
 
@@ -264,24 +255,28 @@ class Compiler:
             mode=Mode.CEXGEN,
             hole_assignments=hole_assignments,
             input_offset=2**bits_val)
-        with open(self.sketch_name + "_cexgen_iteration_" +
-                  str(iter_cnt) + ".sk", "w") as sketch_file:
-            sketch_file.write(cex_code)
 
-        # Use --debug-cex mode and get counter examples.
-        (ret_code, output) = subprocess.getstatusoutput(
-            "sketch -V 3 --debug-cex --bnd-inbits=" + str(bits_val) + " " +
-            self.sketch_name + "_cexgen_iteration_" +
-            str(iter_cnt) + ".sk")
-        # Store the output of running sketch
-        with open(self.sketch_name + "_cexgen_iteration_" +
-                  str(iter_cnt) + "_output.txt", "w") as sketch_file:
-            sketch_file.write(output)
-        # Extract counterexample using regular expression.
-        pkt_group = re.findall(
-            r"input (pkt_\d+)\w+ has value \d+= \((\d+)\)",
-            output)
-        state_group = re.findall(
-            r"input (state_group_\d+_state_\d+)\w+ has value \d+= \((\d+)\)",
-            output)
-        return (pkt_group, state_group)
+        cex_basename = self.sketch_name + "_cexgen_iteration_" + \
+            str(iter_cnt) + "_bits_" + str(bits_val)
+        sketch_filename = cex_basename + ".sk"
+        smt2_filename = cex_basename + ".smt2"
+        Path(sketch_filename).write_text(cex_code)
+
+        # We only need following sketch call's side-effect, corresponding .smt2
+        # file for the sketch.
+        subprocess.run(
+            [
+                "sketch",
+                # To immediately return from sketch, without running
+                # its verification.
+                "--slv-timeout=0.001",
+                "--bnd-inbits=" + str(bits_val),
+                "--beopt:writeSMT",
+                smt2_filename,
+                sketch_filename,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+
+        return z3_utils.generate_counter_examples(smt2_filename)
