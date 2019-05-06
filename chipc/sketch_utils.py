@@ -34,6 +34,7 @@ def generate_smt2_formula(sketch_file_name, smt_file_name):
     check_syntax(sketch_file_name)
     (return_code, output) = subprocess.getstatusoutput('sketch ' +
                                                        sketch_file_name +
+                                                       ' --bnd-inbits=10'
                                                        ' --slv-timeout=0.001' +
                                                        ' --beopt:writeSMT ' +
                                                        smt_file_name)

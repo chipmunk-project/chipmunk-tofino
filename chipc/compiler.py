@@ -230,7 +230,7 @@ class Compiler:
 
         sketch_utils.generate_smt2_formula(sketch_filename, smt2_filename)
 
-        if z3_utils.check_without_bnds(smt2_filename):
+        if z3_utils.simple_check(smt2_filename):
             return 0
         return -1
 

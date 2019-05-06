@@ -74,28 +74,10 @@ def generate_counter_examples(smt2_filename):
     return (pkt_fields, state_vars)
 
 
-def strip_input_bounds(formula):
-    """Given a z3.QuantiferRef(variables, z3.Implies(a, b)) returns
-    z3.QuantifierRef(variables, b)
-
-    Raises:
-        Assertion if the formula isn't a z3.QuantifierRef nor does have a
-        z3.Implies as a body.
-    """
-    assert z3.is_quantifier(
-        formula), ('Formula is not a quantifier:\n', formula)
-    variables = [z3.Int(formula.var_name(i))
-                 for i in range(formula.num_vars())]
-    body = formula.body()
-    assert z3.is_implies(
-        body), ("Given formula doesn't have z3.Implies as body:\n", body)
-    new_body = formula.body().children()[1]
-    return z3.ForAll(variables, new_body)
-
-
-def check_without_bnds(smt2_filename):
+def simple_check(smt2_filename):
     """Given a smt2 file generated from a sketch, parses assertion from the
-    file and checks whether it holds for all integers representable in z3.
+    file and checks with z3. We assume that the file already has input bit
+    ranges defined by sketch.
 
     Returns:
         True if satisfiable else False.
@@ -103,11 +85,10 @@ def check_without_bnds(smt2_filename):
     formula = parse_smt2_file(smt2_filename)
 
     # The original formula's body is comprised of Implies(A, B) where A
-    # specifies range of input variables and where B is a condition that we're
-    # interested to check. We only want to get the B.
-    formula_without_bounds = strip_input_bounds(formula)
+    # specifies range of input variables and where B is a condition. We're
+    # interested to check whether B is True within the range specified by A
 
     z3_slv = z3.Solver()
-    z3_slv.add(formula_without_bounds)
+    z3_slv.add(formula)
 
     return z3_slv.check() == z3.sat
