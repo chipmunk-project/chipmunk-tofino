@@ -30,11 +30,12 @@ def synthesize(sketch_file_name, bnd_inbits, slv_seed, slv_parallel=False):
     return (return_code, output)
 
 
-def generate_smt2_formula(sketch_file_name, smt_file_name):
+def generate_smt2_formula(sketch_file_name, smt_file_name, bit_range):
     check_syntax(sketch_file_name)
     (return_code, output) = subprocess.getstatusoutput('sketch ' +
                                                        sketch_file_name +
-                                                       ' --bnd-inbits=10'
+                                                       ' --bnd-inbits=' +
+                                                       str(bit_range) +
                                                        ' --slv-timeout=0.001' +
                                                        ' --beopt:writeSMT ' +
                                                        smt_file_name)

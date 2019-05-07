@@ -227,8 +227,9 @@ class Compiler:
         sketch_filename = sol_verify_basename + '.sk'
         smt2_filename = sol_verify_basename + '.smt2'
         Path(sketch_filename).write_text(sol_verify_code)
-
-        sketch_utils.generate_smt2_formula(sketch_filename, smt2_filename)
+        # TODO: set the sol_verify bit to be 10 now
+        # Later will pass this value as a parameter
+        sketch_utils.generate_smt2_formula(sketch_filename, smt2_filename, 10)
 
         if z3_utils.simple_check(smt2_filename):
             return 0
@@ -250,6 +251,7 @@ class Compiler:
 
         # We only need following sketch call's side-effect, corresponding .smt2
         # file for the sketch.
-        sketch_utils.generate_smt2_formula(sketch_filename, smt2_filename)
+        sketch_utils.generate_smt2_formula(
+            sketch_filename, smt2_filename, bits_val)
 
         return z3_utils.generate_counter_examples(smt2_filename)
