@@ -180,11 +180,12 @@ def main(argv):
             else:
                 print('Verification failed. Trying again.')
                 if args.hole_elimination == 'hole_elimination_mode':
-                    hole_elimination_assert = generate_hole_elimination_assert(
-                        hole_assignments)
+                    hole_elimination_assert += \
+                        generate_hole_elimination_assert(
+                            hole_assignments)
                 else:
                     assert (args.hole_elimination == 'cex_mode')
-                    additional_testcases = generate_additional_testcases(
+                    additional_testcases += generate_additional_testcases(
                         hole_assignments, compiler, num_fields_in_prog,
                         num_state_groups, state_group_info, count,
                         sol_verify_bit)
