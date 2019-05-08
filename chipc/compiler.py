@@ -209,7 +209,7 @@ class Compiler:
         print('Total number of hole bits is',
               self.sketch_generator.total_hole_bits_)
 
-    def sol_verify(self, hole_assignments, iter_cnt=1):
+    def sol_verify(self, hole_assignments, sol_verify_bit, iter_cnt=1):
         """Verify hole value assignments with z3"""
         # Check that all holes are filled.
         for hole in self.sketch_generator.hole_names_:
@@ -227,9 +227,8 @@ class Compiler:
         sketch_filename = sol_verify_basename + '.sk'
         smt2_filename = sol_verify_basename + '.smt2'
         Path(sketch_filename).write_text(sol_verify_code)
-        # TODO: set the sol_verify bit to be 10 now
-        # Later will pass this value as a parameter
-        sketch_utils.generate_smt2_formula(sketch_filename, smt2_filename, 10)
+        sketch_utils.generate_smt2_formula(
+            sketch_filename, smt2_filename, sol_verify_bit)
 
         if z3_utils.simple_check(smt2_filename):
             return 0

@@ -42,11 +42,12 @@ def set_default_values(pkt_fields, state_vars, num_fields_in_prog,
 
 def generate_additional_testcases(hole_assignments, compiler,
                                   num_fields_in_prog, num_state_groups,
-                                  state_group_info, count):
-    """Creates multiple counterexamples from 2 bits to 10 bit input ranges."""
+                                  state_group_info, count, sol_verify_bit):
+    """Creates multiple counterexamples from 2 bits
+    to sol_verify_bit input ranges."""
     counter_example_definition = ''
     counter_example_assert = ''
-    for bits in range(2, 10):
+    for bits in range(2, sol_verify_bit):
         print('Generating counterexamples of', str(bits), 'bits.')
         (cex_pkt_fields, cex_state_vars) = compiler.counter_example_generator(
             bits, hole_assignments, iter_cnt=count)
@@ -89,6 +90,10 @@ def main(argv):
         type=int,
         help='Number of stateless/stateful ALUs per stage')
     parser.add_argument(
+        'max_input_bit',
+        type=int,
+        help='The maximum input value in bits')
+    parser.add_argument(
         '--pkt-fields',
         type=int,
         nargs='+',
@@ -120,6 +125,7 @@ def main(argv):
      num_state_groups) = get_num_pkt_fields_and_state_groups(program_content)
 
     # Get the state vars information
+    # TODO: add the max_input_bit into sketch_name
     state_group_info = get_info_of_state_groups(program_content)
     sketch_name = args.program_file.split('/')[-1].split('.')[0] + \
         '_' + args.stateful_alu_file.split('/')[-1].split('.')[0] + \
@@ -141,6 +147,7 @@ def main(argv):
     count = 1
     hole_elimination_assert = []
     additional_testcases = ''
+    sol_verify_bit = args.max_input_bit
     while 1:
         if args.hole_elimination == 'hole_elimination_mode':
             (synthesis_ret_code, output, hole_assignments) = \
@@ -166,7 +173,7 @@ def main(argv):
             print('Synthesis succeeded with 2 bits, proceeding to '
                   'verification.')
             verification_ret_code = compiler.sol_verify(
-                hole_assignments, iter_cnt=count)
+                hole_assignments, sol_verify_bit, iter_cnt=count)
             if verification_ret_code == 0:
                 print('SUCCESS: Verification succeeded.')
                 return 0
@@ -179,7 +186,8 @@ def main(argv):
                     assert (args.hole_elimination == 'cex_mode')
                     additional_testcases = generate_additional_testcases(
                         hole_assignments, compiler, num_fields_in_prog,
-                        num_state_groups, state_group_info, count)
+                        num_state_groups, state_group_info, count,
+                        sol_verify_bit)
                 count = count + 1
                 continue
         else:

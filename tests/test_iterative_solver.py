@@ -4,9 +4,9 @@ from os import path
 from chipc import iterative_solver
 
 BASE_PATH = path.abspath(path.dirname(__file__))
-STATEFUL_ALU_DIR = path.join(BASE_PATH, "../example_alus/")
-STATELESS_ALU_DIR = path.join(BASE_PATH, "../chipc/templates/")
-SPEC_DIR = path.join(BASE_PATH, "../example_specs/")
+STATEFUL_ALU_DIR = path.join(BASE_PATH, '../example_alus/')
+STATELESS_ALU_DIR = path.join(BASE_PATH, '../chipc/templates/')
+SPEC_DIR = path.join(BASE_PATH, '../example_specs/')
 
 
 class IterativeSolverTest(unittest.TestCase):
@@ -14,33 +14,33 @@ class IterativeSolverTest(unittest.TestCase):
         self.assertEqual(
             0,
             iterative_solver.main([
-                "iterative_solver",
-                path.join(SPEC_DIR, "simple.sk"),
-                path.join(STATEFUL_ALU_DIR, "raw.stateful_alu"),
-                path.join(STATELESS_ALU_DIR, "stateless_alu.j2"),
-                "2", "2"]),
+                'iterative_solver',
+                path.join(SPEC_DIR, 'simple.sk'),
+                path.join(STATEFUL_ALU_DIR, 'raw.stateful_alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.j2'),
+                '2', '2', '10']),
         )
 
     def test_simple_2_2_raw_hole_elimination_mode(self):
         self.assertEqual(
             0,
             iterative_solver.main([
-                "iterative_solver", path.join(SPEC_DIR, "simple.sk"),
-                path.join(STATEFUL_ALU_DIR, "raw.stateful_alu"),
-                path.join(STATELESS_ALU_DIR, "stateless_alu.j2"),
-                "2", "2",
-                "--hole-elimination"]),
+                'iterative_solver', path.join(SPEC_DIR, 'simple.sk'),
+                path.join(STATEFUL_ALU_DIR, 'raw.stateful_alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.j2'),
+                '2', '2', '10',
+                '--hole-elimination']),
         )
 
     def test_sampling_revised_2_2_raw_cex_mode(self):
         self.assertEqual(
             1,
             iterative_solver.main([
-                "iterative_solver",
-                path.join(SPEC_DIR, "sampling_revised.sk"),
-                path.join(STATEFUL_ALU_DIR, "raw.stateful_alu"),
-                path.join(STATELESS_ALU_DIR, "stateless_alu.j2"),
-                "2", "2"]),
+                'iterative_solver',
+                path.join(SPEC_DIR, 'sampling_revised.sk'),
+                path.join(STATEFUL_ALU_DIR, 'raw.stateful_alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.j2'),
+                '2', '2', '10']),
         )
 
     def test_set_default_values(self):
