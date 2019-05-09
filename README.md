@@ -58,11 +58,11 @@ direct_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templa
 
 ### Iterative solver
 ```shell
-iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 10 --hole-elimination
 ```
 
 ```shell
-iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --parallel --parallel-sketch --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 10 --parallel --parallel-sketch --hole-elimination
 ```
 
 
