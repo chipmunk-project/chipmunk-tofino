@@ -20,6 +20,7 @@ def synthesize(sketch_file_name, bnd_inbits, slv_seed, slv_parallel=False):
     check_syntax(sketch_file_name)
     par_string = ' --slv-parallel' if slv_parallel else ''
     (return_code, output) = subprocess.getstatusoutput('time sketch -V 12 ' +
+                                                       '--slv-nativeints ' +
                                                        sketch_file_name +
                                                        ' --bnd-inbits=' +
                                                        str(bnd_inbits) +
