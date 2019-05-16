@@ -39,14 +39,14 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
 class Compiler:
     def __init__(self, program_file, stateful_alu_file, stateless_alu_file,
                  num_pipeline_stages, num_alus_per_stage, sketch_name,
-                 parallel_or_serial, pkt_fields_to_check=[]):
+                 parallel_sketch, pkt_fields_to_check=[]):
         self.program_file = program_file
         self.stateful_alu_file = stateful_alu_file
         self.stateless_alu_file = stateless_alu_file
         self.num_pipeline_stages = num_pipeline_stages
         self.num_alus_per_stage = num_alus_per_stage
         self.sketch_name = sketch_name
-        self.parallel_or_serial = parallel_or_serial
+        self.parallel_sketch = parallel_sketch
 
         (self.num_fields_in_prog,
          self.num_state_groups) = get_num_pkt_fields_and_state_groups(
@@ -104,11 +104,12 @@ class Compiler:
         print('Total number of hole bits is',
               self.sketch_generator.total_hole_bits_)
         print('Sketch file is ', sketch_file_name)
-        slv_parallel = self.parallel_or_serial == 'parallel'
-        (ret_code, output) = sketch_utils.synthesize(sketch_file_name,
-                                                     bnd_inbits=2,
-                                                     slv_seed=1,
-                                                     slv_parallel=slv_parallel)
+        assert (self.parallel_sketch in [True, False])
+        (ret_code, output) = sketch_utils.synthesize(
+            sketch_file_name,
+            bnd_inbits=2,
+            slv_seed=1,
+            slv_parallel=self.parallel_sketch)
 
         # Store sketch output
         with open(sketch_file_name[:sketch_file_name.find('.sk')] +
