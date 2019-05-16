@@ -62,13 +62,16 @@ def generate_counter_examples(smt2_filename):
 
     model = z3_slv.model()
     for var in model.decls():
-        # The variable names used by sketch have trailing _\d+_\d+_\d+ pattern,
-        # need to remove them to get original variable names.
-        var_name = re.sub(r'_\d+_\d+_\d+$', '', var.name(), count=1)
         value = model.get_interp(var).as_long()
-        if var_name.startswith('pkt_'):
+        match_object = re.match(r'pkt_\d+', var.name())
+        if match_object:
+            var_name = match_object.group(0)
             pkt_fields[var_name] = value
-        elif var_name.startswith('state_group_'):
+            continue
+
+        match_object = re.match(r'state_group_\d+_state_\d+', var.name())
+        if match_object:
+            var_name = match_object.group(0)
             state_vars[var_name] = value
 
     return (pkt_fields, state_vars)

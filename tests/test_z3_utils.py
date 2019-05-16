@@ -71,6 +71,14 @@ class GenerateCounterExampleTest(unittest.TestCase):
             self.assertDictEqual(pkt_fields, {})
             self.assertDictEqual(state_vars, {})
 
+    def test_state_group_with_alphabets(self):
+        x = z3.Int('state_group_1_state_0_b_b_0')
+        simple_formula = z3.ForAll([x], z3.And(x > 3, x < 2))
+        with patch('z3.parse_smt2_file', return_value=[simple_formula]):
+            _, state_vars = z3_utils.generate_counter_examples(
+                'foobar')
+            self.assertDictEqual(state_vars, {'state_group_1_state_0': 0})
+
 
 class SimpleCheckTest(unittest.TestCase):
     def test_success(self):
