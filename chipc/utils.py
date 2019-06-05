@@ -1,35 +1,30 @@
 """Utilities for Chipmunk"""
+from collections import defaultdict
 from re import findall
 
 
-def get_info_of_state_groups(program):
-    """Returns the information of all state vars
-    i.e state_and_packet.state_group_1_state_0
-    we will get the information (1,0)
-    """
-    state_group_info = findall(
-        r'state_and_packet.state_group_(\d+)_state_(\d+)', program)
+def get_state_group_info(program):
+    """Returns a dictionary from state group indices to set of state variables
+    indices.
+    For state_group_0_state_1, the dict will have an entry {0: set(1)}"""
+
+    state_group_info = defaultdict(set)
+    for i, j in findall(
+            r'state_and_packet.state_group_(\d+)_state_(\d+)', program):
+        state_group_info[i].add(j)
+
     return state_group_info
 
 
-def get_num_pkt_fields_and_state_groups(program):
-    """Returns number of packet fields and state groups.
-    Use a regex to scan the program and extract the largest packet field index
-    and largest state variable index
-
-    Args:
-        program: The program to read
-
-    Returns:
-        A tuple of packet field numbers and state variables.
+def get_num_pkt_fields(program):
+    """Returns number of packet fields in the program.
+    If this returns n, packet field indices are from 0 to n-1.
     """
-    pkt_fields = [
-        int(x) for x in findall(r'state_and_packet.pkt_(\d+)', program)
-    ]
-    state_groups = [
-        int(x) for x in findall(r'state_and_packet.state_group_(\d+)', program)
-    ]
-    return (max(pkt_fields) + 1, max(state_groups) + 1)
+    pkt_fields = set()
+    for x in findall(r'state_and_packet.pkt_(\d+)', program):
+        pkt_fields.add(int(x))
+
+    return len(pkt_fields)
 
 
 def get_hole_dicts(sketch):
@@ -49,10 +44,10 @@ def get_hole_value_assignments(hole_names, sketch):
     holes_to_values = {}
 
     for name in hole_names:
-        values = findall("" + name + "__" + r"\w+ = (\d+)", sketch)
+        values = findall('' + name + '__' + r'\w+ = (\d+)', sketch)
         assert len(values) == 1, (
-            "Unexpected number of assignment statements found for hole %s, "
-            "with values %s" % (name, values))
+            'Unexpected number of assignment statements found for hole %s, '
+            'with values %s' % (name, values))
         holes_to_values[name] = values[0]
 
     return holes_to_values

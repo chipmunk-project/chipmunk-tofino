@@ -4,8 +4,8 @@ import sys
 from pathlib import Path
 
 from chipc.compiler import Compiler
-from chipc.utils import get_info_of_state_groups
-from chipc.utils import get_num_pkt_fields_and_state_groups
+from chipc.utils import get_num_pkt_fields
+from chipc.utils import get_state_group_info
 
 
 # Create hole_elimination_assert from hole_assignments
@@ -31,18 +31,18 @@ def set_default_values(pkt_fields, state_vars, num_fields_in_prog,
         if field_name not in pkt_fields:
             print('Setting value 0 for', field_name)
             pkt_fields[field_name] = 0
-    for i in range(len(state_group_info)):
-        state_var_name = 'state_group_' + \
-            state_group_info[i][0] + '_state_' + state_group_info[i][1]
-        if state_var_name not in state_vars:
-            print('Setting value 0 for', state_var_name)
-            state_vars[state_var_name] = 0
+    for group_idx, vs in state_group_info.items():
+        for var_idx in vs:
+            state_var_name = 'state_group_' + group_idx + '_state_' + var_idx
+            if state_var_name not in state_vars:
+                print('Setting value 0 for', state_var_name)
+                state_vars[state_var_name] = 0
     return (pkt_fields, state_vars)
 
 
 def generate_additional_testcases(hole_assignments, compiler,
-                                  num_fields_in_prog, num_state_groups,
-                                  state_group_info, count, sol_verify_bit):
+                                  num_fields_in_prog, state_group_info, count,
+                                  sol_verify_bit):
     """Creates multiple counterexamples from 2 bits
     to sol_verify_bit input ranges."""
     counter_example_definition = ''
@@ -101,9 +101,7 @@ def main(argv):
     parser.add_argument(
         '-p',
         '--parallel',
-        action='store_const',
-        const='parallel_codegen',
-        default='serial_codegen',
+        action='store_true',
         help='Whether to run multiple smaller sketches in parallel by\
               setting salu_config variables explicitly.')
     parser.add_argument(
@@ -122,12 +120,11 @@ def main(argv):
     # Use program_content to store the program file text rather than use it
     # twice
     program_content = Path(args.program_file).read_text()
-    (num_fields_in_prog,
-     num_state_groups) = get_num_pkt_fields_and_state_groups(program_content)
+    num_fields_in_prog = get_num_pkt_fields(program_content)
 
     # Get the state vars information
     # TODO: add the max_input_bit into sketch_name
-    state_group_info = get_info_of_state_groups(program_content)
+    state_group_info = get_state_group_info(program_content)
     sketch_name = args.program_file.split('/')[-1].split('.')[0] + \
         '_' + args.stateful_alu_file.split('/')[-1].split('.')[0] + \
         '_' + args.stateless_alu_file.split('/')[-1].split('.')[0] + \
@@ -151,23 +148,23 @@ def main(argv):
     sol_verify_bit = args.max_input_bit
     while 1:
         if args.hole_elimination == 'hole_elimination_mode':
-            (synthesis_ret_code, output, hole_assignments) = \
+            (synthesis_ret_code, _, hole_assignments) = \
+                compiler.parallel_codegen(
+                    additional_constraints=hole_elimination_assert) \
+                if args.parallel else \
                 compiler.serial_codegen(
                 iter_cnt=count,
-                additional_constraints=hole_elimination_assert) \
-                if args.parallel == 'serial_codegen' else \
-                compiler.parallel_codegen(
-                    additional_constraints=hole_elimination_assert)
+                additional_constraints=hole_elimination_assert)
 
         else:
             assert (args.hole_elimination == 'cex_mode')
-            (synthesis_ret_code, output, hole_assignments) = \
+            (synthesis_ret_code, _, hole_assignments) = \
+                compiler.parallel_codegen(
+                    additional_testcases=additional_testcases) \
+                if args.parallel else \
                 compiler.serial_codegen(
                 iter_cnt=count,
-                additional_testcases=additional_testcases) \
-                if args.parallel == 'serial_codegen' else \
-                compiler.parallel_codegen(
-                    additional_testcases=additional_testcases)
+                additional_testcases=additional_testcases)
 
         print('Iteration #' + str(count))
         if synthesis_ret_code == 0:
@@ -188,8 +185,7 @@ def main(argv):
                     assert (args.hole_elimination == 'cex_mode')
                     additional_testcases += generate_additional_testcases(
                         hole_assignments, compiler, num_fields_in_prog,
-                        num_state_groups, state_group_info, count,
-                        sol_verify_bit)
+                        state_group_info, count, sol_verify_bit)
                 count = count + 1
                 continue
         else:

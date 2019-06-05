@@ -17,7 +17,8 @@ from chipc.chipmunk_pickle import ChipmunkPickle
 from chipc.mode import Mode
 from chipc.sketch_generator import SketchGenerator
 from chipc.utils import get_hole_value_assignments
-from chipc.utils import get_num_pkt_fields_and_state_groups
+from chipc.utils import get_num_pkt_fields
+from chipc.utils import get_state_group_info
 
 
 def kill_child_processes(parent_pid, sig=signal.SIGTERM):
@@ -48,9 +49,9 @@ class Compiler:
         self.sketch_name = sketch_name
         self.parallel_sketch = parallel_sketch
 
-        (self.num_fields_in_prog,
-         self.num_state_groups) = get_num_pkt_fields_and_state_groups(
-             Path(program_file).read_text())
+        program_content = Path(program_file).read_text()
+        self.num_fields_in_prog = get_num_pkt_fields(program_content)
+        self.num_state_groups = len(get_state_group_info(program_content))
 
         assert self.num_fields_in_prog <= num_alus_per_stage, (
             'Number of fields in program %d is greater than number of '

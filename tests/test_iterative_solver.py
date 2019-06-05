@@ -111,7 +111,9 @@ class IterativeSolverTest(unittest.TestCase):
 
     def test_set_default_values(self):
         num_fields_in_prog = 2
-        state_group_info = [['0', '0'], ['0', '1']]
+        state_group_info = {
+            '0': set(['0', '1'])
+        }
 
         pkt_fields = {'pkt_1': 1}
         state_vars = {'state_group_0_state_0': 2}
