@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 
 from chipc.compiler import Compiler
+from chipc.utils import compilation_failure
+from chipc.utils import compilation_success
 from chipc.utils import get_num_pkt_fields
 from chipc.utils import get_state_group_info
 
@@ -151,7 +153,7 @@ def main(argv):
     sol_verify_bit = args.max_input_bit
     while 1:
         print('Iteration #' + str(count))
-        (synthesis_ret_code, _, hole_assignments) = \
+        (synthesis_ret_code, output, hole_assignments) = \
             compiler.parallel_codegen(
                 additional_constraints=hole_elimination_assert,
                 additional_testcases=additional_testcases) \
@@ -167,7 +169,7 @@ def main(argv):
             verification_ret_code = compiler.sol_verify(
                 hole_assignments, sol_verify_bit, iter_cnt=count)
             if verification_ret_code == 0:
-                print('SUCCESS: Verification succeeded.')
+                compilation_success(sketch_name, hole_assignments, output)
                 return 0
             else:
                 print('Verification failed. Trying again.')
@@ -183,7 +185,7 @@ def main(argv):
                 continue
         else:
             # Failed synthesis at 2 bits.
-            print('FAILURE: Failed synthesis at 2 bits.')
+            compilation_failure(sketch_name, output)
             return 1
 
 

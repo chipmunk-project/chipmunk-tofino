@@ -3,6 +3,8 @@ import argparse
 import sys
 
 from chipc.compiler import Compiler
+from chipc.utils import compilation_failure
+from chipc.utils import compilation_success
 
 
 def main(argv):
@@ -52,18 +54,10 @@ def main(argv):
 
     # print results
     if ret_code != 0:
-        with open(sketch_name + '.errors', 'w') as errors_file:
-            errors_file.write(output)
-            print('Sketch failed. Output left in ' + errors_file.name)
+        compilation_failure(sketch_name, output)
         sys.exit(1)
     else:
-        for hole, value in hole_assignments.items():
-            print('int ', hole, ' = ', value, ';')
-
-        with open(sketch_name + '.success', 'w') as success_file:
-            success_file.write(output)
-            print('Sketch succeeded. Generated configuration is given ' +
-                  'above. Output left in ' + success_file.name)
+        compilation_success(sketch_name, hole_assignments, output)
         sys.exit(0)
 
 

@@ -1,5 +1,6 @@
 """Utilities for Chipmunk"""
 from collections import defaultdict
+from pathlib import Path
 from re import findall
 
 
@@ -51,3 +52,19 @@ def get_hole_value_assignments(hole_names, sketch):
         holes_to_values[name] = values[0]
 
     return holes_to_values
+
+
+def compilation_success(sketch_name, hole_assignments, output):
+    print('Compilation succeeded. Hole value assignments are following:')
+    for hole, value in hole_assignments.items():
+        print('int', hole, '=', value)
+    p = Path(sketch_name + '.success')
+    p.write_text(output)
+    print('Output left in', p.name)
+
+
+def compilation_failure(sketch_name, output):
+    print('Compilation failed.')
+    p = Path(sketch_name + '.errors')
+    p.write_text(output)
+    print('Output left in', p.name)

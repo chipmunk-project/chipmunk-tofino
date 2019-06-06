@@ -104,7 +104,7 @@ class Compiler:
         # Call sketch on it
         print('Total number of hole bits is',
               self.sketch_generator.total_hole_bits_)
-        print('Sketch file is ', sketch_file_name)
+        print('Sketch file is', sketch_file_name)
         assert (self.parallel_sketch in [True, False])
         (ret_code, output) = sketch_utils.synthesize(
             sketch_file_name,
@@ -192,7 +192,7 @@ class Compiler:
         # Create file and write sketch_function into it
         with open(self.sketch_name + '_optverify.sk', 'w') as sketch_file:
             sketch_file.write(optverify_code)
-            print('Sketch file is ', sketch_file.name)
+            print('Sketch file is', sketch_file.name)
 
         # Put the rest (holes, hole arguments, constraints, etc.) into a
         # .pickle file.
