@@ -52,6 +52,10 @@ def generate_additional_testcases(hole_assignments, compiler,
         (cex_pkt_fields, cex_state_vars) = compiler.counter_example_generator(
             bits, hole_assignments, iter_cnt=count)
 
+        # z3 was not able to find counterexamples for this input range.
+        if len(cex_pkt_fields) == 0 and len(cex_state_vars) == 0:
+            continue
+
         pkt_fields, state_vars = set_default_values(
             cex_pkt_fields, cex_state_vars, num_fields_in_prog,
             state_group_info)
@@ -110,14 +114,13 @@ def main(argv):
         help='Whether sketch process internally uses parallelism')
     parser.add_argument(
         '--hole-elimination',
-        action='store_const',
-        const='hole_elimination_mode',
-        default='cex_mode',
-        help='Whether to iterate by eliminating holes or using counterexamples'
+        action='store_true',
+        help='If set, use hole elimination mode instead of counterexample '
+        'generation mode.'
     )
 
     args = parser.parse_args(argv[1:])
-    # Use program_content to store the program file text rather than use it
+    # Use program_content to store the program file text rather than using it
     # twice
     program_content = Path(args.program_file).read_text()
     num_fields_in_prog = get_num_pkt_fields(program_content)
@@ -147,26 +150,17 @@ def main(argv):
     additional_testcases = ''
     sol_verify_bit = args.max_input_bit
     while 1:
-        if args.hole_elimination == 'hole_elimination_mode':
-            (synthesis_ret_code, _, hole_assignments) = \
-                compiler.parallel_codegen(
-                    additional_constraints=hole_elimination_assert) \
-                if args.parallel else \
-                compiler.serial_codegen(
-                iter_cnt=count,
-                additional_constraints=hole_elimination_assert)
-
-        else:
-            assert (args.hole_elimination == 'cex_mode')
-            (synthesis_ret_code, _, hole_assignments) = \
-                compiler.parallel_codegen(
-                    additional_testcases=additional_testcases) \
-                if args.parallel else \
-                compiler.serial_codegen(
-                iter_cnt=count,
-                additional_testcases=additional_testcases)
-
         print('Iteration #' + str(count))
+        (synthesis_ret_code, _, hole_assignments) = \
+            compiler.parallel_codegen(
+                additional_constraints=hole_elimination_assert,
+                additional_testcases=additional_testcases) \
+            if args.parallel else \
+            compiler.serial_codegen(
+            iter_cnt=count,
+            additional_constraints=hole_elimination_assert,
+            additional_testcases=additional_testcases)
+
         if synthesis_ret_code == 0:
             print('Synthesis succeeded with 2 bits, proceeding to '
                   'verification.')
@@ -177,12 +171,11 @@ def main(argv):
                 return 0
             else:
                 print('Verification failed. Trying again.')
-                if args.hole_elimination == 'hole_elimination_mode':
+                if args.hole_elimination:
                     hole_elimination_assert += \
                         generate_hole_elimination_assert(
                             hole_assignments)
                 else:
-                    assert (args.hole_elimination == 'cex_mode')
                     additional_testcases += generate_additional_testcases(
                         hole_assignments, compiler, num_fields_in_prog,
                         state_group_info, count, sol_verify_bit)
