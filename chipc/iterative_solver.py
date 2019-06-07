@@ -10,15 +10,25 @@ from chipc.utils import get_num_pkt_fields
 from chipc.utils import get_state_group_info
 
 
-# Create hole_elimination_assert from hole_assignments
-# hole_assignments is in the format {'hole_name':'hole_value'},
-# i.e., {'sample1_stateless_alu_0_0_mux1_ctrl': '0'}
 def generate_hole_elimination_assert(hole_assignments):
+    """Given hole value assignments, {'n_0: 'v_0', 'n_1': 'v_1', ... }, which
+    failed to verify for larger input bit ranges, generates a single element
+    string list representing the negation of holes all equal to the values.
+    This is then passed to sketch file to avoid this specific combination of
+    hole value assignments."""
+    if len(hole_assignments) == 0:
+        return []
+
     # The ! is to ensure a hole combination isn't present.
-    hole_elimination_string = '!'
-    for hole, value in hole_assignments.items():
-        hole_elimination_string += '(' + hole + ' == ' + value + ') && '
-    hole_elimination_string += '1'
+    hole_elimination_string = '!('
+    # To make it easier to test, sort the hole value assignments using the hole
+    # names.
+    for idx, (hole, value) in enumerate(
+            sorted(hole_assignments.items(), key=lambda x: x[0])):
+        hole_elimination_string += '(' + hole + ' == ' + value + ')'
+        if idx != len(hole_assignments) - 1:
+            hole_elimination_string += ' && '
+    hole_elimination_string += ')'
     return [hole_elimination_string]
 
 

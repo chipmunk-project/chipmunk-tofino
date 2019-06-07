@@ -2,11 +2,26 @@ import unittest
 from os import path
 
 from chipc import iterative_solver
+from chipc.iterative_solver import generate_hole_elimination_assert
 
 BASE_PATH = path.abspath(path.dirname(__file__))
 STATEFUL_ALU_DIR = path.join(BASE_PATH, '../example_alus/')
 STATELESS_ALU_DIR = path.join(BASE_PATH, '../chipc/templates/')
 SPEC_DIR = path.join(BASE_PATH, '../example_specs/')
+
+
+class GenerateHoleEliminationTest(unittest.TestCase):
+    def test_success(self):
+        hole_assignments = {'c': '3', 'a': '1', 'b': '2'}
+        self.assertListEqual(
+            generate_hole_elimination_assert(hole_assignments),
+            ['!((a == 1) && (b == 2) && (c == 3))']
+        )
+
+    def test_handle_empty_assignments(self):
+        self.assertListEqual(
+            generate_hole_elimination_assert({}), []
+        )
 
 
 class IterativeSolverTest(unittest.TestCase):
