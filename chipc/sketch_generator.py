@@ -31,10 +31,10 @@ class SketchGenerator:
         self.sketch_name_ = sketch_name
         self.total_hole_bits_ = 0
         self.hole_names_ = []
-        self.hole_preamble_ = ""
+        self.hole_preamble_ = ''
         self.hole_arguments_ = []
         self.holes_ = []
-        self.asserts_ = ""
+        self.asserts_ = ''
         self.constraints_ = []
         self.num_phv_containers_ = num_phv_containers
         self.num_pipeline_stages_ = num_pipeline_stages
@@ -43,7 +43,7 @@ class SketchGenerator:
         self.num_fields_in_prog_ = num_fields_in_prog
         self.pkt_fields_to_check_ = pkt_fields_to_check
         self.jinja2_env_ = jinja2_env
-        self.jinja2_env_.filters["add_prefix_suffix"] = add_prefix_suffix
+        self.jinja2_env_.filters['add_prefix_suffix'] = add_prefix_suffix
         self.stateful_alu_file_ = stateful_alu_file
         self.stateless_alu_file_ = stateless_alu_file
         self.num_operands_to_stateful_alu_ = 0
@@ -52,20 +52,20 @@ class SketchGenerator:
     def reset_holes_and_asserts(self):
         self.total_hole_bits_ = 0
         self.hole_names_ = []
-        self.hole_preamble_ = ""
+        self.hole_preamble_ = ''
         self.hole_arguments_ = []
         self.holes_ = []
-        self.asserts_ = ""
+        self.asserts_ = ''
         self.constraints_ = []
 
     # Write all holes to a single hole string for ease of debugging
     def add_hole(self, hole_name, hole_bit_width):
         assert (hole_bit_width >= 0)
         self.hole_names_ += [hole_name]
-        self.hole_preamble_ += "int " + hole_name + "= ??(" + str(
-            hole_bit_width) + ");\n"
+        self.hole_preamble_ += 'int ' + hole_name + '= ??(' + str(
+            hole_bit_width) + ');\n'
         self.total_hole_bits_ += hole_bit_width
-        self.hole_arguments_ += ["int " + hole_name]
+        self.hole_arguments_ += ['int ' + hole_name]
         self.holes_ += [Hole(hole_name, 2**hole_bit_width - 1)]
 
     # Write several holes from a dictionary (new_holes) into self.holes_
@@ -74,7 +74,7 @@ class SketchGenerator:
             self.add_hole(hole, new_holes[hole])
 
     def add_assert(self, assert_predicate):
-        self.asserts_ += "assert(" + assert_predicate + ");\n"
+        self.asserts_ += 'assert(' + assert_predicate + ');\n'
         self.constraints_ += [assert_predicate]
 
     # Generate Sketch code for a simple stateless alu (+,-,*,/)
@@ -85,42 +85,42 @@ class SketchGenerator:
             self.stateless_alu_file_[self.stateless_alu_file_.rfind('/')+1:])
         stateless_alu = stateless_alu_template.render(
             potential_operands=potential_operands,
-            arg_list=["int " + x for x in potential_operands],
-            alu_name=self.sketch_name_ + "_" + alu_name,
-            mux1=self.sketch_name_ + "_" + alu_name + "_mux1",
-            mux2=self.sketch_name_ + "_" + alu_name + "_mux2",
-            mux3=self.sketch_name_ + "_" + alu_name + "_mux3")
+            arg_list=['int ' + x for x in potential_operands],
+            alu_name=self.sketch_name_ + '_' + alu_name,
+            mux1=self.sketch_name_ + '_' + alu_name + '_mux1',
+            mux2=self.sketch_name_ + '_' + alu_name + '_mux2',
+            mux3=self.sketch_name_ + '_' + alu_name + '_mux3')
         # TODO: now fix # of mux to be 3 and will later make them flexible
         # according to the number of mux used in stateless_alu
         mux_op_1 = self.generate_mux(
-            len(potential_operands), alu_name + "_mux1")
+            len(potential_operands), alu_name + '_mux1')
         mux_op_2 = self.generate_mux(
-            len(potential_operands), alu_name + "_mux2")
+            len(potential_operands), alu_name + '_mux2')
         mux_op_3 = self.generate_mux(
-            len(potential_operands), alu_name + "_mux3")
+            len(potential_operands), alu_name + '_mux3')
 
         # Two ways to get the max value of opcode
         # one is through read comment line //
         # the other one is through find the number of opcode ==
         # these two should be exactly the same
-        max_value_of_opcode = stateless_alu.count("opcode ==")
+        max_value_of_opcode = stateless_alu.count('opcode ==')
         max_value = int(
-            re.search(r"// Max value of opcode is (\d+)",
+            re.search(r'// Max value of opcode is (\d+)',
                       stateless_alu).group(1)
         )
         assert (max_value == max_value_of_opcode), \
             "Number of opcodes in stateless ALU doesn't match up with" + \
-            " the number at the beginning of the stateless ALU file."
+            ' the number at the beginning of the stateless ALU file.'
         bit_of_opcode = math.ceil(math.log(max_value_of_opcode, 2))
 
-        self.add_hole(self.sketch_name_ + "_" +
-                      alu_name + "_opcode", bit_of_opcode)
-        self.add_hole(self.sketch_name_ + "_" + alu_name + "_immediate", 2)
+        self.add_hole(self.sketch_name_ + '_' +
+                      alu_name + '_opcode', bit_of_opcode)
+        self.add_hole(self.sketch_name_ + '_' + alu_name + '_immediate', 2)
         self.add_assert(
-            "(" + self.sketch_name_ + "_" + alu_name + "_opcode == 1)" + "|| ("
-            + self.sketch_name_ + "_" + alu_name + "_mux1_ctrl <= " +
-            self.sketch_name_ + "_" + alu_name +
-            "_mux2_ctrl)")  # symmetry breaking for commutativity
+            '(' + self.sketch_name_ + '_' + alu_name + '_opcode == 1)' + '|| ('
+            + self.sketch_name_ + '_' + alu_name + '_mux1_ctrl <= ' +
+            self.sketch_name_ + '_' + alu_name +
+            '_mux2_ctrl)')  # symmetry breaking for commutativity
         return mux_op_1 + mux_op_2 + mux_op_3 + stateless_alu
 
     # Generate Sketch code for a simple stateful alu (+,-,*,/)
@@ -133,7 +133,7 @@ class SketchGenerator:
         parser = stateful_aluParser(stream)
         tree = parser.stateful_alu()
         stateful_alu_sketch_generator = StatefulAluSketchGenerator(
-            self.stateful_alu_file_, self.sketch_name_ + "_" + alu_name)
+            self.stateful_alu_file_, self.sketch_name_ + '_' + alu_name)
         stateful_alu_sketch_generator.visit(tree)
         self.add_holes(stateful_alu_sketch_generator.globalholes)
         self.stateful_alu_hole_arguments_ = [
@@ -149,41 +149,41 @@ class SketchGenerator:
         for i in range(self.num_pipeline_stages_):
             for l in range(self.num_state_groups_):
                 self.add_hole(
-                    self.sketch_name_ + "_" + "salu_config_" + str(i) + "_" +
+                    self.sketch_name_ + '_' + 'salu_config_' + str(i) + '_' +
                     str(l), 1)
 
         for i in range(self.num_pipeline_stages_):
-            assert_predicate = "("
+            assert_predicate = '('
             for l in range(self.num_state_groups_):
-                assert_predicate += self.sketch_name_ + "_" + \
-                    "salu_config_" + str(i) + "_" + str(l) + " + "
-            assert_predicate += "0) <= " + str(self.num_alus_per_stage_)
+                assert_predicate += self.sketch_name_ + '_' + \
+                    'salu_config_' + str(i) + '_' + str(l) + ' + '
+            assert_predicate += '0) <= ' + str(self.num_alus_per_stage_)
             self.add_assert(assert_predicate)
 
         for l in range(self.num_state_groups_):
-            assert_predicate = "("
+            assert_predicate = '('
             for i in range(self.num_pipeline_stages_):
-                assert_predicate += self.sketch_name_ + "_" + \
-                    "salu_config_" + str(i) + "_" + str(l) + " + "
-            assert_predicate += "0) <= 1"
+                assert_predicate += self.sketch_name_ + '_' + \
+                    'salu_config_' + str(i) + '_' + str(l) + ' + '
+            assert_predicate += '0) <= 1'
             self.add_assert(assert_predicate)
 
     # Sketch code for an n-to-1 mux
     def generate_mux(self, n, mux_name):
         assert (n >= 1)
         num_bits = math.ceil(math.log(n, 2))
-        operand_mux_template = self.jinja2_env_.get_template("mux.j2")
+        operand_mux_template = self.jinja2_env_.get_template('mux.j2')
         mux_code = operand_mux_template.render(
-            mux_name=self.sketch_name_ + "_" + mux_name,
-            operand_list=["input" + str(i) for i in range(0, n)],
-            arg_list=["int input" + str(i) for i in range(0, n)],
+            mux_name=self.sketch_name_ + '_' + mux_name,
+            operand_list=['input' + str(i) for i in range(0, n)],
+            arg_list=['int input' + str(i) for i in range(0, n)],
             num_operands=n)
-        self.add_hole(self.sketch_name_ + "_" + mux_name + "_ctrl", num_bits)
+        self.add_hole(self.sketch_name_ + '_' + mux_name + '_ctrl', num_bits)
         return mux_code
 
     # Stateful operand muxes, stateless ones are part of generate_stateless_alu
     def generate_stateful_operand_muxes(self):
-        ret = ""
+        ret = ''
         # Generate one mux for inputs: num_phv_containers+1 to 1. The +1 is to
         # support constant/immediate operands.
         assert (self.num_operands_to_stateful_alu_ > 0)
@@ -191,8 +191,8 @@ class SketchGenerator:
             for l in range(self.num_state_groups_):
                 for k in range(self.num_operands_to_stateful_alu_):
                     ret += self.generate_mux(
-                        self.num_phv_containers_, "stateful_operand_mux_" +
-                        str(i) + "_" + str(l) + "_" + str(k)) + "\n"
+                        self.num_phv_containers_, 'stateful_operand_mux_' +
+                        str(i) + '_' + str(l) + '_' + str(k)) + '\n'
         return ret
 
     # Output muxes to pick between stateful ALUs and stateless ALU
@@ -206,41 +206,41 @@ class SketchGenerator:
         # doesn't affect the correctness of modeling the output mux because the
         # virtual output mux setting can be translated into the physical output
         # mux setting during post processing.
-        ret = ""
+        ret = ''
         for i in range(self.num_pipeline_stages_):
             for k in range(self.num_phv_containers_):
                 ret += self.generate_mux(
                     self.num_state_groups_ * self.num_state_slots_ + 1,
-                    "output_mux_phv_" + str(i) + "_" + str(k)) + "\n"
+                    'output_mux_phv_' + str(i) + '_' + str(k)) + '\n'
         return ret
 
     def generate_alus(self):
         # Generate sketch code for alus and immediate operands in each stage
-        ret = ""
+        ret = ''
         for i in range(self.num_pipeline_stages_):
             for j in range(self.num_alus_per_stage_):
                 ret += self.generate_stateless_alu(
-                    "stateless_alu_" + str(i) + "_" + str(j), [
-                        "input" + str(k)
+                    'stateless_alu_' + str(i) + '_' + str(j), [
+                        'input' + str(k)
                         for k in range(0, self.num_phv_containers_)
-                    ]) + "\n"
+                    ]) + '\n'
             for l in range(self.num_state_groups_):
-                ret += self.generate_stateful_alu("stateful_alu_" + str(i) +
-                                                  "_" + str(l)) + "\n"
+                ret += self.generate_stateful_alu('stateful_alu_' + str(i) +
+                                                  '_' + str(l)) + '\n'
         return ret
 
     def generate_sketch(self, program_file, mode, additional_constraints=[],
-                        hole_assignments=dict(), additional_testcases="",
+                        hole_assignments=dict(), additional_testcases='',
                         input_offset=0):
         self.reset_holes_and_asserts()
         if mode == Mode.CODEGEN or mode == Mode.SOL_VERIFY or \
                 mode == Mode.CEXGEN:
             # TODO: Need better name for j2 file.
-            template = self.jinja2_env_.get_template("code_generator.j2")
+            template = self.jinja2_env_.get_template('code_generator.j2')
         else:
-            assert(mode == Mode.OPTVERIFY), "Found mode " + mode
+            assert(mode == Mode.OPTVERIFY), 'Found mode ' + mode
             # TODO: Need better name for j2 file.
-            template = self.jinja2_env_.get_template("sketch_functions.j2")
+            template = self.jinja2_env_.get_template('sketch_functions.j2')
 
         # Create stateless and stateful ALUs, operand muxes for stateful ALUs,
         # and output muxes.
@@ -273,10 +273,10 @@ class SketchGenerator:
             stateful_alu_hole_arguments=self.stateful_alu_hole_arguments_,
             num_operands_to_stateful_alu=self.num_operands_to_stateful_alu_,
             num_state_slots=self.num_state_slots_,
-            additional_constraints="\n".join(
-                ["assert(" + str(x) + ");" for x in additional_constraints]),
-            hole_assignments="\n".join(
-                ["int " + str(hole) + " = " + str(value) + ";"
+            additional_constraints='\n'.join(
+                ['assert(' + str(x) + ');' for x in additional_constraints]),
+            hole_assignments='\n'.join(
+                ['int ' + str(hole) + ' = ' + str(value) + ';'
                     for hole, value in hole_assignments.items()]),
             additional_testcases=additional_testcases,
             input_offset=input_offset)
