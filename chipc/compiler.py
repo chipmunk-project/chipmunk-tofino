@@ -211,48 +211,36 @@ class Compiler:
         print('Total number of hole bits is',
               self.sketch_generator.total_hole_bits_)
 
-    def sol_verify(self, hole_assignments, sol_verify_bit, iter_cnt=1):
-        """Verify hole value assignments with z3"""
-        # Check that all holes are filled.
+    def verify(self, hole_assignments, input_bits, iter_cnt=1):
+        """Verify hole value assignments for the sketch with a specific input
+        bit lengths with z3.
+
+        Returns:
+            A tuple of two dicts from string to ints, where the first one
+            represents counterexamples for packet variables and the second for
+            state group variables.
+            If the hole value assignments work for the input_bits, returns
+            a tuple of two empty dicts.
+        """
+        # Check all holes have values.
         for hole in self.sketch_generator.hole_names_:
-            assert (hole in hole_assignments)
+            assert hole in hole_assignments
 
-        # Generate and run sketch that verifies these holes on a large input
-        # range (num_input_bits)
-        sol_verify_code = self.sketch_generator.generate_sketch(
+        # Generate and run sketch that verifies these holes on the specific
+        # input bit length.
+        sketch_to_verify = self.sketch_generator.generate_sketch(
             program_file=self.program_file,
-            mode=Mode.SOL_VERIFY,
-            hole_assignments=hole_assignments)
+            mode=Mode.VERIFY,
+            hole_assignments=hole_assignments
+        )
 
-        sol_verify_basename = self.sketch_name + \
-            '_sol_verify_iteration_' + str(iter_cnt)
-        sketch_filename = sol_verify_basename + '.sk'
-        smt2_filename = sol_verify_basename + '.smt2'
-        Path(sketch_filename).write_text(sol_verify_code)
+        file_basename = self.sketch_name + '_verify_iter_' + str(iter_cnt)
+        sketch_filename = file_basename + '.sk'
+        smt2_filename = file_basename + '.smt2'
+        Path(sketch_filename).write_text(sketch_to_verify)
+
         sketch_utils.generate_smt2_formula(
-            sketch_filename, smt2_filename, sol_verify_bit)
-
-        if z3_utils.simple_check(smt2_filename):
-            return 0
-        return -1
-
-    def counter_example_generator(self, bits_val,
-                                  hole_assignments, iter_cnt=1):
-        cex_code = self.sketch_generator.generate_sketch(
-            program_file=self.program_file,
-            mode=Mode.CEXGEN,
-            hole_assignments=hole_assignments,
-            input_offset=2**bits_val)
-
-        cex_basename = self.sketch_name + '_cexgen_iteration_' + \
-            str(iter_cnt) + '_bits_' + str(bits_val)
-        sketch_filename = cex_basename + '.sk'
-        smt2_filename = cex_basename + '.smt2'
-        Path(sketch_filename).write_text(cex_code)
-
-        # We only need following sketch call's side-effect, corresponding .smt2
-        # file for the sketch.
-        sketch_utils.generate_smt2_formula(
-            sketch_filename, smt2_filename, bits_val)
+            sketch_filename, smt2_filename, input_bits
+        )
 
         return z3_utils.generate_counter_examples(smt2_filename)

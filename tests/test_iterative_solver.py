@@ -124,6 +124,17 @@ class IterativeSolverTest(unittest.TestCase):
                 '2', '2', '10']),
         )
 
+    def test_times_two(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'times_two.sk'),
+                path.join(STATEFUL_ALU_DIR, 'if_else_raw.stateful_alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.j2'),
+                '3', '3', '10']),
+        )
+
     def test_set_default_values(self):
         num_fields_in_prog = 2
         state_group_info = {

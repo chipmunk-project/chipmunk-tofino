@@ -3,9 +3,9 @@ from enum import Enum
 
 class Mode(Enum):
     OPTVERIFY = 1
-    SOL_VERIFY = 2
+    SOL_VERIFY = 2  # Deprecated, no longer in use.
     CODEGEN = 3
-    CEXGEN = 4
+    VERIFY = 4
 
     def is_OPTVERIFY(self):
         return self.name == 'OPTVERIFY'
@@ -16,5 +16,5 @@ class Mode(Enum):
     def is_CODEGEN(self):
         return self.name == 'CODEGEN'
 
-    def is_CEXGEN(self):
-        return self.name == 'CEXGEN'
+    def is_VERIFY(self):
+        return self.name == 'VERIFY'

@@ -52,44 +52,29 @@ def set_default_values(pkt_fields, state_vars, num_fields_in_prog,
     return (pkt_fields, state_vars)
 
 
-def generate_additional_testcases(hole_assignments, compiler,
-                                  num_fields_in_prog, state_group_info, count,
-                                  sol_verify_bit):
-    """Creates multiple counterexamples from 2 bits
-    to sol_verify_bit input ranges."""
-    counter_example_definition = ''
-    counter_example_assert = ''
-    for bits in range(2, sol_verify_bit):
-        print('Generating counterexamples of', str(bits), 'bits.')
-        (cex_pkt_fields, cex_state_vars) = compiler.counter_example_generator(
-            bits, hole_assignments, iter_cnt=count)
+def generate_counterexample_asserts(pkt_fields, state_vars, num_fields_in_prog,
+                                    state_group_info, count):
+    counterexample_defs = ''
+    counterexample_asserts = ''
 
-        # z3 was not able to find counterexamples for this input range.
-        if len(cex_pkt_fields) == 0 and len(cex_state_vars) == 0:
-            continue
+    counterexample_defs += '|StateAndPacket| x_' + str(
+        count) + ' = |StateAndPacket|(\n'
+    for field_name, value in pkt_fields.items():
+        counterexample_defs += field_name + ' = ' + str(
+            value) + ',\n'
 
-        pkt_fields, state_vars = set_default_values(
-            cex_pkt_fields, cex_state_vars, num_fields_in_prog,
-            state_group_info)
+    for i, (state_var_name, value) in enumerate(state_vars.items()):
+        counterexample_defs += state_var_name + ' = ' + str(
+            value)
+        if i < len(state_vars) - 1:
+            counterexample_defs += ',\n'
+        else:
+            counterexample_defs += ');\n'
 
-        counter_example_definition += '|StateAndPacket| x_' + str(
-            count) + '_' + str(bits) + ' = |StateAndPacket|(\n'
-        for field_name, value in pkt_fields.items():
-            counter_example_definition += field_name + ' = ' + str(
-                value + 2**bits) + ',\n'
-
-        for i, (state_var_name, value) in enumerate(state_vars.items()):
-            counter_example_definition += state_var_name + ' = ' + str(
-                value + 2**bits)
-            if i < len(state_vars) - 1:
-                counter_example_definition += ',\n'
-            else:
-                counter_example_definition += ');\n'
-
-        counter_example_assert += 'assert (pipeline(' + 'x_' + str(
-            count) + '_' + str(bits) + ')' + ' == ' + 'program(' + 'x_' + str(
-                count) + '_' + str(bits) + '));\n'
-    return counter_example_definition + counter_example_assert
+    counterexample_asserts += 'assert (pipeline(' + 'x_' + str(
+        count) + ')' + ' == ' + 'program(' + 'x_' + str(
+            count) + '));\n'
+    return counterexample_defs + counterexample_asserts
 
 
 def main(argv):
@@ -127,8 +112,8 @@ def main(argv):
     parser.add_argument(
         '--hole-elimination',
         action='store_true',
-        help='If set, use hole elimination mode instead of counterexample '
-        'generation mode.'
+        help='If set, add addtional assert statements to sketch, so that we \
+              would not see the same combination of hole value assignments.'
     )
 
     args = parser.parse_args(argv[1:])
@@ -173,30 +158,36 @@ def main(argv):
             additional_constraints=hole_elimination_assert,
             additional_testcases=additional_testcases)
 
-        if synthesis_ret_code == 0:
-            print('Synthesis succeeded with 2 bits, proceeding to '
-                  'verification.')
-            verification_ret_code = compiler.sol_verify(
-                hole_assignments, sol_verify_bit, iter_cnt=count)
-            if verification_ret_code == 0:
-                compilation_success(sketch_name, hole_assignments, output)
-                return 0
-            else:
-                print('Verification failed. Trying again.')
-                if args.hole_elimination:
-                    hole_elimination_assert += \
-                        generate_hole_elimination_assert(
-                            hole_assignments)
-                else:
-                    additional_testcases += generate_additional_testcases(
-                        hole_assignments, compiler, num_fields_in_prog,
-                        state_group_info, count, sol_verify_bit)
-                count = count + 1
-                continue
-        else:
-            # Failed synthesis at 2 bits.
+        if synthesis_ret_code != 0:
             compilation_failure(sketch_name, output)
             return 1
+
+        print('Synthesis succeeded with 2 bits, proceeding to verification.')
+        pkt_fields, state_vars = compiler.verify(
+            hole_assignments, sol_verify_bit, iter_cnt=count
+        )
+
+        if len(pkt_fields) == 0 and len(state_vars) == 0:
+            compilation_success(sketch_name, hole_assignments, output)
+            return 0
+
+        print('Verification failed, use returned counterexamples', pkt_fields,
+              state_vars)
+
+        pkt_fields, state_vars = set_default_values(
+            pkt_fields, state_vars, num_fields_in_prog, state_group_info
+        )
+
+        additional_testcases += generate_counterexample_asserts(
+            pkt_fields, state_vars, num_fields_in_prog, state_group_info, count
+        )
+
+        if args.hole_elimination:
+            hole_elimination_assert += generate_hole_elimination_assert(
+                hole_assignments
+            )
+
+        count += 1
 
 
 def run_main():

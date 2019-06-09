@@ -6,7 +6,7 @@
 
 {% if mode.is_CODEGEN() %}
 {{ hole_definitions }}
-{% elif mode.is_SOL_VERIFY() or mode.is_CEXGEN() %}
+{% elif mode.is_SOL_VERIFY() or mode.is_VERIFY() %}
 {{ hole_assignments }}
 {% endif %}
 

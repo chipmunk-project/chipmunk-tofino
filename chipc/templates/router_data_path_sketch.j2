@@ -1,4 +1,4 @@
-{% if mode.is_CODEGEN() or mode.is_SOL_VERIFY() or mode.is_CEXGEN() %}
+{% if mode.is_CODEGEN() or mode.is_SOL_VERIFY() or mode.is_VERIFY() %}
   |StateAndPacket| pipeline (|StateAndPacket| state_and_packet) {
   // Any additional constraints to speed up synthesis through parallel execution.
   {{additional_constraints}}
@@ -155,7 +155,7 @@
   return state_and_packet;
 }
 
-{% if mode.is_CODEGEN() or mode.is_CEXGEN() or  mode.is_SOL_VERIFY() %}
+{% if mode.is_CODEGEN() or mode.is_VERIFY() or  mode.is_SOL_VERIFY() %}
   harness void main(
     {{range(num_fields_in_prog)|map('add_prefix_suffix', "int pkt_", "")|join(',')}}
     {% for state_group_number in range(num_state_groups) %}
@@ -165,14 +165,14 @@
     {% endfor %}) {
 
     |StateAndPacket| x = |StateAndPacket|({% for field_number in range(num_fields_in_prog) %}
-      pkt_{{field_number}} = pkt_{{field_number}} + {{input_offset}},
+      pkt_{{field_number}} = pkt_{{field_number}},
     {% endfor %}
     {% for state_group_number in range(num_state_groups) %}
       {% for slot_number in range(num_state_slots) %}
         {% if (state_group_number == num_state_groups - 1) and (slot_number == num_state_slots - 1) %}
-          state_group_{{state_group_number}}_state_{{slot_number}} = state_group_{{state_group_number}}_state_{{slot_number}} + {{input_offset}}
+          state_group_{{state_group_number}}_state_{{slot_number}} = state_group_{{state_group_number}}_state_{{slot_number}}
         {% else %}
-          state_group_{{state_group_number}}_state_{{slot_number}} = state_group_{{state_group_number}}_state_{{slot_number}} + {{input_offset}},
+          state_group_{{state_group_number}}_state_{{slot_number}} = state_group_{{state_group_number}}_state_{{slot_number}},
         {% endif %}
       {% endfor %}
     {% endfor %});
