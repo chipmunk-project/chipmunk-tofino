@@ -102,17 +102,6 @@ class IterativeSolverTest(unittest.TestCase):
                 '2', '2', '10']),
         )
 
-    def test_simple_2_2_raw_hole_elimination_mode(self):
-        self.assertEqual(
-            0,
-            iterative_solver.main([
-                'iterative_solver', path.join(SPEC_DIR, 'simple.sk'),
-                path.join(STATEFUL_ALU_DIR, 'raw.stateful_alu'),
-                path.join(STATELESS_ALU_DIR, 'stateless_alu.j2'),
-                '2', '2', '10',
-                '--hole-elimination']),
-        )
-
     def test_sampling_revised_2_2_raw_cex_mode(self):
         self.assertEqual(
             1,
@@ -124,6 +113,10 @@ class IterativeSolverTest(unittest.TestCase):
                 '2', '2', '10']),
         )
 
+    # NOTE(taegyunkim): As long as we synthesize initially with 2 bits, and try
+    # to verify with a larger input bits, times_two.sk will always trigger the
+    # code paths to add counterexamples and additional asserts for hole value
+    # assignments.
     def test_times_two(self):
         self.assertEqual(
             0,
@@ -133,6 +126,17 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(STATEFUL_ALU_DIR, 'if_else_raw.stateful_alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.j2'),
                 '3', '3', '10']),
+        )
+
+    def test_times_two_hole_elimination(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'times_two.sk'),
+                path.join(STATEFUL_ALU_DIR, 'if_else_raw.stateful_alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.j2'),
+                '3', '3', '10', '--hole-elimination']),
         )
 
     def test_set_default_values(self):
