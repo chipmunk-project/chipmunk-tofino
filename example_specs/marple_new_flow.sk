@@ -1,20 +1,21 @@
 /*
 // Original program:
 int state_group_0_state_0 = 0;
-struct Packet{
-    int pkt_0;
+struct Packet {
+  int pkt_0;
 };
-void func(struct Packet p){
-if (state_group_0_state_0==0) {state_group_0_state_0=1;
-p.pkt_0=1;
+void func(struct Packet p) {
+  if (state_group_0_state_0 == 0) {
+    state_group_0_state_0 = 1;
+    p.pkt_0 = 1;
+  }
+}
+*/
 
-;}
-} */
-
-|StateAndPacket| program (|StateAndPacket| state_and_packet) {
-if (state_and_packet.state_group_0_state_0==0) {state_and_packet.state_group_0_state_0=1;
-state_and_packet.pkt_0=1;
-
-;}
+| StateAndPacket | program(| StateAndPacket | state_and_packet) {
+  if (state_and_packet.state_group_0_state_0 == 0) {
+    state_and_packet.state_group_0_state_0 = 1;
+    state_and_packet.pkt_0 = 1;
+  }
   return state_and_packet;
 }
