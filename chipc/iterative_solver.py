@@ -171,21 +171,25 @@ def main(argv):
             compilation_success(sketch_name, hole_assignments, output)
             return 0
 
-        print('Verification failed, use returned counterexamples', pkt_fields,
-              state_vars)
+        print('Verification failed.')
 
-        pkt_fields, state_vars = set_default_values(
-            pkt_fields, state_vars, num_fields_in_prog, state_group_info
-        )
-
-        additional_testcases += generate_counterexample_asserts(
-            pkt_fields, state_vars, num_fields_in_prog, state_group_info, count
-        )
-
+        # NOTE(taegyunkim): There is no harm in using both hole elimination
+        # asserts and counterexamples. We want to compare using only hole
+        # elimination asserts and only counterexamples.
         if args.hole_elimination:
             hole_elimination_assert += generate_hole_elimination_assert(
-                hole_assignments
+                hole_assignments)
+            print(hole_elimination_assert)
+        else:
+            print('Use returned counterexamples', pkt_fields, state_vars)
+
+            pkt_fields, state_vars = set_default_values(
+                pkt_fields, state_vars, num_fields_in_prog, state_group_info
             )
+
+            additional_testcases += generate_counterexample_asserts(
+                pkt_fields, state_vars, num_fields_in_prog, state_group_info,
+                count)
 
         count += 1
 

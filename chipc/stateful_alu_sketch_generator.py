@@ -54,7 +54,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         for slot in range(self.num_state_slots):
             self.mainFunction += '\nstate_group.state_' + str(
                 slot) + ' = state_' + str(slot) + ';'
-        self.mainFunction += '\n; return old_state_group;\n}'
+        self.mainFunction += '\nreturn old_state_group;\n}'
         argument_string = ','.join(
             ['int ' + hole for hole in sorted(self.stateful_alu_args)])
         self.mainFunction = self.mainFunction % argument_string
@@ -174,7 +174,7 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.visit(ctx.getChild(0, stateful_aluParser.ExprContext))
         self.mainFunction += ','
         self.visit(ctx.getChild(1, stateful_aluParser.ExprContext))
-        self.mainFunction += ',' + 'rel_op_' + str(self.relopCount) + ')'
+        self.mainFunction += ',' + 'rel_op_' + str(self.relopCount) + ') == 1'
         self.generateRelOp()
         self.relopCount += 1
 
@@ -255,18 +255,17 @@ class StatefulAluSketchGenerator(stateful_aluVisitor):
         self.add_hole('Mux3_' + str(self.mux3Count), 2)
 
     def generateRelOp(self):
-        self.helperFunctionStrings += 'bit ' + self.stateful_alu_name + '_' + \
+        self.helperFunctionStrings += 'int ' + self.stateful_alu_name + '_' + \
             'rel_op_' + str(self.relopCount) + \
             """(int operand1, int operand2, int opcode) {
     if (opcode == 0) {
-      return operand1 != operand2;
+      return (operand1 != operand2) ? 1 : 0;
     } else if (opcode == 1) {
-      return operand1 < operand2;
+      return (operand1 < operand2) ? 1 : 0;
     } else if (opcode == 2) {
-      return operand1 > operand2;
+      return (operand1 > operand2) ? 1 : 0;
     } else {
-      assert(opcode == 3);
-      return operand1 == operand2;
+      return (operand1 == operand2) ? 1 : 0;
     }
     } \n\n"""
         self.add_hole('rel_op_' + str(self.relopCount), 2)

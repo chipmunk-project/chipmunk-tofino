@@ -20,34 +20,34 @@ int {{ alu_name }}({{arg_list|join(',')}}, int opcode_hole_local, int immediate_
   } else if (opcode == 5) {
     return immediate_operand - x;
   } else if (opcode == 6) {
-    return x != y;
+    return (x != y) ? 1 : 0;
   } else if (opcode == 7) {
-    return x != immediate_operand;
+    return (x != immediate_operand) ? 1 : 0;
   } else if (opcode == 8) {
-    return x == y;
+    return (x == y) ? 1 : 0;
   } else if (opcode == 9) {
-    return x == immediate_operand;
+    return (x == immediate_operand) ? 1 : 0;
   } else if (opcode == 10) {
-    return x >= y;
+    return (x >= y) ? 1 : 0;
   } else if (opcode == 11) {
-    return x >= immediate_operand;
+    return (x >= immediate_operand) ? 1 : 0;
   } else if (opcode == 12) {
-    return x < y;
+    return (x < y) ? 1 : 0;
   } else if (opcode == 13) {
-    return x < immediate_operand;
+    return (x < immediate_operand) ? 1 : 0;
   } else if (opcode == 14) {
-    return ( x != 0 ) ? (y) : (z);
+    return (x != 0) ? y : z;
   } else if (opcode == 15) {
     return ( x != 0 ) ? (y) : immediate_operand;
   } else if (opcode == 16) {
-    return (x != 0) || (y != 0);
+    return ((x != 0) || (y != 0)) ? 1 : 0;
   } else if (opcode == 17) {
-    return (x != 0) || (immediate_operand != 0);
+    return ((x != 0) || (immediate_operand != 0)) ? 1 : 0;
   } else if (opcode == 18) {
-    return (x != 0) && (y != 0);
+    return ((x != 0) && (y != 0)) ? 1 : 0;
   } else if (opcode == 19) {
-    return (x != 0) && (immediate_operand != 0);
+    return ((x != 0) && (immediate_operand != 0)) ? 1 : 0;
   } else {
-    return ! (x != 0);
+    return (!(x != 0)) ? 1 : 0;
   }
 }
