@@ -35,6 +35,13 @@ def main(argv):
         '--parallel-sketch',
         action='store_true',
         help='Whether sketch process uses parallelism')
+    parser.add_argument(
+        '--synthesized-allocation',
+        action='store_true',
+        help='If set let sketch allocate state variables otherwise \
+              use canonical allocation, i.e, first state variable assigned \
+              to first phv container.'
+    )
 
     args = parser.parse_args(argv[1:])
     sketch_name = args.program_file.split('/')[-1].split('.')[0] + \
@@ -45,7 +52,8 @@ def main(argv):
     compiler = Compiler(args.program_file, args.stateful_alu_file,
                         args.stateless_alu_file,
                         args.num_pipeline_stages, args.num_alus_per_stage,
-                        sketch_name, args.parallel_sketch, args.pkt_fields)
+                        sketch_name, args.parallel_sketch,
+                        args.synthesized_allocation, args.pkt_fields)
 
     if args.parallel:
         (ret_code, output, hole_assignments) = compiler.parallel_codegen()

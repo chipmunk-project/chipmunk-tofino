@@ -28,7 +28,8 @@ def main(argv):
     compiler = Compiler(args.program_file, args.stateful_alu_file,
                         args.stateless_alu_file,
                         args.num_pipeline_stages, args.num_alus_per_stage,
-                        args.sketch_name, 'serial')
+                        args.sketch_name, 'serial',
+                        synthesized_allocation=False)
     compiler.optverify()
 
 

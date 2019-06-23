@@ -1,0 +1,205 @@
+{% if mode.is_CODEGEN() or mode.is_SOL_VERIFY() or mode.is_VERIFY() %}
+  |StateAndPacket| pipeline (|StateAndPacket| state_and_packet) {
+  // Any additional constraints to speed up synthesis through parallel execution.
+  {{additional_constraints}}
+
+  // Consolidate all constraints on holes here.
+  {{all_assertions}}
+{% elif mode.is_OPTVERIFY() %}
+  |StateAndPacket| pipeline (|StateAndPacket| state_and_packet, {{hole_arguments|join(',')}}) {
+{% endif %}
+
+  // One variable for each container in the PHV
+  // Container i will be allocated to packet field i from the spec.
+  {% for container_number in range(num_phv_containers) %}
+    int input_0_{{container_number}} = 0;
+  {% endfor %}
+
+  // One variable for each stateful ALU's state operand
+  // This will be allocated to a state variable from the program using indicator variables.
+  {% for stage_number in range(num_pipeline_stages) %}
+    {% for state_group_number in range(num_state_groups) %}
+      |StateGroup| state_operand_salu_{{stage_number}}_{{state_group_number}} =  |StateGroup|(
+                                                                                    {% for slot_number in range(num_state_slots-1) %}
+                                                                                       state_{{slot_number}} = 0,
+                                                                                    {% endfor %}
+                                                                                       state_{{num_state_slots-1}} = 0
+                                                                                 );
+    {% endfor %}
+  {% endfor %}
+
+  {% for stage_number in range(num_pipeline_stages) %}
+    /*********** Stage {{stage_number}} *********/
+
+    // Inputs
+    {% if stage_number == 0 %}
+      // Read each PHV container from corresponding packet field.
+      {% for field_number in range(num_fields_in_prog) %}
+        {% for container_number in range(num_phv_containers) %}
+          if (phv_config_{{field_number}}_{{container_number}} == 1){
+            input_0_{{container_number}} = state_and_packet.pkt_{{field_number}};
+          }
+        {% endfor %}
+      {% endfor %}
+
+    {% else %}
+      // Input of this stage is the output of the previous one.
+      {% for container_number in range(num_phv_containers) %}
+        int input_{{stage_number}}_{{container_number}} = output_{{stage_number-1}}_{{container_number}};
+      {% endfor %}
+
+    {% endif %}
+
+    // Stateless ALUs
+    {% for alu_number in range(num_alus_per_stage) %}
+      int destination_{{stage_number}}_{{alu_number}} = {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}(
+      {% for container_number in range(num_phv_containers) %}
+        {% if container_number != num_phv_containers - 1 %}
+          input_{{stage_number}}_{{container_number}},
+        {% else %}
+          input_{{stage_number}}_{{container_number}}
+        {% endif %}
+      {% endfor %},
+      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_opcode,
+      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_immediate,
+      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux1_ctrl,
+      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux2_ctrl,
+      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux3_ctrl
+      );
+    {% endfor %}
+
+    // Stateful operands
+    {% for state_group_number in range(num_state_groups) %}
+      {% for operand_number in range(num_operands_to_stateful_alu) %}
+        int packet_operand_salu{{stage_number}}_{{state_group_number}}_{{operand_number}} = {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_group_number}}_{{operand_number}}(
+        {% for container_number in range(num_phv_containers) %}
+          {% if container_number != num_phv_containers - 1 %}
+            input_{{stage_number}}_{{container_number}},
+          {% else %}
+            input_{{stage_number}}_{{container_number}}
+          {% endif %}
+        {% endfor %}
+      , {{sketch_name}}_stateful_operand_mux_{{stage_number}}_{{state_group_number}}_{{operand_number}}_ctrl);
+      {% endfor %}
+    {% endfor %}
+
+    // Read stateful ALU slots from allocated state vars.
+    {% for state_group_number in range(num_state_groups) %}
+      {% if state_group_number == 0 %}
+        if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+          state_operand_salu_{{stage_number}}_{{state_group_number}} =
+          |StateGroup|({% for slot_number in range(num_state_slots) %}
+                         {% if slot_number < num_state_slots - 1 %}
+                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}},
+                         {% else %}
+                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}}
+                         {% endif %}
+                       {%endfor%});}
+      {% else %}
+        else if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+          state_operand_salu_{{stage_number}}_{{state_group_number}} =
+          |StateGroup|({% for slot_number in range(num_state_slots) %}
+                         {% if slot_number < num_state_slots - 1 %}
+                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}},
+                         {% else %}
+                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}}
+                         {% endif %}
+                       {%endfor%});}
+      {% endif %}
+    {% endfor %}
+
+    // Stateful ALUs
+    {% for state_group_number in range(num_state_groups) %}
+      |StateGroup| old_state_group_{{stage_number}}_{{state_group_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}(state_operand_salu_{{stage_number}}_{{state_group_number}},
+      {% for operand_number in range(num_operands_to_stateful_alu) %}
+        packet_operand_salu{{stage_number}}_{{state_group_number}}_{{operand_number}},
+      {% endfor %}
+      {% set prefix_string = sketch_name + "_stateful_alu_" + (stage_number|string) + "_" + (state_group_number|string) + "_" %}
+      {{stateful_alu_hole_arguments|map('add_prefix_suffix', prefix_string, "_global")|join(',')}});
+    {% endfor %}
+
+    // Outputs
+    {% for container_number in range(num_phv_containers) %}
+      int output_{{stage_number}}_{{container_number}} = {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}(
+      {% for state_group_number in range(num_state_groups) %}
+        {% for state_slot in range(num_state_slots) %}
+          old_state_group_{{stage_number}}_{{state_group_number}}.state_{{state_slot}},
+        {% endfor %}
+      {% endfor %}
+      destination_{{stage_number}}_{{container_number}},
+      {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}_ctrl
+      );
+    {% endfor %}
+
+    {% for state_group_number in range(num_state_groups) %}
+      // Write state_{{state_group_number}}
+      {% if state_group_number == 0 %}
+        if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+        {% for slot_number in range(num_state_slots) %}
+          state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
+        {% endfor %}
+        }
+      {% else %}
+        else if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+        {% for slot_number in range(num_state_slots) %}
+          state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
+        {% endfor %}
+        }
+      {% endif %}
+    {% endfor %}
+
+  {% endfor %}
+
+  {% for field_number in range(num_fields_in_prog) %}
+    // Write pkt_{{field_number}}
+    {% for container_number in range(num_phv_containers) %}
+      if (phv_config_{{field_number}}_{{container_number}} == 1){
+        state_and_packet.pkt_{{field_number}} = output_{{num_pipeline_stages - 1}}_{{container_number}};
+      }
+    {% endfor %}
+  {% endfor %}
+
+  // Return updated packet fields and state vars
+  return state_and_packet;
+}
+
+{% if mode.is_CODEGEN() or mode.is_VERIFY() or  mode.is_SOL_VERIFY() %}
+  harness void main(
+    {{range(num_fields_in_prog)|map('add_prefix_suffix', "int pkt_", "")|join(',')}}
+    {% for state_group_number in range(num_state_groups) %}
+      {% for slot_number in range(num_state_slots) %}
+        , int state_group_{{state_group_number}}_state_{{slot_number}}
+      {% endfor %}
+    {% endfor %}) {
+
+    |StateAndPacket| x = |StateAndPacket|({% for field_number in range(num_fields_in_prog) %}
+      pkt_{{field_number}} = pkt_{{field_number}},
+    {% endfor %}
+    {% for state_group_number in range(num_state_groups) %}
+      {% for slot_number in range(num_state_slots) %}
+        {% if (state_group_number == num_state_groups - 1) and (slot_number == num_state_slots - 1) %}
+          state_group_{{state_group_number}}_state_{{slot_number}} = state_group_{{state_group_number}}_state_{{slot_number}}
+        {% else %}
+          state_group_{{state_group_number}}_state_{{slot_number}} = state_group_{{state_group_number}}_state_{{slot_number}},
+        {% endif %}
+      {% endfor %}
+    {% endfor %});
+
+  |StateAndPacket| pipeline_result = pipeline(x);
+  |StateAndPacket| program_result = program(x);
+
+  {% for state_group_number in range(num_state_groups) %}
+    {% for slot_number in range(num_state_slots) %}
+      assert(pipeline_result.state_group_{{state_group_number}}_state_{{slot_number}}
+      == program_result.state_group_{{state_group_number}}_state_{{slot_number}});
+    {% endfor %}
+  {% endfor %}
+
+  {% for field_number in pkt_fields_to_check %}
+    assert(pipeline_result.pkt_{{field_number}} == program_result.pkt_{{field_number}});
+  {% endfor %}
+
+  {{additional_testcases}}
+
+  }
+{% endif %}
