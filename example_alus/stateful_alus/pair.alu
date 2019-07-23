@@ -1,5 +1,7 @@
-state_0, state_1
-pkt_1, pkt_2, pkt_3, pkt_4, pkt_5
+type : stateful
+state variables : {state_0, state_1}
+hole variables : {}
+packet fields : {pkt_1, pkt_2, pkt_3, pkt_4, pkt_5}
 
 if (rel_op(Mux3(state_0, state_1, 0) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2, 0), C())) {
  if (rel_op(Mux3(state_0, state_1, 0) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2, 0), C())) {

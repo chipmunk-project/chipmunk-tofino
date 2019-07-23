@@ -42,35 +42,35 @@ development environment.
 ### Codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2
+direct_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2
 ```
 
 or
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --parallel-sketch
+direct_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 --parallel-sketch
 ```
 
 ### Parallel codegen
 
 ```shell
-direct_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 --parallel --parallel-sketch
+direct_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 --parallel --parallel-sketch
 ```
 
 ### Iterative solver
 ```shell
-iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 10 --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 10 --hole-elimination
 ```
 
 ```shell
-iterative_solver example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 2 2 10 --parallel --parallel-sketch --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 10 --parallel --parallel-sketch --hole-elimination
 ```
 
 
 ### Optimization Verification
 
 ```shell
-optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 1 1 sample1
-optverify_stub_generator example_specs/simple.sk example_alus/raw.stateful_alu chipc/templates/stateless_alu.j2 1 1 sample2
+optverify_stub_generator example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 1 1 sample1
+optverify_stub_generator example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 1 1 sample2
 optverify sample1 sample2 example_transforms/very_simple.transform
 ```
 
@@ -79,7 +79,7 @@ optverify sample1 sample2 example_transforms/very_simple.transform
 Run:
 
 ```shell
-antlr4 chipc/stateful_alu.g4 -Dlanguage=Python3 -visitor -package chipc
+antlr4 chipc/alu.g4 -Dlanguage=Python3 -visitor -package chipc
 python3 -m unittest
 ```
 

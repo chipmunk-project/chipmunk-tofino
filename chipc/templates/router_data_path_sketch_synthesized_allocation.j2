@@ -62,9 +62,13 @@
       {% endfor %},
       {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_opcode,
       {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_immediate,
-      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux1_ctrl,
-      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux2_ctrl,
-      {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux3_ctrl
+      {% for mux_num in range (1,num_stateless_muxes + 1) %}
+        {% if mux_num != num_stateless_muxes  %}
+          {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux{{mux_num}}_ctrl,
+        {% else %}
+          {{sketch_name}}_stateless_alu_{{stage_number}}_{{alu_number}}_mux{{mux_num}}_ctrl
+         {% endif %}
+      {% endfor %}
       );
     {% endfor %}
 

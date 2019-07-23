@@ -16,7 +16,7 @@ def _generate_parser():
     """Generates chipmunk grammar parser using chipmunk/stateful_alu.g4
     file. Assumes the user has java binary."""
 
-    grammar_name = 'stateful_alu'
+    grammar_name = 'alu'
     antlr_ext = '.g4'
 
     alu_filepath = _PACKAGE_NAME + '/' + grammar_name + antlr_ext

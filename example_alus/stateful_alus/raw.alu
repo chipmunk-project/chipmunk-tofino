@@ -1,0 +1,6 @@
+type : stateful
+state variables : {state_0}
+hole variables : {}
+packet fields : {pkt_0}
+
+state_0 = Opt(state_0) + Mux2(pkt_0, C());
