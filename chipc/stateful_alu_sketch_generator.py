@@ -7,9 +7,11 @@ from chipc.aluVisitor import aluVisitor
 
 
 class StatefulALUSketchGenerator(aluVisitor):
-    def __init__(self, alu_file, alu_name):
+    def __init__(self, alu_file, alu_name,
+                 constant_set_size):
         self.instruction_file = alu_file
         self.alu_name = alu_name
+        self.constant_set_size = constant_set_size
         self.num_state_slots = 0
         self.num_packet_fields = 0
         self.mux3_count = 0
@@ -259,13 +261,15 @@ class StatefulALUSketchGenerator(aluVisitor):
     else return op2;
     } \n\n"""
         self.add_hole('Mux2_' + str(self.mux2_count), 1)
+    # TODO: return the member of the vector
 
     def generateConstant(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
             'C_' + str(self.constant_count) + """(int const) {
-    return const;
+    return constant_vector[const];
     }\n\n"""
-        self.add_hole('const_' + str(self.constant_count), 2)
+        self.add_hole('const_' + str(self.constant_count),
+                      self.constant_set_size)
 
     def generateRelOp(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \

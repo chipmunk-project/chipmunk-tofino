@@ -33,8 +33,8 @@ class TestDirectSolver(unittest.TestCase):
             compiler = Compiler(
                 path.join(SPEC_DIR, 'simple.sk'), path.join(
                     STATEFUL_ALU_DIR, alu),
-                path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'), 2,
-                2, 'simple', parallel_sketch=False)
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
+                2, 2, 'simple', False, '{0,1,2,3}')
             self.assertEqual(compiler.serial_codegen()[0], 0,
                              'Compiling simple.sk failed for ' + alu)
             # TODO(taegyunkim): When all tests pass, clean up intermediary
@@ -50,7 +50,7 @@ class TestDirectSolver(unittest.TestCase):
                 path.join(SPEC_DIR, spec_filename),
                 path.join(STATEFUL_ALU_DIR, alu_filename),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                1, 0, 'simple_raw_1_2', 'serial')
+                1, 0, 'simple_raw_1_2', 'serial', '{0,1,2,3}')
 
     def test_simple_raw_succeeds_with_two_two_grid(self):
         spec_filename = 'simple.sk'
@@ -60,7 +60,7 @@ class TestDirectSolver(unittest.TestCase):
             path.join(SPEC_DIR, spec_filename), path.join(
                 STATEFUL_ALU_DIR, alu_filename),
             path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-            2, 2, 'simple_raw_2_2', parallel_sketch=False)
+            2, 2, 'simple_raw_2_2', False, '{0,1,2,3}')
         (ret_code, _, _) = compiler.serial_codegen()
         self.assertEqual(
             ret_code, 0,
@@ -84,7 +84,7 @@ class TestDirectSolver(unittest.TestCase):
             path.join(SPEC_DIR, spec_filename), path.join(
                 STATEFUL_ALU_DIR, alu_filename),
             path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-            1, 2, 'simple_raw_1_2', parallel_sketch=False)
+            1, 2, 'simple_raw_1_2', False, '{0,1,2,3}')
         (ret_code, _, _) = compiler.serial_codegen()
         self.assertEqual(
             1, ret_code, 'Compiling ' + spec_filename + ' used to fail for ' +
@@ -99,7 +99,7 @@ class TestDirectSolver(unittest.TestCase):
             path.join(SPEC_DIR, spec_filename), path.join(
                 STATEFUL_ALU_DIR, alu_filename),
             path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-            3, 3, 'test_raw_3_3', parallel_sketch=True)
+            3, 3, 'test_raw_3_3', True, '{0,1,2,3}')
         (ret_code, _, _) = compiler.serial_codegen()
         self.assertEqual(
             1, ret_code, 'Compiling ' + spec_filename + ' used to fail for ' +
@@ -110,7 +110,7 @@ class TestDirectSolver(unittest.TestCase):
             path.join(SPEC_DIR, spec_filename), path.join(
                 STATEFUL_ALU_DIR, alu_filename),
             path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-            4, 4, 'test_raw_4_4', parallel_sketch=True)
+            4, 4, 'test_raw_4_4', True, '{0,1,2,3}')
         (ret_code, _, _) = compiler.serial_codegen()
         self.assertEqual(
             ret_code, 0,
@@ -126,7 +126,7 @@ class OptverifyTest(unittest.TestCase):
             path.join(SPEC_DIR, spec_filename), path.join(
                 STATEFUL_ALU_DIR, alu_filename),
             path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-            1, 1, 'sample1', parallel_sketch=False)
+            1, 1, 'sample1', False, '{0,1,2,3}')
 
         compiler.optverify()
 
@@ -134,7 +134,7 @@ class OptverifyTest(unittest.TestCase):
             path.join(SPEC_DIR, spec_filename), path.join(
                 STATEFUL_ALU_DIR, alu_filename),
             path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-            1, 1, 'sample2', parallel_sketch=False)
+            1, 1, 'sample2', False, '{0,1,2,3}')
 
         compiler.optverify()
         self.assertEqual(

@@ -34,7 +34,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'sampling.sk'),
                 path.join(STATEFUL_ALU_DIR, 'if_else_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '1', '10']),
+                '2', '1', '{0,1,2,3}', '10']),
         )
 
     def test_sampling_2_1_if_else_raw_cex_mode_synthesized_alloc(self):
@@ -45,7 +45,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'sampling.sk'),
                 path.join(STATEFUL_ALU_DIR, 'if_else_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '1', '10', '--synthesized-allocation']),
+                '2', '1', '{0,1,2,3}', '10',
+                '--synthesized-allocation']),
         )
 
     def test_rcp_3_2_if_else_raw_cex_mode(self):
@@ -56,7 +57,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'rcp.sk'),
                 path.join(STATEFUL_ALU_DIR, 'if_else_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '3', '2', '10']),
+                '3', '2', '{0,1,2,3}', '10']),
         )
 
     def test_rcp_3_2_if_else_raw_cex_mode_synthesized_alloc(self):
@@ -67,7 +68,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'rcp.sk'),
                 path.join(STATEFUL_ALU_DIR, 'if_else_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '3', '2', '10', '--synthesized-allocation']),
+                '3', '2', '{0,1,2,3}', '10',
+                '--synthesized-allocation']),
         )
 
     def test_blue_increase_4_3_pred_raw_cex_mode(self):
@@ -78,7 +80,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'blue_increase.sk'),
                 path.join(STATEFUL_ALU_DIR, 'pred_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '4', '3', '10']),
+                '4', '3', '{0,1,2,3}', '10']),
         )
 
     def test_blue_increase_4_3_pred_raw_cex_mode_synthesized_alloc(self):
@@ -89,7 +91,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'blue_increase.sk'),
                 path.join(STATEFUL_ALU_DIR, 'pred_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '4', '3', '10', '--synthesized-allocation']),
+                '4', '3', '{0,1,2,3}', '10',
+                '--synthesized-allocation']),
         )
 
     def test_blue_decrease_4_3_sub_cex_mode(self):
@@ -100,9 +103,11 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'blue_decrease.sk'),
                 path.join(STATEFUL_ALU_DIR, 'sub.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '4', '3', '10']),
+                '4', '3', '{0,1,2,3}', '10']),
         )
 
+    # Add --parallel-sketch because it will get timeout without parallel
+    # TODO: try to think up a better way to deal with this part
     def test_blue_decrease_4_3_sub_cex_mode_synthesized_alloc(self):
         self.assertEqual(
             0,
@@ -111,7 +116,9 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'blue_decrease.sk'),
                 path.join(STATEFUL_ALU_DIR, 'sub.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '4', '3', '10', '--synthesized-allocation']),
+                '4', '3', '{0,1,2,3}', '10',
+                '--synthesized-allocation',
+                '--parallel-sketch']),
         )
 
     def test_marple_tcp_nmo_3_2_pred_raw_cex_mode(self):
@@ -122,7 +129,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'marple_tcp_nmo.sk'),
                 path.join(STATEFUL_ALU_DIR, 'pred_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '3', '2', '10']),
+                '3', '2', '{0,1,2,3}', '10']),
         )
 
     def test_marple_tcp_nmo_3_2_pred_raw_cex_mode_synthesized_alloc(self):
@@ -133,7 +140,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'marple_tcp_nmo.sk'),
                 path.join(STATEFUL_ALU_DIR, 'pred_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '3', '2', '10', '--synthesized-allocation']),
+                '3', '2', '{0,1,2,3}', '10',
+                '--synthesized-allocation']),
         )
 
     def test_marple_new_flow_2_2_pred_raw_cex_mode(self):
@@ -144,7 +152,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'marple_new_flow.sk'),
                 path.join(STATEFUL_ALU_DIR, 'pred_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '2', '10']),
+                '2', '2', '{0,1,2,3}', '10']),
         )
 
     def test_marple_new_flow_2_2_pred_raw_cex_mode_synthesized_alloc(self):
@@ -155,7 +163,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'marple_new_flow.sk'),
                 path.join(STATEFUL_ALU_DIR, 'pred_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '2', '10', '--synthesized-allocation']),
+                '2', '2', '{0,1,2,3}', '10',
+                '--synthesized-allocation']),
         )
 
     def test_simple_2_2_raw_cex_mode(self):
@@ -166,7 +175,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'simple.sk'),
                 path.join(STATEFUL_ALU_DIR, 'raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '2', '10']),
+                '2', '2', '{0,1,2,3}', '10']),
         )
 
     def test_simple_2_2_raw_cex_mode_synthesized_alloc(self):
@@ -177,7 +186,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'simple.sk'),
                 path.join(STATEFUL_ALU_DIR, 'raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '2', '10', '--synthesized-allocation']),
+                '2', '2', '{0,1,2,3}', '10',
+                '--synthesized-allocation']),
         )
 
     def test_sampling_revised_2_2_raw_cex_mode(self):
@@ -188,7 +198,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'sampling_revised.sk'),
                 path.join(STATEFUL_ALU_DIR, 'raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '2', '10']),
+                '2', '2', '{0,1,2,3}', '10']),
         )
 
     def test_sampling_revised_2_2_raw_cex_mode_synthesized_alloc(self):
@@ -199,7 +209,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'sampling_revised.sk'),
                 path.join(STATEFUL_ALU_DIR, 'raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '2', '2', '10', '--synthesized-allocation']),
+                '2', '2', '{0,1,2,3}', '10',
+                '--synthesized-allocation']),
         )
 
     # NOTE(taegyunkim): As long as we synthesize initially with 2 bits, and try
@@ -214,7 +225,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'times_two.sk'),
                 path.join(STATEFUL_ALU_DIR, 'if_else_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '3', '3', '10']),
+                '3', '3', '{0,1,2,3}', '10']),
         )
     '''
     def test_times_two_hole_elimination(self):

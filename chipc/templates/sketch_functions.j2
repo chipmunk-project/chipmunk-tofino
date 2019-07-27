@@ -1,3 +1,6 @@
 package {{sketch_name}};
+{% if mode.is_OPTVERIFY() %}
+{{ constant_vector }}
+{% endif %}
 {% include "muxes_and_alus.j2" %}
 {% include "router_data_path_sketch.j2" %}

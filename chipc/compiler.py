@@ -40,7 +40,8 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
 class Compiler:
     def __init__(self, program_file, stateful_alu_file, stateless_alu_file,
                  num_pipeline_stages, num_alus_per_stage, sketch_name,
-                 parallel_sketch, synthesized_allocation=False,
+                 parallel_sketch, constant_set,
+                 synthesized_allocation=False,
                  pkt_fields_to_check=[]):
         self.program_file = program_file
         self.stateful_alu_file = stateful_alu_file
@@ -49,6 +50,7 @@ class Compiler:
         self.num_alus_per_stage = num_alus_per_stage
         self.sketch_name = sketch_name
         self.parallel_sketch = parallel_sketch
+        self.constant_set = constant_set
         self.synthesized_allocation = synthesized_allocation
 
         program_content = Path(program_file).read_text()
@@ -86,6 +88,7 @@ class Compiler:
             jinja2_env=self.jinja2_env,
             stateful_alu_file=stateful_alu_file,
             stateless_alu_file=stateless_alu_file,
+            constant_set=constant_set,
             synthesized_allocation=synthesized_allocation)
 
     def single_codegen_run(self, compiler_input):

@@ -12,12 +12,14 @@ class StatelessAluSketchGenerator (aluVisitor):
     def __init__(self, stateless_alu_file, stateless_alu_name,
                  alu_name,
                  potential_operands,
-                 generate_stateless_mux):
+                 generate_stateless_mux,
+                 constant_set_size):
         self.stateless_alu_name = stateless_alu_name
         self.stateless_alu_file = stateless_alu_file
         self.alu_name = alu_name
         self.potential_operands = potential_operands
         self.generate_stateless_mux = generate_stateless_mux
+        self.constant_set_size = constant_set_size
         self.mux3Count = 0
         self.mux2Count = 0
         self.relopCount = 0
@@ -37,6 +39,8 @@ class StatelessAluSketchGenerator (aluVisitor):
         if 'immediate_operand' in hole_name:
             prefixed_hole = self.stateless_alu_name + '_' + \
                 hole_name[:hole_name.index('_')]
+            # Set num_bits for immediate
+            hole_width = self.constant_set_size
         else:
             prefixed_hole = self.stateless_alu_name + '_' + hole_name
         assert (prefixed_hole not in self.globalholes)
@@ -72,7 +76,15 @@ class StatelessAluSketchGenerator (aluVisitor):
     def write_temp_hole_vars(self):
         for arg in self.stateless_alu_args:
             temp_var = arg[:arg.index('_hole_local')]
-            self.mainFunction += '\tint ' + temp_var + ' = ' + arg + ';\n'
+            # Follow the format like this
+            # int opcode = opcode_hole_local;
+            # int immediate_operand = \
+            # constant_vector[immediate_operand_hole_local];
+            if 'immediate_operand' in temp_var:
+                self.mainFunction += '\tint ' + temp_var + \
+                    ' = ' + 'constant_vector[' + arg + '];\n'
+            else:
+                self.mainFunction += '\tint ' + temp_var + ' = ' + arg + ';\n'
 
     # Generates code that calls muxes from within stateless ALU
     def write_mux_call(self):
@@ -169,12 +181,9 @@ class StatelessAluSketchGenerator (aluVisitor):
             '_hole_local,')
         if (ctx.getChildCount() > 5):
             for i in range(5, ctx.getChildCount()-1):
-
                 self.visit(ctx.getChild(i))
-                num_bits = 2
                 if 'opcode' in ctx.getChild(i).getText():
                     num_bits = self.find_opcode_bits()
-
                 self.add_hole(ctx.getChild(i).getText()[1:].strip(), (
                     num_bits))
 
@@ -493,9 +502,9 @@ class StatelessAluSketchGenerator (aluVisitor):
     def generateConstant(self):
         self.helperFunctionStrings += 'int ' + self.stateless_alu_name + \
             '_' + 'C_' + str(self.constCount) + """(int const) {
-    return const;
+    return constant_vector[const];
     }\n\n"""
-        self.add_hole('const_' + str(self.constCount), 2)
+        self.add_hole('const_' + str(self.constCount), self.constant_set_size)
 
     def generateOpt(self):
         self.helperFunctionStrings += 'int ' + self.stateless_alu_name + \

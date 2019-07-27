@@ -26,7 +26,8 @@ class SketchGenerator:
     def __init__(self, sketch_name, num_phv_containers, num_state_groups,
                  num_alus_per_stage, num_pipeline_stages, num_fields_in_prog,
                  pkt_fields_to_check, jinja2_env, stateful_alu_file,
-                 stateless_alu_file, synthesized_allocation):
+                 stateless_alu_file, constant_set,
+                 synthesized_allocation):
         self.sketch_name_ = sketch_name
         self.total_hole_bits_ = 0
         self.hole_names_ = []
@@ -45,6 +46,15 @@ class SketchGenerator:
         self.jinja2_env_.filters['add_prefix_suffix'] = add_prefix_suffix
         self.stateful_alu_file_ = stateful_alu_file
         self.stateless_alu_file_ = stateless_alu_file
+        # self.constant_set will be the form like
+        # int constant_vector[4] = {0,1,2,3};
+
+        self.constant_set_ = 'int[' + \
+            str(constant_set.count(',')+1) + \
+            '] constant_vector = ' + constant_set + \
+            ';\n\n'
+        self.constant_set_size_ = math.ceil(
+            math.log2(constant_set.count(',')+1))
         self.num_operands_to_stateful_alu_ = 0
         self.num_state_slots_ = 0
         self.synthesized_allocation_ = synthesized_allocation
@@ -89,7 +99,8 @@ class SketchGenerator:
         stateless_alu_sketch_generator = \
             StatelessAluSketchGenerator(
                 self.stateless_alu_file_, self.sketch_name_ + '_' +
-                alu_name, alu_name, potential_operands, self.generate_mux)
+                alu_name, alu_name, potential_operands, self.generate_mux,
+                self.constant_set_size_)
         stateless_alu_sketch_generator.visit(tree)
         self.add_holes(stateless_alu_sketch_generator.globalholes)
         self.stateless_alu_hole_arguments_ = [
@@ -120,7 +131,8 @@ class SketchGenerator:
         parser = aluParser(stream)
         tree = parser.alu()
         stateful_alu_sketch_generator = StatefulALUSketchGenerator(
-            self.stateful_alu_file_, self.sketch_name_ + '_' + alu_name)
+            self.stateful_alu_file_, self.sketch_name_ + '_' + alu_name,
+            self.constant_set_size_)
         stateful_alu_sketch_generator.visit(tree)
         self.add_holes(stateful_alu_sketch_generator.global_holes)
         self.stateful_alu_hole_arguments_ = [
@@ -281,7 +293,10 @@ class SketchGenerator:
             num_pipeline_stages=self.num_pipeline_stages_,
             num_alus_per_stage=self.num_alus_per_stage_,
             num_phv_containers=self.num_phv_containers_,
-            hole_definitions=self.hole_preamble_,
+            # Pass constant_set to constant_vector for optverify
+            constant_vector=self.constant_set_,
+            # Add constant_set to hole_definitions
+            hole_definitions=self.constant_set_ + self.hole_preamble_,
             stateful_operand_mux_definitions=stateful_operand_mux_definitions,
             num_stateless_muxes=self.num_stateless_muxes_,
             output_mux_definitions=output_mux_definitions,
@@ -297,7 +312,8 @@ class SketchGenerator:
             num_state_slots=self.num_state_slots_,
             additional_constraints='\n'.join(
                 ['assert(' + str(x) + ');' for x in additional_constraints]),
-            hole_assignments='\n'.join(
+            # Add constant_set to hole_assignments
+            hole_assignments=self.constant_set_ + '\n'.join(
                 ['int ' + str(hole) + ' = ' + str(value) + ';'
                     for hole, value in hole_assignments.items()]),
             additional_testcases=additional_testcases)

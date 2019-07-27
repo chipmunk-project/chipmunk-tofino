@@ -29,6 +29,7 @@ def main(argv):
                         args.stateless_alu_file,
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         args.sketch_name, 'serial',
+                        '{0,1,2,3}',
                         synthesized_allocation=False)
     compiler.optverify()
 
