@@ -94,7 +94,6 @@ class TestDirectSolver(unittest.TestCase):
     def test_test_sketch(self):
         spec_filename = 'test.sk'
         alu_filename = 'raw.alu'
-        # Running in parallel mode to minimize test run time.
         compiler = Compiler(
             path.join(SPEC_DIR, spec_filename), path.join(
                 STATEFUL_ALU_DIR, alu_filename),
