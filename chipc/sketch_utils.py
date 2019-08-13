@@ -1,5 +1,8 @@
 import subprocess
 
+SYN_TIME_MINS = 30
+SMT_GEN_TIME_MINS = 0.1
+
 
 def check_syntax(sketch_file_name):
     # Check syntax of given sketch file.
@@ -27,7 +30,8 @@ def synthesize(sketch_file_name, bnd_inbits, slv_seed, slv_parallel=False):
                                                        ' --slv-seed=' +
                                                        str(slv_seed) +
                                                        par_string +
-                                                       ' --slv-timeout=30')
+                                                       ' --slv-timeout=' +
+                                                       str(SYN_TIME_MINS))
     assert(output.rfind('Program Parse Error:') == -1)
     return (return_code, output)
 
@@ -38,6 +42,7 @@ def generate_smt2_formula(sketch_file_name, smt_file_name, bit_range):
                                                        sketch_file_name +
                                                        ' --bnd-inbits=' +
                                                        str(bit_range) +
-                                                       ' --slv-timeout=0.001' +
+                                                       ' --slv-timeout=' +
+                                                       str(SMT_GEN_TIME_MINS) +
                                                        ' --beopt:writeSMT ' +
                                                        smt_file_name)
