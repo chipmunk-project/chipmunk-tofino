@@ -87,27 +87,15 @@
 
     // Read stateful ALU slots from allocated state vars.
     {% for state_group_number in range(num_state_groups) %}
-      {% if state_group_number == 0 %}
-        if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
-          state_operand_salu_{{stage_number}}_{{state_group_number}} =
-          |StateGroup|({% for slot_number in range(num_state_slots) %}
-                         {% if slot_number < num_state_slots - 1 %}
-                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}},
-                         {% else %}
-                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}}
-                         {% endif %}
-                       {%endfor%});}
-      {% else %}
-        else if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
-          state_operand_salu_{{stage_number}}_{{state_group_number}} =
-          |StateGroup|({% for slot_number in range(num_state_slots) %}
-                         {% if slot_number < num_state_slots - 1 %}
-                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}},
-                         {% else %}
-                           state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}}
-                         {% endif %}
-                       {%endfor%});}
-      {% endif %}
+      if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+        state_operand_salu_{{stage_number}}_{{state_group_number}} =
+        |StateGroup|({% for slot_number in range(num_state_slots) %}
+                       {% if slot_number < num_state_slots - 1 %}
+                         state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}},
+                       {% else %}
+                         state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}}
+                       {% endif %}
+                     {%endfor%});}
     {% endfor %}
 
     // Stateful ALUs
@@ -135,19 +123,11 @@
 
     {% for state_group_number in range(num_state_groups) %}
       // Write state_{{state_group_number}}
-      {% if state_group_number == 0 %}
-        if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+      if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
         {% for slot_number in range(num_state_slots) %}
           state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
         {% endfor %}
-        }
-      {% else %}
-        else if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
-        {% for slot_number in range(num_state_slots) %}
-          state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
-        {% endfor %}
-        }
-      {% endif %}
+      }
     {% endfor %}
 
   {% endfor %}
