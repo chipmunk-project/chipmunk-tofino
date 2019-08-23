@@ -33,6 +33,13 @@ def negated_body(formula):
         formula), ('Formula is not a quantifier:\n', formula)
     var_names = [formula.var_name(i) for i in range(formula.num_vars())]
     vs = [z3.Int(n) for n in var_names]
+
+    # Here simply doing z3.Not(formula.body()) doesn't work. formula.body()
+    # returns an expression without any bounded variable, i.e., it refers
+    # variables using indices in the order they appear instead of its names,
+    # Var(0), Var(1), Var(2). Thus, we have to re-bind the variables using
+    # substitute_vars. It is also necessary to reverse the list of variables.
+    # See https://github.com/Z3Prover/z3/issues/402 for more details.
     return z3.Not(z3.substitute_vars(formula.body(), *reversed(vs)))
 
 
