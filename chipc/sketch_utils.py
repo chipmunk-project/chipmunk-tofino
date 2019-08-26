@@ -1,7 +1,9 @@
+import re
 import subprocess
+from pathlib import Path
 
 SYN_TIME_MINS = 30
-SMT_GEN_TIME_MINS = 0.1
+SLV_TIMEOUT_MINS = 0.1
 
 
 def check_syntax(sketch_file_name):
@@ -22,6 +24,9 @@ def synthesize(sketch_file_name, bnd_inbits, slv_seed, slv_parallel=False):
     assert(slv_parallel in [True, False])
     check_syntax(sketch_file_name)
     par_string = ' --slv-parallel' if slv_parallel else ''
+    # Consider switching to subprocess.run as subprocess.getstatusoutput is
+    # considered legacy.
+    # https://docs.python.org/3.5/library/subprocess.html#legacy-shell-invocation-functions
     (return_code, output) = subprocess.getstatusoutput('time sketch -V 12 ' +
                                                        '--slv-nativeints ' +
                                                        sketch_file_name +
@@ -43,6 +48,30 @@ def generate_smt2_formula(sketch_file_name, smt_file_name, bit_range):
                                                        ' --bnd-inbits=' +
                                                        str(bit_range) +
                                                        ' --slv-timeout=' +
-                                                       str(SMT_GEN_TIME_MINS) +
+                                                       str(SLV_TIMEOUT_MINS) +
                                                        ' --beopt:writeSMT ' +
                                                        smt_file_name)
+
+
+def generate_ir(sketch_file_name):
+    """Given a sketch file, returns its IR (intermediate representation).
+
+    This function calls sketch and generates a .dag file having IR for the
+    sketch file. Then reads the .dag file and returns its content."""
+    check_syntax(sketch_file_name)
+    # Generate the dag filename by replacing sk extension with dag.
+    dag_file_name = re.sub('sk$', 'dag', sketch_file_name)
+    subprocess.run([
+        'sketch',
+        '-V', '3',
+        sketch_file_name,
+        '--debug-output-dag', dag_file_name,
+        # We only want the dag and sketch output is irrelevant here. So quickly
+        # return from it using --slv-timeout.
+        '--slv-timeout', str(SLV_TIMEOUT_MINS)
+    ],
+        # Pipe stdout and stderr to /dev/null as we don't need them.
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL)
+
+    return Path(dag_file_name).read_text()

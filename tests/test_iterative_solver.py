@@ -270,7 +270,7 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
                 '3', '3', '{0,1,2,3}', '10']),
         )
-    '''
+
     def test_times_two_hole_elimination(self):
         self.assertEqual(
             0,
@@ -279,9 +279,8 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'times_two.sk'),
                 path.join(STATEFUL_ALU_DIR, 'if_else_raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
-                '3', '3', '10', '--hole-elimination']),
+                '3', '3', '{0,1,2,3}', '10', '--hole-elimination']),
         )
-    '''
 
     def test_set_default_values(self):
         num_fields_in_prog = 2

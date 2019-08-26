@@ -46,38 +46,60 @@ class NegatedBodyTest(unittest.TestCase):
             z3_utils.negated_body(formula)
 
 
-class GenerateCounterExampleTest(unittest.TestCase):
+class GenerateCounterexamplesTest(unittest.TestCase):
     def test_successs_with_mock(self):
         x = z3.Int('pkt_0_0_0_0')
         simple_formula = z3.ForAll([x], z3.And(x > 3, x < 2))
-        with patch('z3.parse_smt2_file', return_value=[simple_formula]):
-            pkt_fields, _ = z3_utils.generate_counter_examples(
-                'foobar')
-            self.assertDictEqual(pkt_fields, {'pkt_0': 0})
-
-    def test_with_real_file(self):
-        test_filepath = Path(__file__).parent.joinpath(
-            './data/counterexample.smt2').resolve()
-        pkt_fields, state_vars = z3_utils.generate_counter_examples(
-            str(test_filepath))
+        pkt_fields, _ = z3_utils.generate_counterexamples(
+            simple_formula)
         self.assertDictEqual(pkt_fields, {'pkt_0': 0})
-        self.assertDictEqual(state_vars, {'state_group_0_state_0': 13})
 
     def test_unsat_formula(self):
         x = z3.Int('x')
         equality = z3.ForAll([x], x == x)
-        with patch('z3.parse_smt2_file', return_value=[equality]):
-            pkt_fields, state_vars = z3_utils.generate_counter_examples('foo')
-            self.assertDictEqual(pkt_fields, {})
-            self.assertDictEqual(state_vars, {})
+        pkt_fields, state_vars = z3_utils.generate_counterexamples(equality)
+        self.assertDictEqual(pkt_fields, {})
+        self.assertDictEqual(state_vars, {})
 
     def test_state_group_with_alphabets(self):
         x = z3.Int('state_group_1_state_0_b_b_0')
         simple_formula = z3.ForAll([x], z3.And(x > 3, x < 2))
-        with patch('z3.parse_smt2_file', return_value=[simple_formula]):
-            _, state_vars = z3_utils.generate_counter_examples(
-                'foobar')
-            self.assertDictEqual(state_vars, {'state_group_1_state_0': 0})
+        _, state_vars = z3_utils.generate_counterexamples(
+            simple_formula)
+        self.assertDictEqual(state_vars, {'state_group_1_state_0': 0})
+
+
+class GetZ3FormulaTest(unittest.TestCase):
+    def test_hello(self):
+        base_path = Path(__file__).parent
+        sketch_ir = Path(base_path / './data/hello.dag').resolve().read_text()
+        formula_from_ir = z3_utils.get_z3_formula(sketch_ir, input_bits=2)
+        ir_pkt_fields, ir_state_vars = z3_utils.generate_counterexamples(
+            formula_from_ir)
+
+        formula_from_smt = z3_utils.parse_smt2_file(
+            str(Path(base_path / './data/hello.smt').resolve()))
+        smt_pkt_fields, smt_state_vars = z3_utils.generate_counterexamples(
+            formula_from_smt)
+
+        self.assertDictEqual(ir_pkt_fields, smt_pkt_fields)
+        self.assertDictEqual(ir_state_vars, smt_state_vars)
+
+    def test_sampling(self):
+        base_path = Path(__file__).parent
+        sketch_ir = Path(
+            base_path / './data/sampling.dag').resolve().read_text()
+        formula_from_ir = z3_utils.get_z3_formula(sketch_ir, input_bits=2)
+        ir_pkt_fields, ir_state_vars = z3_utils.generate_counterexamples(
+            formula_from_ir)
+
+        formula_from_smt = z3_utils.parse_smt2_file(
+            str(Path(base_path / './data/sampling.smt').resolve()))
+        smt_pkt_fields, smt_state_vars = z3_utils.generate_counterexamples(
+            formula_from_smt)
+
+        self.assertDictEqual(ir_pkt_fields, smt_pkt_fields)
+        self.assertDictEqual(ir_state_vars, smt_state_vars)
 
 
 class SimpleCheckTest(unittest.TestCase):
@@ -86,3 +108,7 @@ class SimpleCheckTest(unittest.TestCase):
         input_formula = z3.ForAll([a], z3.Implies(a > 0, a + 1 > a))
         with patch('z3.parse_smt2_file', return_value=[input_formula]):
             self.assertTrue(z3_utils.simple_check('foobar'))
+
+
+if __name__ == '__main__':
+    unittest.main()

@@ -1,0 +1,10 @@
+dag main__WrapperNospec :
+TUPLE_DEF Fmain_ANONYMOUS
+TUPLE_DEF Fmain__WrapperNospec_ANONYMOUS
+TUPLE_DEF Fmain__Wrapper_ANONYMOUS
+0 = S INT pkt_1_1_0 2
+1 = PLUS INT 0 0
+2 = CONST INT 2
+3 = TIMES INT 0 2
+4 = EQ BOOL 3 1
+5 = ASSERT 4 "Assert at hello.sk:2 (2)"

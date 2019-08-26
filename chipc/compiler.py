@@ -232,21 +232,21 @@ class Compiler:
         for hole in self.sketch_generator.hole_names_:
             assert hole in hole_assignments
 
-        # Generate and run sketch that verifies these holes on the specific
-        # input bit length.
+        # Generate a sketch file to verify the hole value assignments with
+        # the specified input bit lengths.
         sketch_to_verify = self.sketch_generator.generate_sketch(
             program_file=self.program_file,
             mode=Mode.VERIFY,
             hole_assignments=hole_assignments
         )
 
+        # Write sketch to a file.
         file_basename = self.sketch_name + '_verify_iter_' + str(iter_cnt)
         sketch_filename = file_basename + '.sk'
-        smt2_filename = file_basename + '.smt2'
         Path(sketch_filename).write_text(sketch_to_verify)
 
-        sketch_utils.generate_smt2_formula(
-            sketch_filename, smt2_filename, input_bits
-        )
+        sketch_ir = sketch_utils.generate_ir(sketch_filename)
 
-        return z3_utils.generate_counter_examples(smt2_filename)
+        z3_formula = z3_utils.get_z3_formula(sketch_ir, input_bits)
+
+        return z3_utils.generate_counterexamples(z3_formula)
