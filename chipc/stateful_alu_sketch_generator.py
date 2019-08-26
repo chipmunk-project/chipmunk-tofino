@@ -35,8 +35,10 @@ class StatefulALUSketchGenerator(aluVisitor):
 
     @overrides
     def visitAlu(self, ctx):
+        self.add_hole('output_mux', 1)
         self.main_function += ('|StateGroup| ' + self.alu_name +
-                               '(ref |StateGroup| state_group, ')
+                               '(ref | StateGroup | state_group, ' +
+                               'int output_mux, ')
 
         self.visit(ctx.getChild(0, aluParser.Packet_fieldsContext))
 
@@ -54,7 +56,9 @@ class StatefulALUSketchGenerator(aluVisitor):
         for slot in range(self.num_state_slots):
             self.main_function += '\nstate_group.state_' + str(
                 slot) + ' = state_' + str(slot) + ';'
-        self.main_function += '\nreturn old_state_group;\n}'
+        self.main_function += '\n\nif (output_mux == 1){\n' +\
+                              'return old_state_group;\n}else{\n' +\
+                              'return state_group;\n}\n\n}'
         argument_string = ','.join(
             ['int ' + hole for hole in sorted(self.alu_args)])
         self.main_function = self.main_function % argument_string

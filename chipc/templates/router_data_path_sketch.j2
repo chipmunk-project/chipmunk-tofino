@@ -96,7 +96,7 @@
 
     // Stateful ALUs
     {% for state_group_number in range(num_state_groups) %}
-      |StateGroup| old_state_group_{{stage_number}}_{{state_group_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}(state_operand_salu_{{stage_number}}_{{state_group_number}},
+      |StateGroup| old_state_group_{{stage_number}}_{{state_group_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}(state_operand_salu_{{stage_number}}_{{state_group_number}}, {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}_output_mux_global,
       {% for operand_number in range(num_operands_to_stateful_alu) %}
         packet_operand_salu{{stage_number}}_{{state_group_number}}_{{operand_number}},
       {% endfor %}
