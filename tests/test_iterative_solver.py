@@ -141,6 +141,7 @@ class IterativeSolverTest(unittest.TestCase):
                 '--synthesized-allocation']),
         )
 
+    @unittest.skip('Takes too long and times out on AppVeyor')
     def test_blue_decrease_4_2_sub_cex_mode(self):
         self.assertEqual(
             0,
@@ -152,6 +153,7 @@ class IterativeSolverTest(unittest.TestCase):
                 '4', '2', '{0,1,2,3}', '10']),
         )
 
+    @unittest.skip('Takes too long and times out on AppVeyor')
     def test_blue_decrease_4_2_sub_cex_mode_synthesized_alloc(self):
         self.assertEqual(
             0,

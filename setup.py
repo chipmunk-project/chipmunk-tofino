@@ -70,10 +70,6 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'direct_solver=' + _PACKAGE_NAME + '.direct_solver:run_main',
-            'optverify=' + _PACKAGE_NAME + '.optverify:run_main',
-            'optverify_stub_generator=' + _PACKAGE_NAME +
-            '.optverify_stub_generator:run_main',
             'iterative_solver=' + _PACKAGE_NAME + '.iterative_solver:run_main'
         ]
     })

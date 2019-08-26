@@ -55,21 +55,7 @@ build_script:
 
     sudo pip3 install .
 
-    direct_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "{0,1,2,3}"
-
-    direct_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "{0,1,2,3}" --parallel-sketch
-
-    optverify_stub_generator example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 1 1 sample1
-
-    optverify_stub_generator example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 1 1 sample2
-
-    optverify sample1 sample2 example_transforms/very_simple.transform
-
     $antlr4 chipc/alu.g4 -Dlanguage=Python3 -visitor -package chipc
-
-    direct_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "{0,1,2,3}" --parallel
-
-    direct_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "{0,1,2,3}" --parallel --parallel-sketch
 
     iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "{0,1,2,3}" 10 --hole-elimination
 

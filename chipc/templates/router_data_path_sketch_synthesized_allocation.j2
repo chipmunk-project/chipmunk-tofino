@@ -1,13 +1,9 @@
-{% if mode.is_CODEGEN() or mode.is_SOL_VERIFY() or mode.is_VERIFY() %}
   |StateAndPacket| pipeline (|StateAndPacket| state_and_packet) {
   // Any additional constraints to speed up synthesis through parallel execution.
   {{additional_constraints}}
 
   // Consolidate all constraints on holes here.
   {{all_assertions}}
-{% elif mode.is_OPTVERIFY() %}
-  |StateAndPacket| pipeline (|StateAndPacket| state_and_packet, {{hole_arguments|join(',')}}) {
-{% endif %}
 
   // One variable for each container in the PHV
   // Container i will be allocated to packet field i from the spec.
