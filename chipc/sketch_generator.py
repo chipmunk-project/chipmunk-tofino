@@ -112,11 +112,6 @@ class SketchGenerator:
 
         self.num_stateless_muxes_ = \
             stateless_alu_sketch_generator.num_packet_fields
-        self.add_assert(
-            '(' + self.sketch_name_ + '_' + alu_name + '_opcode == 1)' + '|| ('
-            + self.sketch_name_ + '_' + alu_name + '_mux1_ctrl <= ' +
-            self.sketch_name_ + '_' + alu_name +
-            '_mux2_ctrl)')
 
         return (stateless_alu_sketch_generator.helperFunctionStrings +
                 stateless_alu_sketch_generator.mainFunction)
