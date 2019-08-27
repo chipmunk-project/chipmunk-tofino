@@ -87,6 +87,27 @@ def generate_counterexamples(formula):
     return (pkt_fields, state_vars)
 
 
+def check_sort(z3_var):
+    assert (z3.is_bool(z3_var) or z3.is_int(z3_var)),\
+        str(z3_var) + ' has unsupported type ' + str(type(z3_var))
+
+
+def make_int(z3_var):
+    if z3.is_bool(z3_var):
+        return z3.If(z3_var, 1, 0)
+    else:
+        return z3_var
+
+
+def make_bool(z3_var):
+    if z3.is_int(z3_var):
+        # Use > 0 to convert int to bool as per BooleanNodes.h
+        # in the SKETCH code base.
+        return z3_var > 0
+    else:
+        return z3_var
+
+
 def get_z3_formula(sketch_ir: str, input_bits: int) -> z3.QuantifierRef:
     """Given an intermediate representation of a sketch file and returns a z3
     formula corresponding to that IR with the specified input bits for source
@@ -102,8 +123,21 @@ def get_z3_formula(sketch_ir: str, input_bits: int) -> z3.QuantifierRef:
         if (start in ['dag', 'TUPLE_DEF']):
             continue
         else:
+            # common processing across all nodes
             output_var = '_n' + records[0]
             operation = records[2]
+            if operation in ['NEG', 'NOT']:
+                operand1 = z3_vars['_n' + records[4]]
+                check_sort(operand1)
+            elif operation in ['AND', 'OR', 'XOR', 'PLUS',
+                               'TIMES', 'DIV', 'MOD', 'LT',
+                               'EQ']:
+                operand1 = z3_vars['_n' + records[4]]
+                operand2 = z3_vars['_n' + records[5]]
+                check_sort(operand1)
+                check_sort(operand2)
+
+            # node-specific processing
             if operation == 'ASSERT':
                 z3_asserts += ['_n' + records[3]]
             elif operation == 'S':
@@ -115,33 +149,40 @@ def get_z3_formula(sketch_ir: str, input_bits: int) -> z3.QuantifierRef:
                 z3_vars[output_var] = z3.Int(source_name)
                 z3_srcs += [source_name]
             elif operation in ['NEG']:
-                z3_vars[output_var] = -z3_vars['_n' + records[4]]
+                z3_vars[output_var] = -make_int(operand1)
             elif operation in ['NOT']:
-                z3_vars[output_var] = z3.Not(z3_vars['_n' + records[4]])
+                z3_vars[output_var] = z3.Not(make_bool(operand1))
             elif operation in [
                     'AND', 'OR', 'XOR', 'PLUS', 'TIMES', 'DIV', 'MOD', 'LT',
                     'EQ'
             ]:
-                op1 = '_n' + records[4]
-                op2 = '_n' + records[5]
                 if operation == 'AND':
-                    z3_vars[output_var] = z3.And(z3_vars[op1], z3_vars[op2])
+                    z3_vars[output_var] = z3.And(
+                        make_bool(operand1), make_bool(operand2))
                 elif operation == 'OR':
-                    z3_vars[output_var] = z3.Or(z3_vars[op1], z3_vars[op2])
+                    z3_vars[output_var] = z3.Or(
+                        make_bool(operand1), make_bool(operand2))
                 elif operation == 'XOR':
-                    z3_vars[output_var] = z3.Xor(z3_vars[op1], z3_vars[op2])
+                    z3_vars[output_var] = z3.Xor(
+                        make_bool(operand1), make_bool(operand2))
                 elif operation == 'PLUS':
-                    z3_vars[output_var] = z3_vars[op1] + z3_vars[op2]
+                    z3_vars[output_var] = make_int(
+                        operand1) + make_int(operand2)
                 elif operation == 'TIMES':
-                    z3_vars[output_var] = z3_vars[op1] * z3_vars[op2]
+                    z3_vars[output_var] = make_int(
+                        operand1) * make_int(operand2)
                 elif operation == 'DIV':
-                    z3_vars[output_var] = z3_vars[op1] / z3_vars[op2]
+                    z3_vars[output_var] = make_int(
+                        operand1) / make_int(operand2)
                 elif operation == 'MOD':
-                    z3_vars[output_var] = z3_vars[op1] % z3_vars[op2]
+                    z3_vars[output_var] = make_int(
+                        operand1) % make_int(operand2)
                 elif operation == 'LT':
-                    z3_vars[output_var] = z3_vars[op1] < z3_vars[op2]
+                    z3_vars[output_var] = make_int(
+                        operand1) < make_int(operand2)
                 elif operation == 'EQ':
-                    z3_vars[output_var] = z3_vars[op1] == z3_vars[op2]
+                    z3_vars[output_var] = make_int(
+                        operand1) == make_int(operand2)
                 else:
                     assert False, ('Invalid operation', operation)
             # One can consider ARRACC and ARRASS as array access and
@@ -149,9 +190,10 @@ def get_z3_formula(sketch_ir: str, input_bits: int) -> z3.QuantifierRef:
             # mailing list thread.
             # https://lists.csail.mit.edu/pipermail/sketchusers/2019-August/000104.html
             elif operation in ['ARRACC']:
-                z3_vars[output_var] = z3.If(z3_vars['_n' + records[4]],
-                                            z3_vars['_n' + records[7]],
-                                            z3_vars['_n' + records[6]])
+                predicate = make_bool((z3_vars['_n' + records[4]]))
+                yes_val = z3_vars['_n' + records[7]]
+                no_val = z3_vars['_n' + records[6]]
+                z3_vars[output_var] = z3.If(predicate, yes_val, no_val)
             elif operation in ['ARRASS']:
                 var_type = type(z3_vars['_n' + records[4]])
                 if var_type == z3.BoolRef:
@@ -161,9 +203,10 @@ def get_z3_formula(sketch_ir: str, input_bits: int) -> z3.QuantifierRef:
                     cmp_constant = int(records[6])
                 else:
                     assert False, ('Variable type', var_type, 'not supported')
-                z3_vars[output_var] = z3.If(
-                    z3_vars['_n' + records[4]] == cmp_constant,
-                    z3_vars['_n' + records[8]], z3_vars['_n' + records[7]])
+                predicate = z3_vars['_n' + records[4]] == cmp_constant
+                yes_val = z3_vars['_n' + records[8]]
+                no_val = z3_vars['_n' + records[7]]
+                z3_vars[output_var] = z3.If(predicate, yes_val, no_val)
             elif operation in ['CONST']:
                 var_type = records[3]
                 if var_type == 'INT':

@@ -43,7 +43,6 @@ int simple_raw_2_2_output_mux_phv_1_1_ctrl= ??(1);
 int simple_raw_2_2_salu_config_0_0= ??(1);
 int simple_raw_2_2_salu_config_1_0= ??(1);
 
-
 // Definitions of muxes and ALUs of the router
 // Operand muxes for each ALU in each stage
 // Total of 2 * 2 * 3 2-to-1 muxes

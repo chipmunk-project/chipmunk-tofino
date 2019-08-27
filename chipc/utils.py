@@ -56,7 +56,7 @@ def get_hole_value_assignments(hole_names, sketch):
 
 def compilation_success(sketch_name, hole_assignments, output):
     print('Compilation succeeded. Hole value assignments are following:')
-    for hole, value in hole_assignments.items():
+    for hole, value in sorted(hole_assignments.items()):
         print('int', hole, '=', value)
     p = Path(sketch_name + '.success')
     p.write_text(output)

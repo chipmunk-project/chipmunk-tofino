@@ -1,5 +1,6 @@
 import concurrent.futures as cf
 import itertools
+import math
 import os
 import signal
 from os import path
@@ -88,6 +89,17 @@ class Compiler:
             stateless_alu_file=stateless_alu_file,
             constant_set=constant_set,
             synthesized_allocation=synthesized_allocation)
+
+    def update_constants_for_synthesis(self, constant_set):
+        # Join the values in constant_set to get constant_array in sketch.
+        new_constant_set_str = '{' + ','.join(constant_set) + '}'
+
+        # Use string format to create constant_arr_def_
+        self.sketch_generator.constant_arr_def_ = \
+            'int[{}]'.format(str(len(constant_set))) + \
+            'constant_vector = {};\n\n'.format(new_constant_set_str)
+        self.sketch_generator.constant_arr_size_ = math.ceil(
+            math.log2(len(constant_set)))
 
     def single_codegen_run(self, compiler_input):
         additional_constraints = compiler_input[0]

@@ -46,15 +46,17 @@ class SketchGenerator:
         self.jinja2_env_.filters['add_prefix_suffix'] = add_prefix_suffix
         self.stateful_alu_file_ = stateful_alu_file
         self.stateless_alu_file_ = stateless_alu_file
-        # self.constant_set will be the form like
+        # self.constant_arr_def_ will be the form like
         # int constant_vector[4] = {0,1,2,3};
 
-        self.constant_set_ = 'int[' + \
-            str(constant_set.count(',')+1) + \
-            '] constant_vector = ' + constant_set + \
+        constant_set_str = '{' + ','.join(constant_set) + '}'
+        self.constant_arr_def_ = 'int[' + \
+            str(len(constant_set)) + \
+            '] constant_vector = ' + \
+            constant_set_str + \
             ';\n\n'
-        self.constant_set_size_ = math.ceil(
-            math.log2(constant_set.count(',')+1))
+        self.constant_arr_size_ = math.ceil(
+            math.log2(len(constant_set)))
         self.num_operands_to_stateful_alu_ = 0
         self.num_state_slots_ = 0
         self.synthesized_allocation_ = synthesized_allocation
@@ -100,7 +102,7 @@ class SketchGenerator:
             StatelessAluSketchGenerator(
                 self.stateless_alu_file_, self.sketch_name_ + '_' +
                 alu_name, alu_name, potential_operands, self.generate_mux,
-                self.constant_set_size_)
+                self.constant_arr_size_)
         stateless_alu_sketch_generator.visit(tree)
         self.add_holes(stateless_alu_sketch_generator.globalholes)
         self.stateless_alu_hole_arguments_ = [
@@ -127,7 +129,7 @@ class SketchGenerator:
         tree = parser.alu()
         stateful_alu_sketch_generator = StatefulALUSketchGenerator(
             self.stateful_alu_file_, self.sketch_name_ + '_' + alu_name,
-            self.constant_set_size_)
+            self.constant_arr_size_)
         stateful_alu_sketch_generator.visit(tree)
         self.add_holes(stateful_alu_sketch_generator.global_holes)
         self.stateful_alu_hole_arguments_ = [
@@ -252,7 +254,6 @@ class SketchGenerator:
                         hole_assignments=dict(), additional_testcases=''):
         self.reset_holes_and_asserts()
         assert(mode in [Mode.CODEGEN, Mode.VERIFY])
-        # TODO: Need better name for j2 file.
         if (self.synthesized_allocation_):
             template = self.jinja2_env_.get_template(
                 'code_generator_synthesized_allocation.j2')
@@ -279,8 +280,8 @@ class SketchGenerator:
             num_pipeline_stages=self.num_pipeline_stages_,
             num_alus_per_stage=self.num_alus_per_stage_,
             num_phv_containers=self.num_phv_containers_,
-            # Add constant_set to hole_definitions
-            hole_definitions=self.constant_set_ + self.hole_preamble_,
+            # Add constant_arr_def to hole_definitions
+            hole_definitions=self.constant_arr_def_ + self.hole_preamble_,
             stateful_operand_mux_definitions=stateful_operand_mux_definitions,
             num_stateless_muxes=self.num_stateless_muxes_,
             output_mux_definitions=output_mux_definitions,
@@ -296,8 +297,8 @@ class SketchGenerator:
             num_state_slots=self.num_state_slots_,
             additional_constraints='\n'.join(
                 ['assert(' + str(x) + ');' for x in additional_constraints]),
-            # Add constant_set to hole_assignments
-            hole_assignments=self.constant_set_ + '\n'.join(
+            # Add constant_arr_def to hole_assignments
+            hole_assignments=self.constant_arr_def_ + '\n'.join(
                 ['int ' + str(hole) + ' = ' + str(value) + ';'
                     for hole, value in hole_assignments.items()]),
             additional_testcases=additional_testcases)
