@@ -116,7 +116,6 @@ def get_z3_formula(sketch_ir: str, input_bits: int) -> z3.QuantifierRef:
     z3_vars = dict()
     z3_asserts = []
     z3_srcs = []
-
     for line in sketch_ir.splitlines():
         records = line.split()
         start = records[0]

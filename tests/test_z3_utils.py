@@ -70,6 +70,23 @@ class GenerateCounterexamplesTest(unittest.TestCase):
 
 
 class GetZ3FormulaTest(unittest.TestCase):
+    def test_conversion(self):
+        # Smoke test for bool-to-int and int-to-bool conversion
+        # doesn't do anything too substantial, but checks that
+        # the string is being parsed and converted into z3.
+        z3_utils.get_z3_formula("""0 = CONST BOOL 1
+                                   1 = CONST BOOL 0
+                                   2 = LT BOOL 0 1
+                                   3 = TIMES INT 0 1
+                                   4 = PLUS INT 0 1
+                                   5 = S INT foobar 2""", 10)
+        z3_utils.get_z3_formula("""0 = CONST INT  1
+                                   1 = CONST INT  0
+                                   2 = AND BOOL 0 1
+                                   3 = OR BOOL 0 1
+                                   4 = XOR BOOL 0 1
+                                   5 = S INT foobar 2""", 10)
+
     def test_hello(self):
         base_path = Path(__file__).parent
         sketch_ir = Path(base_path / './data/hello.dag').resolve().read_text()
