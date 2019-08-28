@@ -1,4 +1,5 @@
 import math
+from collections import OrderedDict
 from pathlib import Path
 
 from antlr4 import CommonTokenStream
@@ -251,7 +252,8 @@ class SketchGenerator:
         return ret
 
     def generate_sketch(self, program_file, mode, additional_constraints=[],
-                        hole_assignments=dict(), additional_testcases=''):
+                        hole_assignments=OrderedDict(),
+                        additional_testcases=''):
         self.reset_holes_and_asserts()
         assert(mode in [Mode.CODEGEN, Mode.VERIFY])
         if (self.synthesized_allocation_):

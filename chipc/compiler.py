@@ -3,6 +3,7 @@ import itertools
 import math
 import os
 import signal
+from collections import OrderedDict
 from os import path
 from pathlib import Path
 
@@ -136,7 +137,7 @@ class Compiler:
             holes_to_values = get_hole_value_assignments(
                 self.sketch_generator.hole_names_, output)
         else:
-            holes_to_values = dict()
+            holes_to_values = OrderedDict()
         return (ret_code, output, holes_to_values)
 
     def serial_codegen(self, iter_cnt=1, additional_constraints=[],

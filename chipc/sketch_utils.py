@@ -68,6 +68,7 @@ def generate_ir(sketch_file_name):
         '--debug-output-dag', dag_file_name,
         # We only want the dag and sketch output is irrelevant here. So quickly
         # return from it using --slv-timeout.
+        '--slv-seed', '1',
         '--slv-timeout', str(SLV_TIMEOUT_MINS)
     ],
         # Pipe stdout and stderr to /dev/null as we don't need them.

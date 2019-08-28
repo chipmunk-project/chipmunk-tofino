@@ -3,6 +3,8 @@ import argparse
 import sys
 from pathlib import Path
 
+from ordered_set import OrderedSet
+
 from chipc.compiler import Compiler
 from chipc.utils import compilation_failure
 from chipc.utils import compilation_success
@@ -145,7 +147,10 @@ def main(argv):
         '_' + str(args.num_pipeline_stages) + \
         '_' + str(args.num_alus_per_stage)
 
-    constant_set = set(args.constant_set.split(','))
+    # Use OrderedSet here for deterministic compilation results. We can also
+    # use built-in dict() for Python versions 3.6 and later, as it's inherently
+    # ordered.
+    constant_set = OrderedSet(args.constant_set.split(','))
 
     compiler = Compiler(args.program_file, args.stateful_alu_file,
                         args.stateless_alu_file,

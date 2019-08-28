@@ -1,3 +1,4 @@
+import collections
 import re
 
 import z3
@@ -59,11 +60,16 @@ def generate_counterexamples(formula):
     new_formula = negated_body(formula)
 
     z3_slv = z3.Solver()
-    z3_slv.set(proof=True, unsat_core=True)
+    # To get counterexamples we need to set proof and unsat_core. Random seed
+    # is set for determinism.
+    z3_slv.set(proof=True, unsat_core=True, random_seed=1)
     z3_slv.add(new_formula)
 
-    pkt_fields = {}
-    state_vars = {}
+    # Use OrderedDict here for deterministic compilation results. We can also
+    # use built-in dict() for Python versions 3.6 and later, as it's inherently
+    # ordered.
+    pkt_fields = collections.OrderedDict()
+    state_vars = collections.OrderedDict()
 
     result = z3_slv.check()
     if result != z3.sat:
@@ -113,7 +119,7 @@ def get_z3_formula(sketch_ir: str, input_bits: int) -> z3.QuantifierRef:
     formula corresponding to that IR with the specified input bits for source
     variables."""
 
-    z3_vars = dict()
+    z3_vars = collections.OrderedDict()
     z3_asserts = []
     z3_srcs = []
     for line in sketch_ir.splitlines():

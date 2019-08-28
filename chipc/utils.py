@@ -1,7 +1,9 @@
 """Utilities for Chipmunk"""
-from collections import defaultdict
+from collections import OrderedDict
 from pathlib import Path
 from re import findall
+
+from ordered_set import OrderedSet
 
 
 def get_state_group_info(program):
@@ -9,10 +11,12 @@ def get_state_group_info(program):
     indices.
     For state_group_0_state_1, the dict will have an entry {0: set(1)}"""
 
-    state_group_info = defaultdict(set)
+    state_group_info = OrderedDict()
     for i, j in findall(
             r'state_and_packet.state_group_(\d+)_state_(\d+)', program):
-        state_group_info[i].add(j)
+        indices = state_group_info.get(i, OrderedSet())
+        indices.add(j)
+        state_group_info[i] = indices
 
     return state_group_info
 
