@@ -3,11 +3,10 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/060fwhaq3vfvt22n/branch/master?svg=true)](https://ci.appveyor.com/project/anirudhSK/chipmunk-hhg5f/branch/master)
 
 ## Installation
-- Install [antlr](https://www.antlr.org/)
 - Install [sketch](https://people.csail.mit.edu/asolar/sketch-1.7.5.tar.gz)
 - `pip3 install -r requirements-dev.txt -e . && pre-commit install` (if you want to make changes to
   this repo),
-- `pip3 install -e .` (if you want to simply use chipmunk.).
+- `pip3 install .` (if you want to simply use chipmunk.).
 - Add sudo if you want to install system wide.
 
 ## How to
@@ -20,7 +19,6 @@ If you have installed it as above, first re-install via following command.
 pip3 install -r requirements-dev.txt -e .
 pre-commit install
 ```
-
 Note that there is `-e` in install command. It will install this package in
 development mode, and simply link actual chipc directory to your Python's
 site-packages directory.
@@ -52,7 +50,6 @@ iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu exam
 Run:
 
 ```shell
-antlr4 chipc/alu.g4 -Dlanguage=Python3 -visitor -package chipc
 python3 -m unittest
 ```
 
