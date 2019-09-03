@@ -1,0 +1,133 @@
+type : stateful
+state variables : {state_0, state_1} // register_lo, register_hi
+hole variables : {}
+packet fields : {pkt_0, pkt_1} // metadata_lo, metadata_hi
+
+
+// Consider alu1_hi, alu2_hi, alu1_lo, alu2_lo as functions that take state_0,
+// state_1, pkt_0, pkt_1
+// alu1_hi(state_0, state_1, pkt_0, pkt_1)
+// alu2_hi(state_0, state_1, pkt_0, pkt_1)
+// alu1_lo(state_0, state_1, pkt_0, pkt_1)
+// alu2_lo(state_0, state_1, pkt_0, pkt_1)
+// depending on the condition_lo, condition_hi, choose the output.
+//
+
+
+// comparison unit
+// cmp = +- metadata +- register + constant <compare> 0
+// cmp_lo = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
+// cmp_hi = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
+// update_lo_1_predicate =
+// update_lo_2_predicate =
+// update_hi_1_predicate =
+// update_hi_2_predicate =
+
+
+bool logic_op(bool op1, bool op2, int opcode) {
+  if (opcode == 0) {
+    return false;
+  } else if (opcode == 1) {
+    return ~(op1 | op 2);
+  } else if (opcode == 2) {
+    return (~op1) & op2;
+  } else if (opcode == 3) {
+    return ~op1;
+  } else if (opcode == 4) {
+    return op1 & (~op2);
+  } else if (opcode == 5) {
+    return ~op2;
+  } else if (opcode == 6) {
+    return op1 ^ op2;
+  } else if (opcode == 7) {
+    return ~(op1 & op2);
+  } else if (opcode == 8) {
+    return op1 & op2;
+  } else if (opcode == 9) {
+    return ~(op1 ^ op2);
+  } else if (opcode == 10) {
+    return op2;
+  } else if (opcode == 11) {
+    return (~op1) | op2;
+  } else if (opcode == 12) {
+    return op1;
+  } else if (opcode == 13) {
+    return op1 | (~op2);
+  } else if (opcode == 14) {
+    return op1 | op2;
+  } else {
+    return true;
+  }
+}
+
+int tofino_arith_op(int op1, int op2, int opcode) {
+  if (opcode == 0) {
+    return op1 + op2;
+  } else if (opcode == 1) {
+    return op1 - op2;
+  } else if (opcode == 2) {
+    return op1 > op2 ? op2 : op1;
+  } else if (opcode == 3) {
+    return op1 > op2 ? op1 : op2;
+  } else {
+    return op2 - op1;
+  }
+}
+
+int tofino_alu(int op1, int op2, int opcode) {
+  if (opcode == 0) {
+    return op1 + op2;
+  } else if (opcode == 1) {
+    return op1 - op2;
+  } else if (opcode == 2) {
+    return op1 > op2 ? op2 : op1;
+  } else if (opcode == 3) {
+    return op1 > op2 ? op1 : op2;
+  } else if (opcode == 4) {
+    return op2 - op1;
+  } else if (opcode == 5) {
+    return 0;
+  } else if (opcode == 6) {
+    return ~(op1 | op 2);
+  } else if (opcode == 7) {
+    return (~op1) & op2;
+  } else if (opcode == 8) {
+    return ~op1;
+  } else if (opcode == 9) {
+    return op1 & (~op2);
+  } else if (opcode == 10) {
+    return ~op2;
+  } else if (opcode == 11) {
+    return op1 ^ op2;
+  } else if (opcode == 12) {
+    return ~(op1 & op2);
+  } else if (opcode == 13) {
+    return op1 & op2;
+  } else if (opcode == 14) {
+    return ~(op1 ^ op2);
+  } else if (opcode == 15) {
+    return op2;
+  } else if (opcode == 16) {
+    return (~op1) | op2;
+  } else if (opcode == 17) {
+    return op1;
+  } else if (opcode == 18) {
+    return op1 | (~op2);
+  } else if (opcode == 19) {
+    return op1 | op2;
+  } else {
+    return 1;
+  }
+
+}
+
+update_lo_1_predicate = logic_op(cmp_hi, cmp_lo, update_lo_1_predicate_opcode);
+update_lo_2_predicate = logic_op(cmp_hi, cmp_lo, update_lo_2_predicate_opcode);
+
+update_hi_1_predicate = logic_op(cmp_hi, cmp_lo, update_hi_1_predicate_opcode);
+update_hi_2_predicate = logic_op(cmp_hi, cmp_lo, update_hi_2_predicate_opcode);
+
+
+if (update_lo_1_predicate & update_lo_2_predicate) {
+  state_0 =
+}
