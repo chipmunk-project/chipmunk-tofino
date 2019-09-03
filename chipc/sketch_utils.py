@@ -2,7 +2,6 @@ import re
 import subprocess
 from pathlib import Path
 
-SYN_TIME_MINS = 30
 SLV_TIMEOUT_MINS = 0.1
 
 
@@ -34,9 +33,7 @@ def synthesize(sketch_file_name, bnd_inbits, slv_seed, slv_parallel=False):
                                                        str(bnd_inbits) +
                                                        ' --slv-seed=' +
                                                        str(slv_seed) +
-                                                       par_string +
-                                                       ' --slv-timeout=' +
-                                                       str(SYN_TIME_MINS))
+                                                       par_string)
     assert(output.rfind('Program Parse Error:') == -1)
     return (return_code, output)
 
