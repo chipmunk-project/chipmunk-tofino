@@ -1,0 +1,73 @@
+type : stateless  
+state variables : {} 
+hole variables : {opcode}
+packet fields : {pkt_0, pkt_1}
+
+
+
+if (opcode == 0) {
+  // modify_field(mdata.result1, mdata.value1);
+  return pkt_0;
+} elif (opcode == 1) {
+  // add(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_0 + pkt_1;
+} elif (opcode == 2) {
+  // subtract(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_1 - pkt_0;
+} elif (opcode == 3) {
+  // bit_and(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_0 & pkt_1;
+} elif (opcode == 4) {
+  // bit_andca(mdata.result1, mdata.value1, mdata.value2);
+  return ~pkt_0 & pkt_1;
+} elif (opcode == 5) {
+  // bit_andcb(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_0 & ~pkt_1;
+} elif (opcode == 6) {
+  // bit_nand(mdata.result1, mdata.value1, mdata.value2);
+  return ~(pkt_0 & pkt_1);
+} elif (opcode == 7) {
+  // bit_nor(mdata.result1, mdata.value1, mdata.value2);
+  return ~(pkt_0 | pkt_1);
+} elif (opcode == 8) {
+  // result1 = ~value1
+  return ~pkt_0;
+} elif (opcode == 9) {
+  // bit_or(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_0 | pkt_1;
+} elif (opcode == 10) {
+  // bit_orca(mdata.result1, mdata.value1, mdata.value2);
+  return ~pkt_0 | pkt_1;
+} elif (opcode == 11) {
+  // bit_orcb(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_0 | ~pkt_1;
+} elif (opcode == 12) {
+  // bit_xnor(mdata.result1, mdata.value1, mdata.value2);
+  return ~(pkt_0 ^ pkt_1);
+} elif (opcode == 13) {
+  // bit_xor(mdata.result1, mdata.value1, mdata.value2);
+  return (pkt_0 ^ pkt_1);
+} elif (opcode == 14) {
+  // max(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_0 > pkt_1 ? pkt_0 : pkt_1;  
+} elif (opcode == 15) {
+  // min(mdata.result1, mdata.value1, mdata.value2);
+  return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
+} elif (opcode == 16) {
+  // subtract(mdata.result1, mdata.value1, mdata.value2);
+  // TODO: is this same as 2?
+  return pkt_0 - pkt_1
+} elif (opcode == 17) {
+  // subtract_from_field(mdata.result1, mdata.value1);
+  return 
+} elif (opcode == 18) {
+  // shift_left(mdata.result1, mdata.value1, 1);
+  return pkt_0 << 1
+} elif (opcode == 19) {
+  // result1 = value1 >> value2(immediate value)
+  return pkt_0 >> 1
+} else {
+  // swap(mdata.value1, mdata.value2);
+  // TODO:This is hard to do
+  return 
+}  
