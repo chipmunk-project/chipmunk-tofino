@@ -21,6 +21,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.arithop_count = 0
         self.opt_count = 0
         self.constant_count = 0
+        self.compute_alu_count = 0
         self.helper_function_strings = '\n\n\n'
         self.alu_args = OrderedDict()
         self.global_holes = OrderedDict()
@@ -232,6 +233,18 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.generateConstant()
         self.constant_count += 1
 
+    @overrides
+    def visitComputeAlu(self, ctx):
+        self.main_function += self.alu_name + '_' + 'compute_alu_' + str(
+            self.compute_alu_count) + '('
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+        self.main_function += ',' + 'compute_alu_' + \
+            str(self.compute_alu_count) + ')'
+        self.generateComputeAlu()
+        self.compute_alu_count += 1
+
     def generateMux3(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
             'Mux3_' + str(self.mux3_count) + \
@@ -311,3 +324,56 @@ class StatefulALUSketchGenerator(aluVisitor):
     return op1;
     } \n\n"""
         self.add_hole('Opt_' + str(self.opt_count), 1)
+
+    def generateComputeAlu(self):
+        function_str = """\
+int {alu_name}_compute_alu_{compute_alu_count}(int op1, int op2, int opcode) {{
+    if (opcode == 0) {
+        return op1 + op2;
+    } else if (opcode == 1) {
+      return op1 - op2;
+    } else if (opcode == 2) {
+      return op1 > op2 ? op2 : op1;
+    } else if (opcode == 3) {
+      return op1 > op2 ? op1 : op2;
+    } else if (opcode == 4) {
+      return op2 - op1;
+    } else if (opcode == 5) {
+      return 0;
+    } else if (opcode == 6) {
+      return ~(op1 | op 2);
+    } else if (opcode == 7) {
+      return (~op1) & op2;
+    } else if (opcode == 8) {
+      return ~op1;
+    } else if (opcode == 9) {
+      return op1 & (~op2);
+    } else if (opcode == 10) {
+      return ~op2;
+    } else if (opcode == 11) {
+      return op1 ^ op2;
+    } else if (opcode == 12) {
+      return ~(op1 & op2);
+    } else if (opcode == 13) {
+      return op1 & op2;
+    } else if (opcode == 14) {
+      return ~(op1 ^ op2);
+    } else if (opcode == 15) {
+      return op2;
+    } else if (opcode == 16) {
+      return (~op1) | op2;
+    } else if (opcode == 17) {
+      return op1;
+    } else if (opcode == 18) {
+      return op1 | (~op2);
+    } else if (opcode == 19) {
+      return op1 | op2;
+    } else {
+      return 1;
+_   }
+}}\n"""
+        self.add_hole('compute_alu_', + str.self(self.compute_alu_count), 5)
+
+        self.helper_function_strings += dedent(
+            function_str.format(alu_name=self.alu_name,
+                                compute_alu_count=str(self.compute_alu_count)))

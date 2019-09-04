@@ -6,6 +6,7 @@ LINE_COMMENT : '//' ~[\r\n]* -> skip;
 // Keywords
 RELOP            : 'rel_op'; // <, >, <=, >=, ==, !=
 ARITHOP          : 'arith_op'; // +,-
+COMPUTEALU       : 'compute_alu'
 MUX3             : 'Mux3';   // 3-to-1 mux
 MUX2             : 'Mux2';   // 2-to-1 mux
 OPT              : 'Opt';    // Pick either the argument or 0
@@ -109,6 +110,7 @@ expr   : variable #Var
        | CONSTANT #Constant
        | ARITHOP '(' expr ',' expr ')' # ArithOp
        | NUM #Value
+       | COMPUTEALU '(' expr ',' expr ')' # ComputeAlu
        ;
 
 alu: state_indicator state_vars hole_vars packet_fields alu_body;
