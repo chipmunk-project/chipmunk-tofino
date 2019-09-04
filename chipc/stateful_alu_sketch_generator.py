@@ -15,6 +15,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.constant_arr_size = constant_arr_size
         self.num_state_slots = 0
         self.num_packet_fields = 0
+        self.mux6_count = 0
         self.mux3_count = 0
         self.mux2_count = 0
         self.relop_count = 0
@@ -22,6 +23,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.opt_count = 0
         self.constant_count = 0
         self.compute_alu_count = 0
+        self.bitwise_op_count = 0
         self.helper_function_strings = '\n\n\n'
         self.alu_args = OrderedDict()
         self.global_holes = OrderedDict()
@@ -154,6 +156,25 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.main_function += ctx.getChild(0).getText()
 
     @overrides
+    def visitMux6(self, ctx):
+        self.main_function += self.alu_name + '_' + 'Mux6_' + str(
+            self.mux6_count) + '('
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(2, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(3, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(4, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(5, aluParser.ExprContext))
+        self.main_function += ',' + 'Mux6_' + str(self.mux6_count) + ')'
+        self.generateMux6()
+        self.mux6_count += 1
+
+    @overrides
     def visitMux3(self, ctx):
         self.main_function += self.alu_name + '_' + 'Mux3_' + str(
             self.mux3_count) + '('
@@ -206,6 +227,18 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.relop_count += 1
 
     @overrides
+    def visitBitwiseOp(self, ctx):
+        self.main_function += self.alu_name + '_' + 'bitwise_op_' + str(
+            self.bitwise_op_count) + '('
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+        self.main_function += ',' + 'bitwise_op_' + \
+            str(self.bitwise_op_count) + ') == 1'
+        self.generateBitwiseOp()
+        self.bitwise_op_count += 1
+
+    @overrides
     def visitArithOp(self, ctx):
         self.main_function += self.alu_name + '_' + 'arith_op_' + str(
             self.arithop_count) + '('
@@ -244,6 +277,23 @@ class StatefulALUSketchGenerator(aluVisitor):
             str(self.compute_alu_count) + ')'
         self.generateComputeAlu()
         self.compute_alu_count += 1
+
+    def generateMux6(self):
+        function_str = """\
+int {alu_name}_Mux6_{mux6_count}(int op1, int op2, int op3, int op5, int op6,
+                                 int opcode) {{
+    if (opcode == 0) return op1;
+    else if (opcode == 1) return op2;
+    else if (opcode == 2) return op3;
+    else if (opcode == 3) return op4;
+    else if (opcode == 4) return op5;
+    else if (opcode == 5) return op6;
+    else return 0;
+}}
+"""
+        self.helper_function_strings += dedent(
+            function_str.format(self.alu_name, str(self.mux6_count)))
+        self.add_hole('Mux6_' + str(self.mux6_count), 3)
 
     def generateMux3(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
@@ -304,6 +354,52 @@ class StatefulALUSketchGenerator(aluVisitor):
     }
     } \n\n"""
         self.add_hole('rel_op_' + str(self.relop_count), 2)
+
+    def generateBitwiseOp(self):
+        function_str = """\
+int {alu_name}_bitwise_op_{bitwise_op_count} (int op1, int op2, int opcode) {{
+  if (opcode == 0) {
+    return false;
+  } else if (opcode == 1) {
+    return ~(op1 | op 2);
+  } else if (opcode == 2) {
+    return (~op1) & op2;
+  } else if (opcode == 3) {
+    return ~op1;
+  } else if (opcode == 4) {
+    return op1 & (~op2);
+  } else if (opcode == 5) {
+    return ~op2;
+  } else if (opcode == 6) {
+    return op1 ^ op2;
+  } else if (opcode == 7) {
+    return ~(op1 & op2);
+  } else if (opcode == 8) {
+    return op1 & op2;
+  } else if (opcode == 9) {
+    return ~(op1 ^ op2);
+  } else if (opcode == 10) {
+    return op2;
+  } else if (opcode == 11) {
+    return (~op1) | op2;
+  } else if (opcode == 12) {
+    return op1;
+  } else if (opcode == 13) {
+    return op1 | (~op2);
+  } else if (opcode == 14) {
+    return op1 | op2;
+  } else {
+    return true;
+  }
+}}\n
+"""
+        self.helper_function_strings += dedent(
+            function_str.format(
+                alu_name=self.alu_name,
+                bitwise_op_count=self.bitwise_op_count
+            )
+        )
+        self.add_hole('bitwise_op_' + str(self.bitwise_op_count), 4)
 
     def generateArithOp(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
@@ -372,8 +468,8 @@ int {alu_name}_compute_alu_{compute_alu_count}(int op1, int op2, int opcode) {{
       return 1;
 _   }
 }}\n"""
-        self.add_hole('compute_alu_', + str.self(self.compute_alu_count), 5)
-
         self.helper_function_strings += dedent(
             function_str.format(alu_name=self.alu_name,
                                 compute_alu_count=str(self.compute_alu_count)))
+
+        self.add_hole('compute_alu_' + str(self.compute_alu_count), 5)

@@ -5,8 +5,10 @@ WS : [ \n\t\r]+ -> channel(HIDDEN);
 LINE_COMMENT : '//' ~[\r\n]* -> skip;
 // Keywords
 RELOP            : 'rel_op'; // <, >, <=, >=, ==, !=
+BITWISEOP        : 'bitwise_op'; // ~, |, &, ^, and combiations of these
 ARITHOP          : 'arith_op'; // +,-
-COMPUTEALU       : 'compute_alu'
+COMPUTEALU       : 'compute_alu';
+MUX6             : 'Mux6';      // 6-to-1 mux
 MUX3             : 'Mux3';   // 3-to-1 mux
 MUX2             : 'Mux2';   // 2-to-1 mux
 OPT              : 'Opt';    // Pick either the argument or 0
@@ -73,6 +75,7 @@ guard  : guard (EQUAL
               | OR) guard #Nested
        | '(' guard ')' #Paren
        | RELOP '(' expr ',' expr ')' #RelOp
+       | BITWISEOP '(' expr ',' expr ')' #BitwiseOp
        | expr EQUAL expr #Equals
        | expr GREATER expr #Greater
        | expr GREATER_OR_EQUAL expr #GreaterEqual
@@ -105,6 +108,7 @@ expr   : variable #Var
        | '(' expr ')' #ExprWithParen
        | MUX3 '(' expr ',' expr ',' NUM ')' #Mux3WithNum
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
+       | MUX6 '(' expr ',' expr ',' expr ',' expr ',' expr ',' expr ')' #Mux6
        | MUX2 '(' expr ',' expr ')' #Mux2
        | OPT '(' expr ')' #Opt
        | CONSTANT #Constant
