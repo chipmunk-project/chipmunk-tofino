@@ -1,10 +1,8 @@
 // Max value of opcode is 17
-type : stateless  
-state variables : {} 
+type : stateless
+state variables : {}
 hole variables : {opcode}
 packet fields : {pkt_0, pkt_1}
-
-
 
 if (opcode == 0) {
   // modify_field(mdata.result1, mdata.value1);
@@ -50,14 +48,17 @@ if (opcode == 0) {
   return (pkt_0 ^ pkt_1);
 } elif (opcode == 14) {
   // max(mdata.result1, mdata.value1, mdata.value2);
-  return pkt_0 > pkt_1 ? pkt_0 : pkt_1;  
+  return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
 } elif (opcode == 15) {
   // min(mdata.result1, mdata.value1, mdata.value2);
   return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
 } elif (opcode == 16) {
-  // shift_left(mdata.result1, mdata.value1, 1);
+  // shift_left(mdata.result1, mdata.value1, 1;
+  // TODO: Do we need to support bit shifts by variable amounts?
+  // i.e. pkt_0 << pkt_1
   return pkt_0 << 1;
 } else {
   // result1 = value1 >> value2(immediate value)
+  // TODO: Same here as above. variable bit shifts
   return pkt_0 >> 1;
-}  
+}
