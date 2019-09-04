@@ -1,3 +1,4 @@
+// Max value of opcode is 17
 type : stateless  
 state variables : {} 
 hole variables : {opcode}
@@ -54,20 +55,9 @@ if (opcode == 0) {
   // min(mdata.result1, mdata.value1, mdata.value2);
   return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
 } elif (opcode == 16) {
-  // subtract(mdata.result1, mdata.value1, mdata.value2);
-  // TODO: is this same as 2?
-  return pkt_0 - pkt_1
-} elif (opcode == 17) {
-  // subtract_from_field(mdata.result1, mdata.value1);
-  return 
-} elif (opcode == 18) {
   // shift_left(mdata.result1, mdata.value1, 1);
-  return pkt_0 << 1
-} elif (opcode == 19) {
-  // result1 = value1 >> value2(immediate value)
-  return pkt_0 >> 1
+  return pkt_0 << 1;
 } else {
-  // swap(mdata.value1, mdata.value2);
-  // TODO:This is hard to do
-  return 
+  // result1 = value1 >> value2(immediate value)
+  return pkt_0 >> 1;
 }  
