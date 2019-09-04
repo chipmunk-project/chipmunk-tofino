@@ -15,7 +15,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.constant_arr_size = constant_arr_size
         self.num_state_slots = 0
         self.num_packet_fields = 0
-        self.mux6_count = 0
+        self.mux7_count = 0
         self.mux3_count = 0
         self.mux2_count = 0
         self.relop_count = 0
@@ -156,9 +156,9 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.main_function += ctx.getChild(0).getText()
 
     @overrides
-    def visitMux6(self, ctx):
-        self.main_function += self.alu_name + '_' + 'Mux6_' + str(
-            self.mux6_count) + '('
+    def visitMux7(self, ctx):
+        self.main_function += self.alu_name + '_' + 'Mux7_' + str(
+            self.mux7_count) + '('
         self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ','
         self.visit(ctx.getChild(1, aluParser.ExprContext))
@@ -170,9 +170,11 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.visit(ctx.getChild(4, aluParser.ExprContext))
         self.main_function += ','
         self.visit(ctx.getChild(5, aluParser.ExprContext))
-        self.main_function += ',' + 'Mux6_' + str(self.mux6_count) + ')'
-        self.generateMux6()
-        self.mux6_count += 1
+        self.main_function += ','
+        self.visit(ctx.getChild(6, aluParser.ExprContext))
+        self.main_function += ',' + 'Mux7_' + str(self.mux7_count) + ')'
+        self.generateMux7()
+        self.mux7_count += 1
 
     @overrides
     def visitMux3(self, ctx):
@@ -278,22 +280,22 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.generateComputeAlu()
         self.compute_alu_count += 1
 
-    def generateMux6(self):
+    def generateMux7(self):
         function_str = """\
-int {alu_name}_Mux6_{mux6_count}(int op1, int op2, int op3, int op5, int op6,
-                                 int opcode) {{
+int {alu_name}_Mux7_{mux7_count}(int op1, int op2, int op3, int op5, int op6,
+                                 int op7, int opcode) {{
     if (opcode == 0) return op1;
     else if (opcode == 1) return op2;
     else if (opcode == 2) return op3;
     else if (opcode == 3) return op4;
     else if (opcode == 4) return op5;
     else if (opcode == 5) return op6;
-    else return 0;
+    else return op7;
 }}
 """
         self.helper_function_strings += dedent(
-            function_str.format(self.alu_name, str(self.mux6_count)))
-        self.add_hole('Mux6_' + str(self.mux6_count), 3)
+            function_str.format(self.alu_name, str(self.mux7_count)))
+        self.add_hole('Mux7_' + str(self.mux7_count), 3)
 
     def generateMux3(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \

@@ -3,6 +3,8 @@ state variables : {state_0, state_1} // register_lo, register_hi
 hole variables : {}
 packet fields : {pkt_0, pkt_1} // metadata_lo, metadata_hi
 
+// TODO: The alu grammar doesn't support temporary variables.
+
 reg_hi = state_1
 reg_lo = state_0
 
@@ -19,6 +21,7 @@ alu_lo_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
 // comparison unit
 // +- metadata +- register + constant <compare> 0
 // compare operations are ==, !=, >, >=, <, <=
+// TODO: rel_op doesn't support >=, <= yet. We might have to expand that.
 cmp_hi = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
                 arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
 cmp_lo = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
@@ -30,25 +33,28 @@ update_lo_1_predicate = bitwise_op(cmp_hi, cmp_lo);
 update_lo_2_predicate = bitwise_op(cmp_hi, cmp_lo);
 
 if (update_hi_1_predicate & update_hi_2_predicate) {
-  state_1 = Mux2(alu_hi_1 | alu_hi_2, register_hi);
+    state_1 = Mux2(alu_hi_1 | alu_hi_2, register_hi);
 } else if (update_hi_1_predicate & (~update_hi_2_predicate)) {
-  state_1 = Mux2(alu_hi_1, register_hi);
+    state_1 = Mux2(alu_hi_1, register_hi);
 } else if ((~update_hi_1_predicate) & update_hi_2_predicate) {
-  state_1 = Mux2(alu_hi_2, register_hi);
+    state_1 = Mux2(alu_hi_2, register_hi);
 } else {
-  state_1 = register_hi;
+    // TODO: This is a little ambiguous, we might have to check whether the bf
+    // compiler returns 0.
+    state_1 = register_hi;
 }
 
 if (update_lo_1_predicate & update_lo_2_predicate) {
-  state_0 = Mux2(alu_lo_1 | alu_lo_2, register_lo);
+    state_0 = Mux2(alu_lo_1 | alu_lo_2, register_lo);
 } else if (update_lo_1_predicate & (~update_lo_2_predicate)) {
-  state_0 = Mux2(alu_lo_1, register_lo);
+    state_0 = Mux2(alu_lo_1, register_lo);
 } else if ((~update_lo_1_predicate) & update_lo_2_predicate) {
-  state_0 = Mux2(alu_lo_2, register_lo);
+    state_0 = Mux2(alu_lo_2, register_lo);
 } else {
-  state_0 = register_lo;
+    state_0 = register_lo;
 }
 
 // Output, we can update only one metadata field, assume it's metadata_hi, i.e.
-// state_1
-state_1 = Mux6(metadata_hi, metadata_lo, reg_hi, reg_lo, state_0, state_1)
+// pkt_1.
+// TODO: what is the right way to update one of the packet fields.
+pkt_1 = Mux7(metadata_hi, metadata_lo, reg_hi, reg_lo, state_0, state_1, 0)
