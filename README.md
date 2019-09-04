@@ -38,11 +38,11 @@ development environment.
 
 ### Iterative solver
 ```shell
-iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "{0,1,2,3}" 10 --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "0,1,2,3" 10 --hole-elimination
 ```
 
 ```shell
-iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "{0,1,2,3}" 10 --parallel --parallel-sketch --hole-elimination
+iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "0,1,2,3" 10 --parallel --parallel-sketch --hole-elimination
 ```
 
 ### Test
