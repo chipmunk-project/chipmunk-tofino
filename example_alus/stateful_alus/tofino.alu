@@ -24,7 +24,7 @@ packet fields : {pkt_0, pkt_1} // metadata_lo, metadata_hi
 // update_hi_2_predicate =
 
 
-bool logic_op(bool op1, bool op2, int opcode) {
+bool boolean_op(bool op1, bool op2, int opcode) {
   if (opcode == 0) {
     return false;
   } else if (opcode == 1) {
@@ -60,21 +60,7 @@ bool logic_op(bool op1, bool op2, int opcode) {
   }
 }
 
-int tofino_arith_op(int op1, int op2, int opcode) {
-  if (opcode == 0) {
-    return op1 + op2;
-  } else if (opcode == 1) {
-    return op1 - op2;
-  } else if (opcode == 2) {
-    return op1 > op2 ? op2 : op1;
-  } else if (opcode == 3) {
-    return op1 > op2 ? op1 : op2;
-  } else {
-    return op2 - op1;
-  }
-}
-
-int tofino_alu(int op1, int op2, int opcode) {
+int compute_alu(int op1, int op2, int opcode) {
   if (opcode == 0) {
     return op1 + op2;
   } else if (opcode == 1) {
@@ -118,16 +104,40 @@ int tofino_alu(int op1, int op2, int opcode) {
   } else {
     return 1;
   }
-
 }
 
-update_lo_1_predicate = logic_op(cmp_hi, cmp_lo, update_lo_1_predicate_opcode);
-update_lo_2_predicate = logic_op(cmp_hi, cmp_lo, update_lo_2_predicate_opcode);
+alu_hi_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
+alu_hi_2 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
+alu_lo_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
+alu_lo_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
 
-update_hi_1_predicate = logic_op(cmp_hi, cmp_lo, update_hi_1_predicate_opcode);
-update_hi_2_predicate = logic_op(cmp_hi, cmp_lo, update_hi_2_predicate_opcode);
+cmp_hi = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
+cmp_lo = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
 
+update_lo_1_predicate = boolean_op(cmp_hi, cmp_lo);
+update_lo_2_predicate = boolean_op(cmp_hi, cmp_lo);
+
+update_hi_1_predicate = boolean_op(cmp_hi, cmp_lo);
+update_hi_2_predicate = boolean_op(cmp_hi, cmp_lo);
+
+if (update_hi_1_predicate & update_hi_2_predicate) {
+  state_1 = Mux2(alu_hi_1 | alu_hi_2, state_1);
+} else if (update_hi_1_predicate & (~update_hi_2_predicate)) {
+  state_1 = Mux2(alu_hi_1, state_1);
+} else if ((~update_hi_1_predicate) & update_hi_2_predicate) {
+  state_1 = Mux2(alu_hi_2, state_1);
+} else {
+  state_1 = state_1;
+}
 
 if (update_lo_1_predicate & update_lo_2_predicate) {
-  state_0 =
+  state_0 = Mux2(alu_lo_1 | alu_lo_2, state_0);
+} else if (update_lo_1_predicate & (~update_lo_2_predicate)) {
+  state_0 = Mux2(alu_lo_1, state_0);
+} else if ((~update_lo_1_predicate) & update_lo_2_predicate) {
+  state_0 = Mux2(alu_lo_2, state_0);
+} else {
+  state_0 = state_0;
 }
+
+// Output
