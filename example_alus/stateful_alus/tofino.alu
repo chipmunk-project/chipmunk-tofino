@@ -3,141 +3,52 @@ state variables : {state_0, state_1} // register_lo, register_hi
 hole variables : {}
 packet fields : {pkt_0, pkt_1} // metadata_lo, metadata_hi
 
+reg_hi = state_1
+reg_lo = state_0
 
-// Consider alu1_hi, alu2_hi, alu1_lo, alu2_lo as functions that take state_0,
-// state_1, pkt_0, pkt_1
-// alu1_hi(state_0, state_1, pkt_0, pkt_1)
-// alu2_hi(state_0, state_1, pkt_0, pkt_1)
-// alu1_lo(state_0, state_1, pkt_0, pkt_1)
-// alu2_lo(state_0, state_1, pkt_0, pkt_1)
-// depending on the condition_lo, condition_hi, choose the output.
-//
+metadata_hi = pkt_1
+metadata_lo = pkt_0
 
-
-// comparison unit
-// cmp = +- metadata +- register + constant <compare> 0
-// cmp_lo = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
-// cmp_hi = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
-// update_lo_1_predicate =
-// update_lo_2_predicate =
-// update_hi_1_predicate =
-// update_hi_2_predicate =
-
-
-bool boolean_op(bool op1, bool op2, int opcode) {
-  if (opcode == 0) {
-    return false;
-  } else if (opcode == 1) {
-    return ~(op1 | op 2);
-  } else if (opcode == 2) {
-    return (~op1) & op2;
-  } else if (opcode == 3) {
-    return ~op1;
-  } else if (opcode == 4) {
-    return op1 & (~op2);
-  } else if (opcode == 5) {
-    return ~op2;
-  } else if (opcode == 6) {
-    return op1 ^ op2;
-  } else if (opcode == 7) {
-    return ~(op1 & op2);
-  } else if (opcode == 8) {
-    return op1 & op2;
-  } else if (opcode == 9) {
-    return ~(op1 ^ op2);
-  } else if (opcode == 10) {
-    return op2;
-  } else if (opcode == 11) {
-    return (~op1) | op2;
-  } else if (opcode == 12) {
-    return op1;
-  } else if (opcode == 13) {
-    return op1 | (~op2);
-  } else if (opcode == 14) {
-    return op1 | op2;
-  } else {
-    return true;
-  }
-}
-
-int compute_alu(int op1, int op2, int opcode) {
-  if (opcode == 0) {
-    return op1 + op2;
-  } else if (opcode == 1) {
-    return op1 - op2;
-  } else if (opcode == 2) {
-    return op1 > op2 ? op2 : op1;
-  } else if (opcode == 3) {
-    return op1 > op2 ? op1 : op2;
-  } else if (opcode == 4) {
-    return op2 - op1;
-  } else if (opcode == 5) {
-    return 0;
-  } else if (opcode == 6) {
-    return ~(op1 | op 2);
-  } else if (opcode == 7) {
-    return (~op1) & op2;
-  } else if (opcode == 8) {
-    return ~op1;
-  } else if (opcode == 9) {
-    return op1 & (~op2);
-  } else if (opcode == 10) {
-    return ~op2;
-  } else if (opcode == 11) {
-    return op1 ^ op2;
-  } else if (opcode == 12) {
-    return ~(op1 & op2);
-  } else if (opcode == 13) {
-    return op1 & op2;
-  } else if (opcode == 14) {
-    return ~(op1 ^ op2);
-  } else if (opcode == 15) {
-    return op2;
-  } else if (opcode == 16) {
-    return (~op1) | op2;
-  } else if (opcode == 17) {
-    return op1;
-  } else if (opcode == 18) {
-    return op1 | (~op2);
-  } else if (opcode == 19) {
-    return op1 | op2;
-  } else {
-    return 1;
-  }
-}
-
+// compute_alu(A, B), where A can be metadata or constant
+// where B can be register or constant
 alu_hi_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
 alu_hi_2 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
 alu_lo_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
 alu_lo_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
 
-cmp_hi = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
-cmp_lo = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) + arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
+// comparison unit
+// +- metadata +- register + constant <compare> 0
+// compare operations are ==, !=, >, >=, <, <=
+cmp_hi = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
+cmp_lo = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
 
-update_lo_1_predicate = boolean_op(cmp_hi, cmp_lo);
-update_lo_2_predicate = boolean_op(cmp_hi, cmp_lo);
-
-update_hi_1_predicate = boolean_op(cmp_hi, cmp_lo);
-update_hi_2_predicate = boolean_op(cmp_hi, cmp_lo);
+update_hi_1_predicate = bitwise_op(cmp_hi, cmp_lo);
+update_hi_2_predicate = bitwise_op(cmp_hi, cmp_lo);
+update_lo_1_predicate = bitwise_op(cmp_hi, cmp_lo);
+update_lo_2_predicate = bitwise_op(cmp_hi, cmp_lo);
 
 if (update_hi_1_predicate & update_hi_2_predicate) {
-  state_1 = Mux2(alu_hi_1 | alu_hi_2, state_1);
+  state_1 = Mux2(alu_hi_1 | alu_hi_2, register_hi);
 } else if (update_hi_1_predicate & (~update_hi_2_predicate)) {
-  state_1 = Mux2(alu_hi_1, state_1);
+  state_1 = Mux2(alu_hi_1, register_hi);
 } else if ((~update_hi_1_predicate) & update_hi_2_predicate) {
-  state_1 = Mux2(alu_hi_2, state_1);
+  state_1 = Mux2(alu_hi_2, register_hi);
 } else {
-  state_1 = state_1;
+  state_1 = register_hi;
 }
 
 if (update_lo_1_predicate & update_lo_2_predicate) {
-  state_0 = Mux2(alu_lo_1 | alu_lo_2, state_0);
+  state_0 = Mux2(alu_lo_1 | alu_lo_2, register_lo);
 } else if (update_lo_1_predicate & (~update_lo_2_predicate)) {
-  state_0 = Mux2(alu_lo_1, state_0);
+  state_0 = Mux2(alu_lo_1, register_lo);
 } else if ((~update_lo_1_predicate) & update_lo_2_predicate) {
-  state_0 = Mux2(alu_lo_2, state_0);
+  state_0 = Mux2(alu_lo_2, register_lo);
 } else {
-  state_0 = state_0;
+  state_0 = register_lo;
 }
 
-// Output
+// Output, we can update only one metadata field, assume it's metadata_hi, i.e.
+// state_1
+state_1 = Mux6(metadata_hi, metadata_lo, reg_hi, reg_lo, state_0, state_1)
