@@ -103,7 +103,9 @@ if ((bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
   state_0 = state_0;
 }
 
-// Output, we can update only one metadata field, assume it's metadata_hi, i.e.
-// pkt_1.
-// TODO: what is the right way to update one of the packet fields.
+// TODO: We can only update one metadata field, and we don't know at this point
+// which one will get updated. We would return simply one value from here and
+// let the output mux choose. To handle this, we would like to change all
+// stateful alus to return one single integer value and modify related Python
+// sketch generator scripts to accomodate this.
 pkt_1 = Mux5(pkt_1, pkt_0, state_0, state_1, 0)
