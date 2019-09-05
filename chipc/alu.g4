@@ -36,6 +36,7 @@ NUM : ('0'..'9') | (('1'..'9')('0'..'9')+);
 
 // alias id to state_var and packet_field
 state_var    : ID;
+temp_var     : ID;
 packet_field : ID;
 // alias id to hole variables
 hole_var : ID;
@@ -100,7 +101,10 @@ return_statement : RETURN expr ';'
 
 updates: update+;
 update : state_var '=' expr ';'
-       | state_var '=' guard ';';
+       | state_var '=' guard ';'
+       | 'int ' temp_var '=' expr ';'
+       | 'bit ' temp_var '=' expr ';'
+       ;
 
 variable : ID ;
 expr   : variable #Var
