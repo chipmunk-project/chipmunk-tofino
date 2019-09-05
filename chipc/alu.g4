@@ -92,7 +92,7 @@ guard  : guard (EQUAL
        | expr BITOR expr #BitOr
        | NOT expr #NOT
        | TRUE #True
-       | ID #bool_var
+       | ID #BoolVar
        ;
 
 

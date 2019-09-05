@@ -23,7 +23,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.opt_count = 0
         self.constant_count = 0
         self.compute_alu_count = 0
-        self.bitwise_op_count = 0
+        self.bool_op_count = 0
         self.helper_function_strings = '\n\n\n'
         self.alu_args = OrderedDict()
         self.global_holes = OrderedDict()
@@ -87,6 +87,10 @@ class StatefulALUSketchGenerator(aluVisitor):
 
     @overrides
     def visitVar(self, ctx):
+        self.main_function += ctx.getText()
+
+    @overrides
+    def visitBoolVar(self, ctx):
         self.main_function += ctx.getText()
 
     @overrides
@@ -229,16 +233,16 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.relop_count += 1
 
     @overrides
-    def visitBitwiseOp(self, ctx):
-        self.main_function += self.alu_name + '_' + 'bitwise_op_' + str(
-            self.bitwise_op_count) + '('
-        self.visit(ctx.getChild(0, aluParser.ExprContext))
+    def visitBoolOp(self, ctx):
+        self.main_function += self.alu_name + '_' + 'bool_op_' + str(
+            self.bool_op_count) + '('
+        self.visit(ctx.getChild(0, aluParser.GuardContext))
         self.main_function += ','
-        self.visit(ctx.getChild(1, aluParser.ExprContext))
-        self.main_function += ',' + 'bitwise_op_' + \
-            str(self.bitwise_op_count) + ') == 1'
-        self.generateBitwiseOp()
-        self.bitwise_op_count += 1
+        self.visit(ctx.getChild(1, aluParser.GuardContext))
+        self.main_function += ',' + 'bool_op_' + \
+            str(self.bool_op_count) + ') == 1'
+        self.generateBoolOp()
+        self.bool_op_count += 1
 
     @overrides
     def visitArithOp(self, ctx):
@@ -357,9 +361,9 @@ int {alu_name}_Mux5_{mux5_count}(int op1, int op2, int op3, int op5, int op6,
     } \n\n"""
         self.add_hole('rel_op_' + str(self.relop_count), 2)
 
-    def generateBitwiseOp(self):
+    def generateBoolOp(self):
         function_str = """\
-int {alu_name}_bitwise_op_{bitwise_op_count} (int op1, int op2, int opcode) {{
+int {alu_name}_bool_op_{bool_op_count} (int op1, int op2, int opcode) {{
   if (opcode == 0) {
     return false;
   } else if (opcode == 1) {
@@ -398,10 +402,10 @@ int {alu_name}_bitwise_op_{bitwise_op_count} (int op1, int op2, int opcode) {{
         self.helper_function_strings += dedent(
             function_str.format(
                 alu_name=self.alu_name,
-                bitwise_op_count=self.bitwise_op_count
+                bool_op_count=self.bool_op_count
             )
         )
-        self.add_hole('bitwise_op_' + str(self.bitwise_op_count), 4)
+        self.add_hole('bool_op_' + str(self.bool_op_count), 4)
 
     def generateArithOp(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
