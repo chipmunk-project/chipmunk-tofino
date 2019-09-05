@@ -5,45 +5,102 @@ packet fields : {pkt_0, pkt_1} // metadata_lo, metadata_hi
 
 // compute_alu(A, B), where A can be metadata or constant
 // where B can be register or constant
-alu_hi_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
-alu_hi_2 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
-alu_lo_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
-alu_lo_1 = compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()));
 
-// comparison unit
-// +- metadata +- register + constant <compare> 0
-// compare operations are ==, !=, >, >=, <, <=
-// rel_op doesn't support >-, <= but it should be enough because bitwise_op has
-// support for ~.
-// TODO: rel_op doesn't support >=, <= yet. We might have to expand that.
-cmp_hi = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
-                arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
-cmp_lo = rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
-                arith_op(0, Mux3(state_0, state_1, 0)) + C(), 0)
+// NOTE: rel_op doesn't support >-, <= but it should be enough because
+// bitwise_op has support for ~.
 
-update_hi_1_predicate = bitwise_op(cmp_hi, cmp_lo);
-update_hi_2_predicate = bitwise_op(cmp_hi, cmp_lo);
-update_lo_1_predicate = bitwise_op(cmp_hi, cmp_lo);
-update_lo_2_predicate = bitwise_op(cmp_hi, cmp_lo);
-
-if (update_hi_1_predicate & update_hi_2_predicate) {
-    state_1 = alu_hi_1 | alu_hi_2;
-} else if (update_hi_1_predicate & (~update_hi_2_predicate)) {
-    state_1 = alu_hi_1;
-} else if ((~update_hi_1_predicate) & update_hi_2_predicate) {
-    state_1 = alu_hi_2;
+if ((bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0),
+                rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0))) &
+    (bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0),
+                rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0)))) {
+  state_1 =
+      (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()))) |
+      (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C())));
+} else if ((bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0),
+                       rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0))) &
+           (~(bitwise_op(
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0),
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0))))) {
+  state_1 = (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C())));
+} else if ((~(bitwise_op(
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0),
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0)))) &
+           (bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0),
+                       rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0)))) {
+  state_1 = (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C())));
 } else {
-    state_1 = state_1;
+  state_1 = state_1;
 }
 
-if (update_lo_1_predicate & update_lo_2_predicate) {
-    state_0 = alu_lo_1 | alu_lo_2, register_lo;
-} else if (update_lo_1_predicate & (~update_lo_2_predicate)) {
-    state_0 = alu_lo_1, register_lo;
-} else if ((~update_lo_1_predicate) & update_lo_2_predicate) {
-    state_0 = alu_lo_2, register_lo;
+if ((bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0),
+                rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0))) &
+    (bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0),
+                rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                           arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                       0)))) {
+  state_0 =
+      (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C()))) |
+      (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C())));
+} else if ((bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0),
+                       rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0))) &
+           (~(bitwise_op(
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0),
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0))))) {
+  state_0 = (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C())));
+} else if ((~(bitwise_op(
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0),
+               rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                          arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                      0)))) &
+           (bitwise_op(rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0),
+                       rel_op(arith_op(0, Mux3(pkt_0, pkt_1, 0)) +
+                                  arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              0)))) {
+  state_0 = (compute_alu(Mux3(pkt_0, pkt_1, C()), Mux3(state_0, state_1, C())));
 } else {
-    state_0 = state_0;
+  state_0 = state_0;
 }
 
 // Output, we can update only one metadata field, assume it's metadata_hi, i.e.
