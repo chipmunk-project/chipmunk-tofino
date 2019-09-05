@@ -8,7 +8,7 @@ RELOP            : 'rel_op'; // <, >, <=, >=, ==, !=
 BITWISEOP        : 'bitwise_op'; // ~, |, &, ^, and combiations of these
 ARITHOP          : 'arith_op'; // +,-
 COMPUTEALU       : 'compute_alu';
-MUX7             : 'Mux7';      // 7-to-1 mux
+MUX5             : 'Mux5';      // 5-to-1 mux
 MUX3             : 'Mux3';   // 3-to-1 mux
 MUX2             : 'Mux2';   // 2-to-1 mux
 OPT              : 'Opt';    // Pick either the argument or 0
@@ -108,7 +108,7 @@ expr   : variable #Var
        | '(' expr ')' #ExprWithParen
        | MUX3 '(' expr ',' expr ',' NUM ')' #Mux3WithNum
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
-       | MUX7 '(' expr ',' expr ',' expr ',' expr ',' expr ',' expr ',' expr ')' #Mux7
+       | MUX5 '(' expr ',' expr ',' expr ',' expr ',' expr ')' #Mux5
        | MUX2 '(' expr ',' expr ')' #Mux2
        | OPT '(' expr ')' #Opt
        | CONSTANT #Constant
