@@ -4,10 +4,10 @@ grammar alu;
 WS : [ \n\t\r]+ -> channel(HIDDEN);
 LINE_COMMENT : '//' ~[\r\n]* -> skip;
 // Keywords
-RELOP            : 'rel_op'; // <, >, <=, >=, ==, !=
-BITWISEOP        : 'bitwise_op'; // ~, |, &, ^, and combiations of these
-ARITHOP          : 'arith_op'; // +,-
-COMPUTEALU       : 'compute_alu';
+RELOP            : 'rel_op'; // <, >, <=, >=, ==, != Captures everything from slide 14 of salu.pdf
+BOOLOP           : 'boolean_op'; // !, &&, || and combiations of these (best guess for how update_lo/hi_1/2_predicate works
+ARITHOP          : 'arith_op'; // Captures +/- used in slide 14 of salu.pdf
+COMPUTEALU       : 'compute_alu'; // Captures everything from slide 15 of salu.pdf
 MUX5             : 'Mux5';      // 5-to-1 mux
 MUX3             : 'Mux3';   // 3-to-1 mux
 MUX2             : 'Mux2';   // 2-to-1 mux
@@ -76,7 +76,7 @@ guard  : guard (EQUAL
               | OR) guard #Nested
        | '(' guard ')' #Paren
        | RELOP '(' expr ',' expr ')' #RelOp
-       | BITWISEOP '(' expr ',' expr ')' #BitwiseOp
+       | BOOLOP '(' guard ',' guard ')' #BoolOp
        | expr EQUAL expr #Equals
        | expr GREATER expr #Greater
        | expr GREATER_OR_EQUAL expr #GreaterEqual
