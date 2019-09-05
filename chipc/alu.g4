@@ -26,9 +26,8 @@ LESS_OR_EQUAL    : '<=';
 NOT_EQUAL        : '!=';
 OR               : '||';
 AND              : '&&';
-BITAND           : '&';
 BITOR            : '|';
-NOT              : '!' | '~';
+NOT              : '!';
 
 // Identifiers
 ID : ('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
@@ -77,7 +76,6 @@ guard  : guard (EQUAL
               | NOT_EQUAL
               | AND
               | OR
-              | BITAND
               | BITOR
               | NOT) guard #Nested
        | '(' guard ')' #Paren
@@ -91,7 +89,6 @@ guard  : guard (EQUAL
        | expr NOT_EQUAL expr #NotEqual
        | expr AND expr #And
        | expr OR expr #Or
-       | expr BITAND expr #BitAnd
        | expr BITOR expr #BitOr
        | NOT expr #NOT
        | TRUE #True
