@@ -86,6 +86,7 @@ guard  : guard (EQUAL
        | expr AND expr #And
        | expr OR expr #Or
        | TRUE #True
+       | ID #bool_var
        ;
 
 
@@ -103,7 +104,7 @@ updates: update+;
 update : state_var '=' expr ';'
        | state_var '=' guard ';'
        | 'int ' temp_var '=' expr ';'
-       | 'bit ' temp_var '=' expr ';'
+       | 'bit ' temp_var '=' guard ';'
        ;
 
 variable : ID ;
