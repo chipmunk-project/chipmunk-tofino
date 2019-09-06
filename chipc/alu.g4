@@ -106,7 +106,7 @@ statement : state_var '=' expr ';' #StmtUpdateExpr
           | 'bit ' temp_var '=' guard ';' #StmtUpdateTempBit
           // TODO: Don't allow multiple return statements from the grammar
           | return_statement #StmtReturn
-          | IF '(' if_guard = guard ')' '{' if_body =  statement+ '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = statement+ '}')* (ELSE  '{' else_body = statement+ '}')? #StmtIfElseIfElse
+          | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')? #StmtIfElseIfElse
           ;
 
 return_statement : RETURN expr ';'
