@@ -3,6 +3,8 @@ state variables : {state_0, state_1}
 hole variables : {}
 packet fields : {pkt_1, pkt_2, pkt_3, pkt_4, pkt_5}
 
+int old_state_0 = state_0;
+int old_state_1 = state_1;
 if (rel_op(Mux3(state_0, state_1, 0) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2, 0), C())) {
  if (rel_op(Mux3(state_0, state_1, 0) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2, 0), C())) {
   state_0 = Opt(state_0) + arith_op(Mux3(pkt_1, pkt_2, C()),  Mux3(pkt_1, pkt_2, C()));
@@ -20,3 +22,5 @@ if (rel_op(Mux3(state_0, state_1, 0) + Mux3(pkt_1, pkt_2, 0) - Mux3(pkt_1, pkt_2
   state_1 = Opt(state_1) + arith_op(Mux3(pkt_1, pkt_2, C()),  Mux3(pkt_1, pkt_2, C()));
  }
 }
+
+return Mux4(old_state_0, old_state_1, state_0, state_1);

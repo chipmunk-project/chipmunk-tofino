@@ -16,6 +16,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.num_state_slots = 0
         self.num_packet_fields = 0
         self.mux5_count = 0
+        self.mux4_count = 0
         self.mux3_count = 0
         self.mux2_count = 0
         self.relop_count = 0
@@ -39,17 +40,15 @@ class StatefulALUSketchGenerator(aluVisitor):
 
     @overrides
     def visitAlu(self, ctx):
-        self.add_hole('output_mux', 1)
-        self.main_function += ('|StateGroup| ' + self.alu_name +
-                               '(ref | StateGroup | state_group, ' +
-                               'int output_mux, ')
+        self.main_function += ('int ' + self.alu_name +
+                               '(ref | StateGroup | state_group, ')
 
         self.visit(ctx.getChild(0, aluParser.Packet_fieldsContext))
 
         self.visit(ctx.getChild(0, aluParser.State_varsContext))
 
         self.main_function += \
-            ', %s) {\n |StateGroup| old_state_group = state_group;'
+            ', %s) {\n'
 
         assert(self.num_state_slots > 0)
         for slot in range(self.num_state_slots):
@@ -57,12 +56,7 @@ class StatefulALUSketchGenerator(aluVisitor):
                 slot) + ' = state_group.state_' + str(slot) + ';'
 
         self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
-        for slot in range(self.num_state_slots):
-            self.main_function += '\nstate_group.state_' + str(
-                slot) + ' = state_' + str(slot) + ';'
-        self.main_function += '\n\nif (output_mux == 1){\n' +\
-                              'return old_state_group;\n}else{\n' +\
-                              'return state_group;\n}\n\n}'
+        self.main_function += '\n\n}'
         argument_string = ','.join(
             ['int ' + hole for hole in sorted(self.alu_args)])
         self.main_function = self.main_function % argument_string
@@ -94,6 +88,10 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.main_function += ctx.getText()
 
     @overrides
+    def visitTemp_var(self, ctx):
+        self.main_function += ctx.getText()
+
+    @overrides
     def visitState_vars(self, ctx):
         self.num_state_slots = ctx.getChildCount() - 5
 
@@ -103,50 +101,72 @@ class StatefulALUSketchGenerator(aluVisitor):
 
     @overrides
     def visitReturn_statement(self, ctx):
-        # Stateful ALU's dont have return statements
-        assert(ctx.getChildCount() == 0)
+        self.main_function += 'return '
+        self.visit(ctx.getChild(1))
+        self.main_function += ';'
 
     @overrides
-    def visitAlu_body(self, ctx):
-        if (ctx.getChildCount() == 1):  # simple update
-            self.visit(ctx.getChild(0))
-        else:  # if-elif-else update
-            self.main_function += 'if ('
-            self.visit(ctx.if_guard)
+    def visitStmtIfElseIfElse(self, ctx):
+        self.main_function += 'if ('
+        self.visit(ctx.if_guard)
+        self.main_function += ') {'
+        self.visit(ctx.if_body)
+        self.main_function += '}'
+
+        # if there is an elif
+        if (ctx.getChildCount() > 7
+                and ctx.getChild(7).getText() == 'elif'):
+            self.main_function += 'else if ('
+            self.visit(ctx.elif_guard)
             self.main_function += ') {'
-            self.visit(ctx.if_body)
+            self.visit(ctx.elif_body)
             self.main_function += '}'
 
-            # if there is an elif
-            if (ctx.getChildCount() > 7
-                    and ctx.getChild(7).getText() == 'elif'):
-                self.main_function += 'else if ('
-                self.visit(ctx.elif_guard)
-                self.main_function += ') {'
-                self.visit(ctx.elif_body)
-                self.main_function += '}'
-
-            # if there is an else
-            if ((ctx.getChildCount() > 7
-                 and ctx.getChild(7).getText() == 'else')
-                    or (ctx.getChildCount() > 14
-                        and ctx.getChild(14).getText() == 'else')):
-                self.main_function += 'else {'
-                self.visit(ctx.else_body)
-                self.main_function += '}'
+        # if there is an else
+        if ((ctx.getChildCount() > 7
+                and ctx.getChild(7).getText() == 'else')
+                or (ctx.getChildCount() > 14
+                    and ctx.getChild(14).getText() == 'else')):
+            self.main_function += 'else {'
+            self.visit(ctx.else_body)
+            self.main_function += '}'
 
     @overrides
-    def visitUpdates(self, ctx):
-        self.visitChildren(ctx)
-
-    @overrides
-    def visitUpdate(self, ctx):
+    def visitStmtUpdateExpr(self, ctx):
         assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
             'Every update must end with a semicolon.'
-
         self.visit(ctx.getChild(0, aluParser.State_varContext))
         self.main_function += ' = '
-        self.visit(ctx.getChild(2))
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ';'
+
+    @overrides
+    def visitStmtUpdateGuard(self, ctx):
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
+            'Every update must end with a semicolon.'
+        self.visit(ctx.getChild(0, aluParser.State_varContext))
+        self.main_function += ' = '
+        self.visit(ctx.getChild(0, aluParser.GuardContext))
+        self.main_function += ';'
+
+    @overrides
+    def visitStmtUpdateTempInt(self, ctx):
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
+            'Every update must end with a semicolon.'
+        self.main_function += ctx.getChild(0).getText()
+        self.visit(ctx.getChild(0, aluParser.Temp_varContext))
+        self.main_function += '='
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ';'
+
+    @overrides
+    def visitStmtUpdateTempBit(self, ctx):
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
+            'Every update must end with a semicolon.'
+        self.main_function += ctx.getChild(0).getText()
+        self.visit(ctx.getChild(0, aluParser.Temp_varContext))
+        self.main_function += '='
+        self.visit(ctx.getChild(0, aluParser.GuardContext))
         self.main_function += ';'
 
     @overrides
@@ -172,13 +192,24 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.visit(ctx.getChild(3, aluParser.ExprContext))
         self.main_function += ','
         self.visit(ctx.getChild(4, aluParser.ExprContext))
-        self.main_function += ','
-        self.visit(ctx.getChild(5, aluParser.ExprContext))
-        self.main_function += ','
-        self.visit(ctx.getChild(6, aluParser.ExprContext))
         self.main_function += ',' + 'Mux5_' + str(self.mux5_count) + ')'
         self.generateMux5()
         self.mux5_count += 1
+
+    @overrides
+    def visitMux4(self, ctx):
+        self.main_function += self.alu_name + '_' + 'Mux4_' + str(
+            self.mux4_count) + '('
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(2, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(3, aluParser.ExprContext))
+        self.main_function += ',' + 'Mux4_' + str(self.mux4_count) + ')'
+        self.generateMux4()
+        self.mux4_count += 1
 
     @overrides
     def visitMux3(self, ctx):
@@ -286,20 +317,32 @@ class StatefulALUSketchGenerator(aluVisitor):
 
     def generateMux5(self):
         function_str = """\
-int {alu_name}_Mux5_{mux5_count}(int op1, int op2, int op3, int op5, int op6,
-                                 int op7, int opcode) {{
+int {alu_name}_Mux5_{mux5_count}(int op1, int op2, int op3, int op4, int op5
+                                 int opcode) {{
     if (opcode == 0) return op1;
     else if (opcode == 1) return op2;
     else if (opcode == 2) return op3;
     else if (opcode == 3) return op4;
-    else if (opcode == 4) return op5;
-    else if (opcode == 5) return op6;
-    else return op7;
+    else return op5;
 }}
 """
         self.helper_function_strings += dedent(
             function_str.format(self.alu_name, str(self.mux5_count)))
         self.add_hole('Mux5_' + str(self.mux5_count), 3)
+
+    def generateMux4(self):
+        function_str = """\
+int {alu_name}_Mux4_{mux4_count}(int op1, int op2, int op3, int op4,
+                                 int opcode) {{
+    if (opcode == 0) return op1;
+    else if (opcode == 1) return op2;
+    else if (opcode == 2) return op3;
+    else return op4;
+}}
+"""
+        self.helper_function_strings += dedent(
+            function_str.format(self.alu_name, str(self.mux4_count)))
+        self.add_hole('Mux54' + str(self.mux4_count), 2)
 
     def generateMux3(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \

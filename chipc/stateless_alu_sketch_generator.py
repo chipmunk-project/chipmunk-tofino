@@ -217,39 +217,68 @@ class StatelessAluSketchGenerator (aluVisitor):
         self.mainFunction += ctx.getText()
 
     @overrides
-    def visitAlu_body(self, ctx):
-        if (ctx.getChildCount() == 1
-                and ctx.alu_update is not None):  # simple update
-            self.visit(ctx.alu_update)
-        elif (ctx.getChildCount() == 1 and
-                ctx.return_update is not None):
+    def visitStmtIfElseIfElse(self, ctx):
+        self.mainFunction += 'if ('
+        self.visit(ctx.if_guard)
+        self.mainFunction += ') {'
+        self.visit(ctx.if_body)
+        self.mainFunction += '}'
 
-            self.visit(ctx.return_update)
-        else:  # if-elif-else update
-            self.mainFunction += '\tif ('
-            self.visit(ctx.if_guard)
-            self.mainFunction += ') {\n'
+        # if there is an elif
+        if (ctx.getChildCount() > 7
+                and ctx.getChild(7).getText() == 'elif'):
+            self.mainFunction += 'else if ('
+            self.visit(ctx.elif_guard)
+            self.mainFunction += ') {'
+            self.visit(ctx.elif_body)
+            self.mainFunction += '}'
 
-            self.visit(ctx.if_body)
-            self.mainFunction += '\n}\n'
-            elif_index = 7
-            while (ctx.getChildCount() > elif_index and
-                    ctx.getChild(elif_index).getText() == 'elif'):
+        # if there is an else
+        if ((ctx.getChildCount() > 7
+                and ctx.getChild(7).getText() == 'else')
+                or (ctx.getChildCount() > 14
+                    and ctx.getChild(14).getText() == 'else')):
+            self.mainFunction += 'else {'
+            self.visit(ctx.else_body)
+            self.mainFunction += '}'
 
-                self.mainFunction += '\telse if ('
-                self.visit(ctx.getChild(elif_index+2))
-                self.mainFunction += ') {\n'
-                self.visit(ctx.getChild(elif_index+5))
+    @overrides
+    def visitStmtUpdateExpr(self, ctx):
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
+            'Every update must end with a semicolon.'
+        self.visit(ctx.getChild(0, aluParser.State_varContext))
+        self.mainFunction += ' = '
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.mainFunction += ';'
 
-                self.mainFunction += '\n}\n'
-                elif_index += 7
+    @overrides
+    def visitStmtUpdateGuard(self, ctx):
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
+            'Every update must end with a semicolon.'
+        self.visit(ctx.getChild(0, aluParser.State_varContext))
+        self.mainFunction += ' = '
+        self.visit(ctx.getChild(0, aluParser.GuardContext))
+        self.mainFunction += ';'
 
-            # if there is an else
-            if (ctx.getChildCount() > elif_index and
-                    ctx.getChild(elif_index).getText() == 'else'):
-                self.mainFunction += '\telse {\n'
-                self.visit(ctx.else_body)
-                self.mainFunction += '\n}\n'
+    @overrides
+    def visitStmtUpdateTempInt(self, ctx):
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
+            'Every update must end with a semicolon.'
+        self.mainFunction += ctx.getChild(0).getText()
+        self.visit(ctx.getChild(0, aluParser.Temp_varContext))
+        self.mainFunction += '='
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.mainFunction += ';'
+
+    @overrides
+    def visitStmtUpdateTempBit(self, ctx):
+        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
+            'Every update must end with a semicolon.'
+        self.mainFunction += ctx.getChild(0).getText()
+        self.visit(ctx.getChild(0, aluParser.Temp_varContext))
+        self.mainFunction += '='
+        self.visit(ctx.getChild(0, aluParser.GuardContext))
+        self.mainFunction += ';'
 
     @overrides
     def visitNested(self, ctx):
@@ -418,18 +447,6 @@ class StatelessAluSketchGenerator (aluVisitor):
         self.visit(ctx.getChild(1))
 
         self.mainFunction += ctx.getChild(2).getText()
-
-    @overrides
-    def visitUpdate(self, ctx):
-
-        # Make sure every update ends with a semicolon
-        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
-            'Every update must end with a semicolon.'
-
-        self.visit(ctx.getChild(0, aluParser.State_varContext))
-        self.mainFunction += ' = '
-        self.visit(ctx.getChild(0, aluParser.ExprContext))
-        self.mainFunction += ';'
 
     @overrides
     def visitExprWithOp(self, ctx):
