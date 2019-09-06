@@ -218,29 +218,30 @@ class StatelessAluSketchGenerator (aluVisitor):
 
     @overrides
     def visitStmtIfElseIfElse(self, ctx):
-        self.mainFunction += 'if ('
+        self.mainFunction += '\tif ('
         self.visit(ctx.if_guard)
-        self.mainFunction += ') {'
-        self.visit(ctx.if_body)
-        self.mainFunction += '}'
+        self.mainFunction += ') {\n'
 
-        # if there is an elif
-        if (ctx.getChildCount() > 7
-                and ctx.getChild(7).getText() == 'elif'):
-            self.mainFunction += 'else if ('
-            self.visit(ctx.elif_guard)
-            self.mainFunction += ') {'
-            self.visit(ctx.elif_body)
-            self.mainFunction += '}'
+        self.visit(ctx.if_body)
+        self.mainFunction += '\n}\n'
+        elif_index = 7
+        while (ctx.getChildCount() > elif_index and
+                ctx.getChild(elif_index).getText() == 'elif'):
+
+            self.mainFunction += '\telse if ('
+            self.visit(ctx.getChild(elif_index+2))
+            self.mainFunction += ') {\n'
+            self.visit(ctx.getChild(elif_index+5))
+
+            self.mainFunction += '\n}\n'
+            elif_index += 7
 
         # if there is an else
-        if ((ctx.getChildCount() > 7
-                and ctx.getChild(7).getText() == 'else')
-                or (ctx.getChildCount() > 14
-                    and ctx.getChild(14).getText() == 'else')):
-            self.mainFunction += 'else {'
+        if (ctx.getChildCount() > elif_index and
+                ctx.getChild(elif_index).getText() == 'else'):
+            self.mainFunction += '\telse {\n'
             self.visit(ctx.else_body)
-            self.mainFunction += '}'
+            self.mainFunction += '\n}\n'
 
     @overrides
     def visitStmtUpdateExpr(self, ctx):

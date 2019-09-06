@@ -101,35 +101,40 @@ class StatefulALUSketchGenerator(aluVisitor):
 
     @overrides
     def visitReturn_statement(self, ctx):
+        for slot in range(self.num_state_slots):
+            self.main_function += '\nstate_group.state_' + str(
+                slot) + ' = state_' + str(slot) + ';'
+
         self.main_function += 'return '
         self.visit(ctx.getChild(1))
         self.main_function += ';'
 
     @overrides
     def visitStmtIfElseIfElse(self, ctx):
-        self.main_function += 'if ('
+        self.main_function += '\tif ('
         self.visit(ctx.if_guard)
-        self.main_function += ') {'
-        self.visit(ctx.if_body)
-        self.main_function += '}'
+        self.main_function += ') {\n'
 
-        # if there is an elif
-        if (ctx.getChildCount() > 7
-                and ctx.getChild(7).getText() == 'elif'):
-            self.main_function += 'else if ('
-            self.visit(ctx.elif_guard)
-            self.main_function += ') {'
-            self.visit(ctx.elif_body)
-            self.main_function += '}'
+        self.visit(ctx.if_body)
+        self.main_function += '\n}\n'
+        elif_index = 7
+        while (ctx.getChildCount() > elif_index and
+                ctx.getChild(elif_index).getText() == 'elif'):
+
+            self.main_function += '\telse if ('
+            self.visit(ctx.getChild(elif_index+2))
+            self.main_function += ') {\n'
+            self.visit(ctx.getChild(elif_index+5))
+
+            self.main_function += '\n}\n'
+            elif_index += 7
 
         # if there is an else
-        if ((ctx.getChildCount() > 7
-                and ctx.getChild(7).getText() == 'else')
-                or (ctx.getChildCount() > 14
-                    and ctx.getChild(14).getText() == 'else')):
-            self.main_function += 'else {'
+        if (ctx.getChildCount() > elif_index and
+                ctx.getChild(elif_index).getText() == 'else'):
+            self.main_function += '\telse {\n'
             self.visit(ctx.else_body)
-            self.main_function += '}'
+            self.main_function += '\n}\n'
 
     @overrides
     def visitStmtUpdateExpr(self, ctx):
@@ -327,7 +332,9 @@ int {alu_name}_Mux5_{mux5_count}(int op1, int op2, int op3, int op4, int op5
 }}
 """
         self.helper_function_strings += dedent(
-            function_str.format(self.alu_name, str(self.mux5_count)))
+            function_str.format(
+                alu_name=self.alu_name,
+                mux5_count=str(self.mux5_count)))
         self.add_hole('Mux5_' + str(self.mux5_count), 3)
 
     def generateMux4(self):
@@ -341,8 +348,10 @@ int {alu_name}_Mux4_{mux4_count}(int op1, int op2, int op3, int op4,
 }}
 """
         self.helper_function_strings += dedent(
-            function_str.format(self.alu_name, str(self.mux4_count)))
-        self.add_hole('Mux54' + str(self.mux4_count), 2)
+            function_str.format(
+                alu_name=self.alu_name,
+                mux4_count=str(self.mux4_count)))
+        self.add_hole('Mux4_' + str(self.mux4_count), 2)
 
     def generateMux3(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
