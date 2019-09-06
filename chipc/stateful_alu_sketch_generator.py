@@ -84,6 +84,10 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.main_function += ctx.getText()
 
     @overrides
+    def visitValue(self, ctx):
+        self.main_function += ctx.getText()
+
+    @overrides
     def visitBoolVar(self, ctx):
         self.main_function += ctx.getText()
 
@@ -322,7 +326,7 @@ class StatefulALUSketchGenerator(aluVisitor):
 
     def generateMux5(self):
         function_str = """\
-int {alu_name}_Mux5_{mux5_count}(int op1, int op2, int op3, int op4, int op5
+int {alu_name}_Mux5_{mux5_count}(int op1, int op2, int op3, int op4, int op5,
                                  int opcode) {{
     if (opcode == 0) return op1;
     else if (opcode == 1) return op2;
@@ -416,39 +420,39 @@ int {alu_name}_Mux4_{mux4_count}(int op1, int op2, int op3, int op4,
     def generateBoolOp(self):
         function_str = """\
 int {alu_name}_bool_op_{bool_op_count} (int op1, int op2, int opcode) {{
-  if (opcode == 0) {
+  if (opcode == 0) {{
     return false;
-  } else if (opcode == 1) {
-    return ~(op1 | op 2);
-  } else if (opcode == 2) {
+  }} else if (opcode == 1) {{
+    return ~(op1 | op2);
+  }} else if (opcode == 2) {{
     return (~op1) & op2;
-  } else if (opcode == 3) {
+  }} else if (opcode == 3) {{
     return ~op1;
-  } else if (opcode == 4) {
+  }} else if (opcode == 4) {{
     return op1 & (~op2);
-  } else if (opcode == 5) {
+  }} else if (opcode == 5) {{
     return ~op2;
-  } else if (opcode == 6) {
+  }} else if (opcode == 6) {{
     return op1 ^ op2;
-  } else if (opcode == 7) {
+  }} else if (opcode == 7) {{
     return ~(op1 & op2);
-  } else if (opcode == 8) {
+  }} else if (opcode == 8) {{
     return op1 & op2;
-  } else if (opcode == 9) {
+  }} else if (opcode == 9) {{
     return ~(op1 ^ op2);
-  } else if (opcode == 10) {
+  }} else if (opcode == 10) {{
     return op2;
-  } else if (opcode == 11) {
+  }} else if (opcode == 11) {{
     return (~op1) | op2;
-  } else if (opcode == 12) {
+  }} else if (opcode == 12) {{
     return op1;
-  } else if (opcode == 13) {
+  }} else if (opcode == 13) {{
     return op1 | (~op2);
-  } else if (opcode == 14) {
+  }} else if (opcode == 14) {{
     return op1 | op2;
-  } else {
+  }} else {{
     return true;
-  }
+  }}
 }}\n
 """
         self.helper_function_strings += dedent(
@@ -482,49 +486,49 @@ int {alu_name}_bool_op_{bool_op_count} (int op1, int op2, int opcode) {{
     def generateComputeAlu(self):
         function_str = """\
 int {alu_name}_compute_alu_{compute_alu_count}(int op1, int op2, int opcode) {{
-    if (opcode == 0) {
+    if (opcode == 0) {{
         return op1 + op2;
-    } else if (opcode == 1) {
+    }} else if (opcode == 1) {{
       return op1 - op2;
-    } else if (opcode == 2) {
+    }} else if (opcode == 2) {{
       return op1 > op2 ? op2 : op1;
-    } else if (opcode == 3) {
+    }} else if (opcode == 3) {{
       return op1 > op2 ? op1 : op2;
-    } else if (opcode == 4) {
+    }} else if (opcode == 4) {{
       return op2 - op1;
-    } else if (opcode == 5) {
+    }} else if (opcode == 5) {{
       return 0;
-    } else if (opcode == 6) {
-      return ~(op1 | op 2);
-    } else if (opcode == 7) {
+    }} else if (opcode == 6) {{
+      return ~(op1 | op2);
+    }} else if (opcode == 7) {{
       return (~op1) & op2;
-    } else if (opcode == 8) {
+    }} else if (opcode == 8) {{
       return ~op1;
-    } else if (opcode == 9) {
+    }} else if (opcode == 9) {{
       return op1 & (~op2);
-    } else if (opcode == 10) {
+    }} else if (opcode == 10) {{
       return ~op2;
-    } else if (opcode == 11) {
+    }} else if (opcode == 11) {{
       return op1 ^ op2;
-    } else if (opcode == 12) {
+    }} else if (opcode == 12) {{
       return ~(op1 & op2);
-    } else if (opcode == 13) {
+    }} else if (opcode == 13) {{
       return op1 & op2;
-    } else if (opcode == 14) {
+    }} else if (opcode == 14) {{
       return ~(op1 ^ op2);
-    } else if (opcode == 15) {
+    }} else if (opcode == 15) {{
       return op2;
-    } else if (opcode == 16) {
+    }} else if (opcode == 16) {{
       return (~op1) | op2;
-    } else if (opcode == 17) {
+    }} else if (opcode == 17) {{
       return op1;
-    } else if (opcode == 18) {
+    }} else if (opcode == 18) {{
       return op1 | (~op2);
-    } else if (opcode == 19) {
+    }} else if (opcode == 19) {{
       return op1 | op2;
-    } else {
+    }} else {{
       return 1;
-_   }
+    }}
 }}\n"""
         self.helper_function_strings += dedent(
             function_str.format(alu_name=self.alu_name,
