@@ -29,6 +29,7 @@ bit update_lo_1_predicate = boolean_op(cmp_hi, cmp_lo);
 bit update_lo_2_predicate = boolean_op(cmp_hi, cmp_lo);
 
 // Actually run the ALUs
+// TODO: Support multiple else ifs from grammar
 if (update_hi_1_predicate && update_hi_2_predicate) {
     state_1 = alu_hi_1 | alu_hi_2;
 } else if (update_hi_1_predicate && (!update_hi_2_predicate)) {

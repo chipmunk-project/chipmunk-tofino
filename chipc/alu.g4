@@ -9,6 +9,7 @@ BOOLOP           : 'boolean_op'; // !, &&, || and combiations of these (best gue
 ARITHOP          : 'arith_op'; // Captures +/- used in slide 14 of salu.pdf
 COMPUTEALU       : 'compute_alu'; // Captures everything from slide 15 of salu.pdf
 MUX5             : 'Mux5';      // 5-to-1 mux
+MUX4             : 'Mux4';
 MUX3             : 'Mux3';   // 3-to-1 mux
 MUX2             : 'Mux2';   // 2-to-1 mux
 OPT              : 'Opt';    // Pick either the argument or 0
@@ -97,30 +98,29 @@ guard  : guard (EQUAL
 
 
 // alu_body
-alu_body : alu_update = updates
-         | return_update = return_statement
-         | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')?
-         ;
+alu_body : statement+;
+
+statement : state_var '=' expr ';' #StmtUpdateExpr
+          | state_var '=' guard ';' #StmtUpdateGuard
+          | 'int ' temp_var '=' expr ';' #StmtUpdateTempInt
+          | 'bit ' temp_var '=' guard ';' #StmtUpdateTempBit
+          // TODO: Don't allow multiple return statements from the grammar
+          | return_statement #StmtReturn
+          | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')? #StmtIfElseIfElse
+          ;
 
 return_statement : RETURN expr ';'
                  | RETURN guard ';';
-
-
-updates: update+;
-update : state_var '=' expr ';'
-       | state_var '=' guard ';'
-       | 'int ' temp_var '=' expr ';'
-       | 'bit ' temp_var '=' guard ';'
-       ;
 
 variable : ID ;
 expr   : variable #Var
        | expr op=('+'|'-'|'*'|'/') expr #ExprWithOp
        | '(' expr ')' #ExprWithParen
+       | MUX2 '(' expr ',' expr ')' #Mux2
        | MUX3 '(' expr ',' expr ',' NUM ')' #Mux3WithNum
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
+       | MUX4 '(' expr ',' expr ',' expr ',' expr ')' #Mux4
        | MUX5 '(' expr ',' expr ',' expr ',' expr ',' expr ')' #Mux5
-       | MUX2 '(' expr ',' expr ')' #Mux2
        | OPT '(' expr ')' #Opt
        | CONSTANT #Constant
        | ARITHOP '(' expr ',' expr ')' # ArithOp
