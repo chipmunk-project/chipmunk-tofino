@@ -141,6 +141,32 @@ class StatefulALUSketchGenerator(aluVisitor):
             self.main_function += '\n}\n'
 
     @overrides
+    def visitAnd(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ' && '
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    #TODO: now we only support A && (!B) !B && A
+    # we do not support (!A) && B
+
+    @overrides
+    def visitNotExpr(self, ctx):
+        self.main_function += ' !'
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+
+    @overrides
+    def visitOr(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ' || '
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
+    def visitBitOr(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ' | '
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
     def visitStmtUpdateExpr(self, ctx):
         assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
             'Every update must end with a semicolon.'
@@ -183,6 +209,12 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ctx.getChild(1).getText()
         self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
+    def visitExprWithParen(self, ctx):
+        self.main_function += '('
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ')'
 
     @overrides
     def visitState_var(self, ctx):

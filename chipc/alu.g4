@@ -116,6 +116,7 @@ variable : ID ;
 expr   : variable #Var
        | expr op=('+'|'-'|'*'|'/') expr #ExprWithOp
        | '(' expr ')' #ExprWithParen
+       | NOT expr #NotExpr
        | MUX2 '(' expr ',' expr ')' #Mux2
        | MUX3 '(' expr ',' expr ',' NUM ')' #Mux3WithNum
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
