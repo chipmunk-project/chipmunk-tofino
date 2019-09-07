@@ -29,6 +29,8 @@ OR               : '||';
 AND              : '&&';
 BITOR            : '|';
 NOT              : '!';
+QUESTION         : '?';
+UNREACHABLE      : 'assert(false);';
 
 // Identifiers
 ID : ('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
@@ -94,6 +96,7 @@ guard  : guard (EQUAL
        | NOT expr #NOT
        | TRUE #True
        | ID #BoolVar
+       | guard '?' expr ':' expr #MinMaxFunc
        ;
 
 
@@ -107,6 +110,7 @@ statement : state_var '=' expr ';' #StmtUpdateExpr
           // TODO: Don't allow multiple return statements from the grammar
           | return_statement #StmtReturn
           | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')? #StmtIfElseIfElse
+          | UNREACHABLE #AssertFalse
           ;
 
 return_statement : RETURN expr ';'

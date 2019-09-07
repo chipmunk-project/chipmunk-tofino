@@ -425,6 +425,14 @@ class StatelessAluSketchGenerator (aluVisitor):
         self.arithopCount += 1
 
     @overrides
+    def visitMinMaxFunc(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.GuardContext))
+        self.mainFunction += '?'
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.mainFunction += ':'
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
     def visitTrue(self, ctx):
         self.mainFunction += 'true'
 

@@ -205,6 +205,10 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.main_function += ';'
 
     @overrides
+    def visitAssertFalse(self, ctx):
+        self.main_function += ctx.getChild(0).getText()
+
+    @overrides
     def visitExprWithOp(self, ctx):
         self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ctx.getChild(1).getText()
@@ -450,38 +454,39 @@ int {alu_name}_Mux4_{mux4_count}(int op1, int op2, int op3, int op4,
         self.add_hole('rel_op_' + str(self.relop_count), 2)
 
     def generateBoolOp(self):
+    #TODO: change the parameter type and replace & by &&
         function_str = """\
-int {alu_name}_bool_op_{bool_op_count} (int op1, int op2, int opcode) {{
+bit {alu_name}_bool_op_{bool_op_count} (bit op1, bit op2, int opcode) {{
   if (opcode == 0) {{
     return false;
   }} else if (opcode == 1) {{
-    return ~(op1 | op2);
+    return ~(op1 || op2);
   }} else if (opcode == 2) {{
-    return (~op1) & op2;
+    return (~op1) && op2;
   }} else if (opcode == 3) {{
     return ~op1;
   }} else if (opcode == 4) {{
-    return op1 & (~op2);
+    return op1 && (~op2);
   }} else if (opcode == 5) {{
     return ~op2;
   }} else if (opcode == 6) {{
     return op1 ^ op2;
   }} else if (opcode == 7) {{
-    return ~(op1 & op2);
+    return ~(op1 && op2);
   }} else if (opcode == 8) {{
-    return op1 & op2;
+    return op1 && op2;
   }} else if (opcode == 9) {{
     return ~(op1 ^ op2);
   }} else if (opcode == 10) {{
     return op2;
   }} else if (opcode == 11) {{
-    return (~op1) | op2;
+    return (~op1) || op2;
   }} else if (opcode == 12) {{
     return op1;
   }} else if (opcode == 13) {{
-    return op1 | (~op2);
+    return op1 || (~op2);
   }} else if (opcode == 14) {{
-    return op1 | op2;
+    return op1 || op2;
   }} else {{
     return true;
   }}
@@ -516,6 +521,7 @@ int {alu_name}_bool_op_{bool_op_count} (int op1, int op2, int opcode) {{
         self.add_hole('Opt_' + str(self.opt_count), 1)
 
     def generateComputeAlu(self):
+    # comment out all logical operations and replace ~ by !
         function_str = """\
 int {alu_name}_compute_alu_{compute_alu_count}(int op1, int op2, int opcode) {{
     if (opcode == 0) {{
@@ -528,36 +534,12 @@ int {alu_name}_compute_alu_{compute_alu_count}(int op1, int op2, int opcode) {{
       return op1 > op2 ? op1 : op2;
     }} else if (opcode == 4) {{
       return op2 - op1;
-    }} else if (opcode == 5) {{
-      return 0;
-    }} else if (opcode == 6) {{
-      return ~(op1 | op2);
-    }} else if (opcode == 7) {{
-      return (~op1) & op2;
-    }} else if (opcode == 8) {{
-      return ~op1;
-    }} else if (opcode == 9) {{
-      return op1 & (~op2);
-    }} else if (opcode == 10) {{
-      return ~op2;
-    }} else if (opcode == 11) {{
-      return op1 ^ op2;
-    }} else if (opcode == 12) {{
-      return ~(op1 & op2);
-    }} else if (opcode == 13) {{
-      return op1 & op2;
-    }} else if (opcode == 14) {{
-      return ~(op1 ^ op2);
     }} else if (opcode == 15) {{
       return op2;
-    }} else if (opcode == 16) {{
-      return (~op1) | op2;
     }} else if (opcode == 17) {{
       return op1;
-    }} else if (opcode == 18) {{
-      return op1 | (~op2);
-    }} else if (opcode == 19) {{
-      return op1 | op2;
+    }} else if (opcode == 5) {{
+      return 0;
     }} else {{
       return 1;
     }}

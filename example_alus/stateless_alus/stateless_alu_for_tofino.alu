@@ -1,7 +1,7 @@
-// Max value of opcode is 17
+// Max value of opcode is 13
 type : stateless
 state variables : {}
-hole variables : {opcode}
+hole variables : {opcode, immediate_operand}
 packet fields : {pkt_0, pkt_1}
 
 if (opcode == 0) {
@@ -15,50 +15,53 @@ if (opcode == 0) {
   return pkt_1 - pkt_0;
 } elif (opcode == 3) {
   // bit_and(mdata.result1, mdata.value1, mdata.value2);
-  return pkt_0 & pkt_1;
+  return (pkt_0 != 0) && (pkt_1 != 0);
 } elif (opcode == 4) {
   // bit_andca(mdata.result1, mdata.value1, mdata.value2);
-  return ~pkt_0 & pkt_1;
+  return (pkt_0 == 0) && (pkt_1 != 0);
 } elif (opcode == 5) {
   // bit_andcb(mdata.result1, mdata.value1, mdata.value2);
-  return pkt_0 & ~pkt_1;
+  return (pkt_0 != 0) && (pkt_1 == 0);
 } elif (opcode == 6) {
   // bit_nand(mdata.result1, mdata.value1, mdata.value2);
-  return ~(pkt_0 & pkt_1);
+  return (pkt_0 == 0) || (pkt_1 == 0);
 } elif (opcode == 7) {
   // bit_nor(mdata.result1, mdata.value1, mdata.value2);
-  return ~(pkt_0 | pkt_1);
+  return (pkt_0 == 0) &&  (pkt_1 == 0);
 } elif (opcode == 8) {
   // result1 = ~value1
-  return ~pkt_0;
+  return (pkt_0 == 0);
 } elif (opcode == 9) {
   // bit_or(mdata.result1, mdata.value1, mdata.value2);
-  return pkt_0 | pkt_1;
+  return (pkt_0 != 0) || (pkt_1 != 0);
 } elif (opcode == 10) {
   // bit_orca(mdata.result1, mdata.value1, mdata.value2);
-  return ~pkt_0 | pkt_1;
+  return (pkt_0 == 0) || (pkt_1 != 0);
 } elif (opcode == 11) {
   // bit_orcb(mdata.result1, mdata.value1, mdata.value2);
-  return pkt_0 | ~pkt_1;
-} elif (opcode == 12) {
+  return (pkt_0 != 0) || (pkt_1 == 0);
+  // TODO: add bitwise Nor back
+  // } elif (opcode == 12) {
   // bit_xnor(mdata.result1, mdata.value1, mdata.value2);
-  return ~(pkt_0 ^ pkt_1);
-} elif (opcode == 13) {
+  // return ~(pkt_0 ^ pkt_1);
+  // } elif (opcode == 13) {
   // bit_xor(mdata.result1, mdata.value1, mdata.value2);
-  return (pkt_0 ^ pkt_1);
-} elif (opcode == 14) {
+  // return (pkt_0 ^ pkt_1);
+} elif (opcode == 12) {
   // max(mdata.result1, mdata.value1, mdata.value2);
   return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
-} elif (opcode == 15) {
+} else {
   // min(mdata.result1, mdata.value1, mdata.value2);
   return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
-} elif (opcode == 16) {
+} 
+  // TODO: add back left shift and right shift
+  // elif (opcode == 14) {
   // shift_left(mdata.result1, mdata.value1, 1;
   // TODO: Do we need to support bit shifts by variable amounts?
   // i.e. pkt_0 << pkt_1
-  return pkt_0 << 1;
-} else {
+  //  return pkt_0 << 1;
+  // } else {
   // result1 = value1 >> value2(immediate value)
   // TODO: Same here as above. variable bit shifts
-  return pkt_0 >> 1;
-}
+  // return pkt_0 >> 1;
+  // }
