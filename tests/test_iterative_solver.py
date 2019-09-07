@@ -107,6 +107,17 @@ class IterativeSolverTest(unittest.TestCase):
                 '1', '3', '0,1,2,3', '10']),
         )
 
+    def test_learn_filter_1_3_tofino_alu_cex_mode(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'learn_filter.sk'),
+                path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '1', '3', '0,1,2,3', '10']),
+        )
+
     def test_learn_filter_1_3_raw_cex_mode_synthesized_alloc(self):
         self.assertEqual(
             0,
@@ -127,6 +138,17 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'learn_filter.sk'),
                 path.join(STATEFUL_ALU_DIR, 'raw.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
+                '2', '2', '0,1,2,3', '10']),
+        )
+
+    def test_learn_filter_2_2_tofino_alu_cex_mode(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'learn_filter.sk'),
+                path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
                 '2', '2', '0,1,2,3', '10']),
         )
 
@@ -224,6 +246,17 @@ class IterativeSolverTest(unittest.TestCase):
                 '2', '2', '0,1,2,3', '10']),
         )
 
+    def test_simple_2_2_tofino_alu_cex_mode(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'simple.sk'),
+                path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '2', '2', '0,1,2,3', '10']),
+        )
+
     def test_simple_2_2_raw_cex_mode_synthesized_alloc(self):
         self.assertEqual(
             0,
@@ -236,6 +269,17 @@ class IterativeSolverTest(unittest.TestCase):
                 '--synthesized-allocation']),
         )
 
+    def test_simple2_2_2_tofino_alu_cex_mode(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'simple2.sk'),
+                path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '2', '2', '0,1,2,3', '10']),
+        )
+
     def test_snap_heavy_hitter_2_2_raw_cex_mode(self):
         self.assertEqual(
             0,
@@ -244,6 +288,17 @@ class IterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'snap_heavy_hitter.sk'),
                 path.join(STATEFUL_ALU_DIR, 'pair.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
+                '1', '1', '0,1,2,3', '10']),
+        )
+
+    def test_snap_heavy_hitter_2_2_tofino_alu_cex_mode(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'snap_heavy_hitter.sk'),
+                path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
                 '1', '1', '0,1,2,3', '10']),
         )
 
