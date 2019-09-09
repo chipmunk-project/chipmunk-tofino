@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from overrides import overrides
 
 from chipc.aluParser import aluParser
@@ -22,19 +20,9 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.compute_alu_count = 0
         self.bool_op_count = 0
         self.helper_function_strings = '\n\n\n'
-        self.alu_args = OrderedDict()
-        self.global_holes = OrderedDict()
         self.main_function = ''
         self.hole_assignments = hole_assignments
         self.constant_arr = constant_arr
-
-    # Copied From Taegyun's code
-    def add_hole(self, hole_name, hole_width):
-        prefixed_hole = self.alu_name + '_' + hole_name
-        assert (prefixed_hole + '_global' not in self.global_holes)
-        self.global_holes[prefixed_hole + '_global'] = hole_width
-        assert (hole_name not in self.alu_args)
-        self.alu_args[hole_name] = hole_width
 
     def get_full_hole_name(self, hole_name):
         return self.alu_name + '_' + hole_name + '_global'
