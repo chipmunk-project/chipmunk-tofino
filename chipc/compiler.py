@@ -16,6 +16,7 @@ from chipc import sketch_utils
 from chipc import z3_utils
 from chipc.mode import Mode
 from chipc.sketch_code_generator import SketchCodeGenerator
+from chipc.tofino_code_generator import TofinoCodeGenerator
 from chipc.utils import get_hole_value_assignments
 from chipc.utils import get_num_pkt_fields
 from chipc.utils import get_state_group_info
@@ -237,3 +238,20 @@ class Compiler:
         z3_formula = z3_utils.get_z3_formula(sketch_ir, input_bits)
 
         return z3_utils.generate_counterexamples(z3_formula)
+
+    def compile_to_tofino(self, hole_assignments):
+        print(self.constant_set)
+
+        constant_arr = [int(s) for s in self.constant_set]
+
+        tofino_code_generator = TofinoCodeGenerator(
+            self.sketch_name,
+            self.num_alus_per_stage,
+            self.num_pipeline_stages,
+            self.num_state_groups,
+            constant_arr,
+            self.stateful_alu_file,
+            hole_assignments,
+        )
+
+        tofino_code_generator.run()
