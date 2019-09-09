@@ -1,6 +1,11 @@
 version: 1.0.{build}
 image: Ubuntu1604
 stack: jdk 8
+branches:
+  # whitelist
+  only:
+    - master
+skip_branch_with_pr: true
 install:
 - sh: >-
     old_dir=`pwd`
