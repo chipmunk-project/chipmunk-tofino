@@ -4,8 +4,14 @@ grammar alu;
 WS : [ \n\t\r]+ -> channel(HIDDEN);
 LINE_COMMENT : '//' ~[\r\n]* -> skip;
 // Keywords
-RELOP            : 'rel_op'; // <, >, <=, >=, ==, !=
-ARITHOP          : 'arith_op'; // +,-
+RELOP            : 'rel_op'; // <, >, <=, >=, ==, != Captures everything from slide 14 of salu.pdf
+BOOLOP           : 'boolean_op'; // !, &&, || and combinations of these (best guess for how update_lo/hi_1/2_predicate works
+ARITHOP          : 'arith_op'; // Captures +/- used in slide 14 of salu.pdf
+COMPUTEALU       : 'compute_alu'; // Captures everything from slide 15 of salu.pdf
+// TODO: Instead of having numbered MUX, maybe implement a support one mux that
+// can take variable number of arguments.
+MUX5             : 'Mux5';      // 5-to-1 mux
+MUX4             : 'Mux4';
 MUX3             : 'Mux3';   // 3-to-1 mux
 MUX2             : 'Mux2';   // 2-to-1 mux
 OPT              : 'Opt';    // Pick either the argument or 0
@@ -23,6 +29,10 @@ LESS_OR_EQUAL    : '<=';
 NOT_EQUAL        : '!=';
 OR               : '||';
 AND              : '&&';
+BITOR            : '|';
+NOT              : '!';
+QUESTION         : '?';
+ASSERT_FALSE      : 'assert(false);';
 
 // Identifiers
 ID : ('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '_' | '0'..'9')*;
@@ -33,6 +43,7 @@ NUM : ('0'..'9') | (('1'..'9')('0'..'9')+);
 
 // alias id to state_var and packet_field
 state_var    : ID;
+temp_var     : ID;
 packet_field : ID;
 // alias id to hole variables
 hole_var : ID;
@@ -62,6 +73,8 @@ packet_fields : 'packet' 'fields' ':' '{' packet_field '}'
 
 
 // guard for if and elif statements
+// TODO: Implement all of visitors and generators for this rule.
+// TODO: Rename guard to bool_expr and expr to arith_expr.
 guard  : guard (EQUAL
               | GREATER
               | GREATER_OR_EQUAL
@@ -69,9 +82,12 @@ guard  : guard (EQUAL
               | LESS_OR_EQUAL
               | NOT_EQUAL
               | AND
-              | OR) guard #Nested
+              | OR
+              | BITOR
+              | NOT) guard #Nested
        | '(' guard ')' #Paren
        | RELOP '(' expr ',' expr ')' #RelOp
+       | BOOLOP '(' guard ',' guard ')' #BoolOp
        | expr EQUAL expr #Equals
        | expr GREATER expr #Greater
        | expr GREATER_OR_EQUAL expr #GreaterEqual
@@ -80,35 +96,51 @@ guard  : guard (EQUAL
        | expr NOT_EQUAL expr #NotEqual
        | expr AND expr #And
        | expr OR expr #Or
+       | expr BITOR expr #BitOr
+       // NOTE: We need to keep following NOT in guard because we cannot
+       // (A && !B) whichj should be (expr && NOT expr).
+       | NOT expr #NOT
        | TRUE #True
+       | ID #BoolVar
+       | guard '?' expr ':' expr #MinMaxFunc
        ;
 
 
 // alu_body
-alu_body : alu_update = updates
-         | return_update = return_statement
-         | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')?
-         ;
+alu_body : statement+;
+
+statement : state_var '=' expr ';' #StmtUpdateExpr
+          | state_var '=' guard ';' #StmtUpdateGuard
+          | 'int ' temp_var '=' expr ';' #StmtUpdateTempInt
+          | 'bit ' temp_var '=' guard ';' #StmtUpdateTempBit
+          // NOTE: Having multiple return statements between a pair of curly
+          // braces is syntactically correct, but such program might not make
+          // sense for us.
+          // TODO: Modify the generator to catch multiple return statements
+          // and output errors early on.
+          | return_statement #StmtReturn
+          | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')? #StmtIfElseIfElse
+          | ASSERT_FALSE #AssertFalse
+          ;
 
 return_statement : RETURN expr ';'
                  | RETURN guard ';';
-
-
-updates: update+;
-update : state_var '=' expr ';'
-       | state_var '=' guard ';';
 
 variable : ID ;
 expr   : variable #Var
        | expr op=('+'|'-'|'*'|'/') expr #ExprWithOp
        | '(' expr ')' #ExprWithParen
+       | NOT expr #NotExpr
+       | MUX2 '(' expr ',' expr ')' #Mux2
        | MUX3 '(' expr ',' expr ',' NUM ')' #Mux3WithNum
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
-       | MUX2 '(' expr ',' expr ')' #Mux2
+       | MUX4 '(' expr ',' expr ',' expr ',' expr ')' #Mux4
+       | MUX5 '(' expr ',' expr ',' expr ',' expr ',' expr ')' #Mux5
        | OPT '(' expr ')' #Opt
        | CONSTANT #Constant
        | ARITHOP '(' expr ',' expr ')' # ArithOp
        | NUM #Value
+       | COMPUTEALU '(' expr ',' expr ')' # ComputeAlu
        ;
 
 alu: state_indicator state_vars hole_vars packet_fields alu_body;
