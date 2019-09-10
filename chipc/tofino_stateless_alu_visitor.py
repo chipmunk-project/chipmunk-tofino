@@ -276,13 +276,6 @@ class TofinoStatelessAluVisitor (aluVisitor):
         # self.main_function += ';'
 
     @overrides
-    def visitNested(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0))
-        # self.main_function += ctx.getChild(1).getText()
-        # self.visit(ctx.getChild(2))
-
-    @overrides
     def visitReturn_statement(self, ctx):
         pass
         # self.main_function += '\t\treturn '

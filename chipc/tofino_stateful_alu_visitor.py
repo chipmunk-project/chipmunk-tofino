@@ -325,11 +325,6 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         return self.generateComputeAlu(op1, op2, opcode)
 
-    @overrides
-    def visitNested(self, ctx):
-        return self.visit(ctx.getChild(0)) + ctx.getChild(1).getText() + \
-            self.visit(ctx.getChild(2))
-
     def generateMux5(self, op1, op2, op3, op4, op5, opcode):
         if opcode == 0:
             return op1
