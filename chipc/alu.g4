@@ -5,7 +5,7 @@ WS : [ \n\t\r]+ -> channel(HIDDEN);
 LINE_COMMENT : '//' ~[\r\n]* -> skip;
 // Keywords
 RELOP            : 'rel_op'; // <, >, <=, >=, ==, != Captures everything from slide 14 of salu.pdf
-BOOLOP           : 'boolean_op'; // !, &&, || and combinations of these (best guess for how update_lo/hi_1/2_predicate works
+BOOLOP           : 'bool_op'; // !, &&, || and combinations of these (best guess for how update_lo/hi_1/2_predicate works
 ARITHOP          : 'arith_op'; // Captures +/- used in slide 14 of salu.pdf
 COMPUTEALU       : 'compute_alu'; // Captures everything from slide 15 of salu.pdf
 // TODO: Instead of having numbered MUX, maybe implement a support one mux that
@@ -29,7 +29,6 @@ LESS_OR_EQUAL    : '<=';
 NOT_EQUAL        : '!=';
 OR               : '||';
 AND              : '&&';
-BITOR            : '|';
 NOT              : '!';
 QUESTION         : '?';
 ASSERT_FALSE      : 'assert(false);';
@@ -71,66 +70,28 @@ packet_field_with_comma : ',' packet_field;
 packet_fields : 'packet' 'fields' ':' '{' packet_field '}'
               | 'packet' 'fields' ':' '{' packet_field packet_field_with_comma+ '}';
 
-
-// guard for if and elif statements
-// TODO: Implement all of visitors and generators for this rule.
-// TODO: Rename guard to bool_expr and expr to arith_expr.
-guard  : guard (EQUAL
-              | GREATER
-              | GREATER_OR_EQUAL
-              | LESS
-              | LESS_OR_EQUAL
-              | NOT_EQUAL
-              | AND
-              | OR
-              | BITOR
-              | NOT) guard #Nested
-       | '(' guard ')' #Paren
-       | RELOP '(' expr ',' expr ')' #RelOp
-       | BOOLOP '(' guard ',' guard ')' #BoolOp
-       | expr EQUAL expr #Equals
-       | expr GREATER expr #Greater
-       | expr GREATER_OR_EQUAL expr #GreaterEqual
-       | expr LESS expr #Less
-       | expr LESS_OR_EQUAL expr #LessEqual
-       | expr NOT_EQUAL expr #NotEqual
-       | expr AND expr #And
-       | expr OR expr #Or
-       | expr BITOR expr #BitOr
-       // NOTE: We need to keep following NOT in guard because we cannot
-       // (A && !B) whichj should be (expr && NOT expr).
-       | NOT expr #NOT
-       | TRUE #True
-       | ID #BoolVar
-       | guard '?' expr ':' expr #MinMaxFunc
-       ;
-
-
 // alu_body
 alu_body : statement+;
 
 statement : state_var '=' expr ';' #StmtUpdateExpr
-          | state_var '=' guard ';' #StmtUpdateGuard
           | 'int ' temp_var '=' expr ';' #StmtUpdateTempInt
-          | 'bit ' temp_var '=' guard ';' #StmtUpdateTempBit
+          | 'bit ' temp_var '=' expr ';' #StmtUpdateTempBit
           // NOTE: Having multiple return statements between a pair of curly
           // braces is syntactically correct, but such program might not make
           // sense for us.
           // TODO: Modify the generator to catch multiple return statements
           // and output errors early on.
           | return_statement #StmtReturn
-          | IF '(' if_guard = guard ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = guard ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')? #StmtIfElseIfElse
+          | IF '(' if_guard = expr ')' '{' if_body =  alu_body '}' (ELIF '(' elif_guard = expr ')' '{' elif_body = alu_body '}')* (ELSE  '{' else_body = alu_body '}')? #StmtIfElseIfElse
           | ASSERT_FALSE #AssertFalse
           ;
 
-return_statement : RETURN expr ';'
-                 | RETURN guard ';';
+return_statement : RETURN expr ';';
 
 variable : ID ;
 expr   : variable #Var
        | expr op=('+'|'-'|'*'|'/') expr #ExprWithOp
        | '(' expr ')' #ExprWithParen
-       | NOT expr #NotExpr
        | MUX2 '(' expr ',' expr ')' #Mux2
        | MUX3 '(' expr ',' expr ',' NUM ')' #Mux3WithNum
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
@@ -139,8 +100,21 @@ expr   : variable #Var
        | OPT '(' expr ')' #Opt
        | CONSTANT #Constant
        | ARITHOP '(' expr ',' expr ')' # ArithOp
-       | NUM #Value
+       | NUM #Num
        | COMPUTEALU '(' expr ',' expr ')' # ComputeAlu
+       | RELOP '(' expr ',' expr ')' #RelOp
+       | BOOLOP '(' expr ',' expr ')' #BoolOp
+       | expr EQUAL expr #Equals
+       | expr GREATER expr #Greater
+       | expr GREATER_OR_EQUAL expr #GreaterEqual
+       | expr LESS expr #Less
+       | expr LESS_OR_EQUAL expr #LessEqual
+       | expr NOT_EQUAL expr #NotEqual
+       | expr AND expr #And
+       | expr OR expr #Or
+       | NOT expr #NOT
+       | TRUE #True
+       | expr '?' expr ':' expr #Ternary
        ;
 
 alu: state_indicator state_vars hole_vars packet_fields alu_body;

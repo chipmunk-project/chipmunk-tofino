@@ -8,9 +8,7 @@ from chipc.aluVisitor import aluVisitor
 
 
 class StatefulALUSketchGenerator(aluVisitor):
-    def __init__(self, alu_file, alu_name,
-                 constant_arr_size):
-        self.instruction_file = alu_file
+    def __init__(self, alu_name, constant_arr_size):
         self.alu_name = alu_name
         self.constant_arr_size = constant_arr_size
         self.num_state_slots = 0
@@ -19,8 +17,8 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.mux4_count = 0
         self.mux3_count = 0
         self.mux2_count = 0
-        self.relop_count = 0
-        self.arithop_count = 0
+        self.rel_op_count = 0
+        self.arith_op_count = 0
         self.opt_count = 0
         self.constant_count = 0
         self.compute_alu_count = 0
@@ -84,11 +82,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.main_function += ctx.getText()
 
     @overrides
-    def visitValue(self, ctx):
-        self.main_function += ctx.getText()
-
-    @overrides
-    def visitBoolVar(self, ctx):
+    def visitNum(self, ctx):
         self.main_function += ctx.getText()
 
     @overrides
@@ -153,20 +147,9 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.visit(ctx.getChild(0, aluParser.ExprContext))
 
     @overrides
-    def visitNotExpr(self, ctx):
-        self.main_function += ' !'
-        self.visit(ctx.getChild(0, aluParser.ExprContext))
-
-    @overrides
     def visitOr(self, ctx):
         self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ' || '
-        self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitBitOr(self, ctx):
-        self.visit(ctx.getChild(0, aluParser.ExprContext))
-        self.main_function += ' | '
         self.visit(ctx.getChild(1, aluParser.ExprContext))
 
     @overrides
@@ -176,15 +159,6 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.visit(ctx.getChild(0, aluParser.State_varContext))
         self.main_function += ' = '
         self.visit(ctx.getChild(0, aluParser.ExprContext))
-        self.main_function += ';'
-
-    @overrides
-    def visitStmtUpdateGuard(self, ctx):
-        assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
-            'Every update must end with a semicolon.'
-        self.visit(ctx.getChild(0, aluParser.State_varContext))
-        self.main_function += ' = '
-        self.visit(ctx.getChild(0, aluParser.GuardContext))
         self.main_function += ';'
 
     @overrides
@@ -204,7 +178,7 @@ class StatefulALUSketchGenerator(aluVisitor):
         self.main_function += ctx.getChild(0).getText()
         self.visit(ctx.getChild(0, aluParser.Temp_varContext))
         self.main_function += '='
-        self.visit(ctx.getChild(0, aluParser.GuardContext))
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ';'
 
     @overrides
@@ -302,22 +276,22 @@ class StatefulALUSketchGenerator(aluVisitor):
     @overrides
     def visitRelOp(self, ctx):
         self.main_function += self.alu_name + '_' + 'rel_op_' + str(
-            self.relop_count) + '('
+            self.rel_op_count) + '('
         self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ','
         self.visit(ctx.getChild(1, aluParser.ExprContext))
         self.main_function += ',' + 'rel_op_' + \
-            str(self.relop_count) + ') == 1'
+            str(self.rel_op_count) + ') == 1'
         self.generateRelOp()
-        self.relop_count += 1
+        self.rel_op_count += 1
 
     @overrides
     def visitBoolOp(self, ctx):
         self.main_function += self.alu_name + '_' + 'bool_op_' + str(
             self.bool_op_count) + '('
-        self.visit(ctx.getChild(0, aluParser.GuardContext))
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ','
-        self.visit(ctx.getChild(1, aluParser.GuardContext))
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
         self.main_function += ',' + 'bool_op_' + \
             str(self.bool_op_count) + ') == 1'
         self.generateBoolOp()
@@ -326,13 +300,14 @@ class StatefulALUSketchGenerator(aluVisitor):
     @overrides
     def visitArithOp(self, ctx):
         self.main_function += self.alu_name + '_' + 'arith_op_' + str(
-            self.arithop_count) + '('
+            self.arith_op_count) + '('
         self.visit(ctx.getChild(0, aluParser.ExprContext))
         self.main_function += ','
         self.visit(ctx.getChild(1, aluParser.ExprContext))
-        self.main_function += ',' + 'arith_op_' + str(self.arithop_count) + ')'
+        self.main_function += ',' + 'arith_op_' + \
+            str(self.arith_op_count) + ')'
         self.generateArithOp()
-        self.arithop_count += 1
+        self.arith_op_count += 1
 
     @overrides
     def visitOpt(self, ctx):
@@ -442,7 +417,7 @@ int {alu_name}_Mux4_{mux4_count}(int op1, int op2, int op3, int op4,
 
     def generateRelOp(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
-            'rel_op_' + str(self.relop_count) + \
+            'rel_op_' + str(self.rel_op_count) + \
             """(int operand1, int operand2, int opcode) {
     if (opcode == 0) {
       return (operand1 != operand2) ? 1 : 0;
@@ -454,7 +429,7 @@ int {alu_name}_Mux4_{mux4_count}(int op1, int op2, int op3, int op4,
       return (operand1 == operand2) ? 1 : 0;
     }
     } \n\n"""
-        self.add_hole('rel_op_' + str(self.relop_count), 2)
+        self.add_hole('rel_op_' + str(self.rel_op_count), 2)
 
     def generateBoolOp(self):
         function_str = """\
@@ -504,7 +479,7 @@ bit {alu_name}_bool_op_{bool_op_count} (bit op1, bit op2, int opcode) {{
 
     def generateArithOp(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \
-            'arith_op_' + str(self.arithop_count) + \
+            'arith_op_' + str(self.arith_op_count) + \
             """(int operand1, int operand2, int opcode) {
     if (opcode == 0) {
       return operand1 + operand2;
@@ -512,7 +487,7 @@ bit {alu_name}_bool_op_{bool_op_count} (bit op1, bit op2, int opcode) {{
       return operand1 - operand2;
     }
     }\n\n"""
-        self.add_hole('arith_op_' + str(self.arithop_count), 1)
+        self.add_hole('arith_op_' + str(self.arith_op_count), 1)
 
     def generateOpt(self):
         self.helper_function_strings += 'int ' + self.alu_name + '_' + \

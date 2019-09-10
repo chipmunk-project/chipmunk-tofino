@@ -15,7 +15,7 @@ from jinja2 import StrictUndefined
 from chipc import sketch_utils
 from chipc import z3_utils
 from chipc.mode import Mode
-from chipc.sketch_generator import SketchGenerator
+from chipc.sketch_code_generator import SketchCodeGenerator
 from chipc.utils import get_hole_value_assignments
 from chipc.utils import get_num_pkt_fields
 from chipc.utils import get_state_group_info
@@ -77,7 +77,7 @@ class Compiler:
             pkt_fields_to_check = list(range(self.num_fields_in_prog))
 
         # Create an object for sketch generation
-        self.sketch_generator = SketchGenerator(
+        self.sketch_code_generator = SketchCodeGenerator(
             sketch_name=sketch_name,
             num_pipeline_stages=num_pipeline_stages,
             num_alus_per_stage=num_alus_per_stage,
@@ -96,10 +96,10 @@ class Compiler:
         new_constant_set_str = '{' + ','.join(constant_set) + '}'
 
         # Use string format to create constant_arr_def_
-        self.sketch_generator.constant_arr_def_ = \
+        self.sketch_code_generator.constant_arr_def_ = \
             'int[{}]'.format(str(len(constant_set))) + \
             'constant_vector = {};\n\n'.format(new_constant_set_str)
-        self.sketch_generator.constant_arr_size_ = math.ceil(
+        self.sketch_code_generator.constant_arr_size_ = math.ceil(
             math.log2(len(constant_set)))
 
     def single_codegen_run(self, compiler_input):
@@ -108,7 +108,7 @@ class Compiler:
         sketch_file_name = compiler_input[2]
 
         """Codegeneration"""
-        codegen_code = self.sketch_generator.generate_sketch(
+        codegen_code = self.sketch_code_generator.generate_sketch(
             program_file=self.program_file,
             mode=Mode.CODEGEN,
             additional_constraints=additional_constraints,
@@ -120,7 +120,7 @@ class Compiler:
 
         # Call sketch on it
         print('Total number of hole bits is',
-              self.sketch_generator.total_hole_bits_)
+              self.sketch_code_generator.total_hole_bits_)
         print('Sketch file is', sketch_file_name)
         assert (self.parallel_sketch in [True, False])
         (ret_code, output) = sketch_utils.synthesize(
@@ -135,7 +135,7 @@ class Compiler:
             output_file.write(output)
         if (ret_code == 0):
             holes_to_values = get_hole_value_assignments(
-                self.sketch_generator.hole_names_, output)
+                self.sketch_code_generator.hole_names_, output)
         else:
             holes_to_values = OrderedDict()
         return (ret_code, output, holes_to_values)
@@ -211,12 +211,12 @@ class Compiler:
             a tuple of two empty dicts.
         """
         # Check all holes have values.
-        for hole in self.sketch_generator.hole_names_:
+        for hole in self.sketch_code_generator.hole_names_:
             assert hole in hole_assignments
 
         # Generate a sketch file to verify the hole value assignments with
         # the specified input bit lengths.
-        sketch_to_verify = self.sketch_generator.generate_sketch(
+        sketch_to_verify = self.sketch_code_generator.generate_sketch(
             program_file=self.program_file,
             mode=Mode.VERIFY,
             hole_assignments=hole_assignments

@@ -23,7 +23,7 @@ def add_prefix_suffix(text, prefix_string, suffix_string):
 
 
 # Sketch Generator class
-class SketchGenerator:
+class SketchCodeGenerator:
     def __init__(self, sketch_name, num_phv_containers, num_state_groups,
                  num_alus_per_stage, num_pipeline_stages, num_fields_in_prog,
                  pkt_fields_to_check, jinja2_env, stateful_alu_file,
@@ -105,7 +105,7 @@ class SketchGenerator:
                 alu_name, alu_name, potential_operands, self.generate_mux,
                 self.constant_arr_size_)
         stateless_alu_sketch_generator.visit(tree)
-        self.add_holes(stateless_alu_sketch_generator.globalholes)
+        self.add_holes(stateless_alu_sketch_generator.global_holes)
         self.stateless_alu_hole_arguments_ = [
             x for x in sorted(
                 stateless_alu_sketch_generator.stateless_alu_args
@@ -116,8 +116,8 @@ class SketchGenerator:
         self.num_stateless_muxes_ = \
             stateless_alu_sketch_generator.num_packet_fields
 
-        return (stateless_alu_sketch_generator.helperFunctionStrings +
-                stateless_alu_sketch_generator.mainFunction)
+        return (stateless_alu_sketch_generator.helper_function_strings +
+                stateless_alu_sketch_generator.main_function)
 
     # Generate Sketch code for a simple stateful alu (+,-,*,/)
     # Takes one state and one packet operand (or immediate operand) as inputs
@@ -129,7 +129,7 @@ class SketchGenerator:
         parser = aluParser(stream)
         tree = parser.alu()
         stateful_alu_sketch_generator = StatefulALUSketchGenerator(
-            self.stateful_alu_file_, self.sketch_name_ + '_' + alu_name,
+            self.sketch_name_ + '_' + alu_name,
             self.constant_arr_size_)
         stateful_alu_sketch_generator.visit(tree)
         self.add_holes(stateful_alu_sketch_generator.global_holes)
