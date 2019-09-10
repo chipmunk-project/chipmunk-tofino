@@ -1,6 +1,6 @@
 # Chipmunk (version that includes support for Tofino code generation)
 
-[![Build status](https://ci.appveyor.com/api/projects/status/060fwhaq3vfvt22n/branch/master?svg=true)](https://ci.appveyor.com/project/anirudhSK/chipmunk-hhg5f/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/atsuojrqo000bku4/branch/master?svg=true)](https://ci.appveyor.com/project/anirudhSK/chipmunk/branch/master)
 
 ## Installation
 - Install [sketch](https://people.csail.mit.edu/asolar/sketch-1.7.5.tar.gz)
