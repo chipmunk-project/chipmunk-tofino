@@ -240,9 +240,11 @@ class Compiler:
         return z3_utils.generate_counterexamples(z3_formula)
 
     def compile_to_tofino(self, hole_assignments):
-        print(self.constant_set)
+        hole_assignments = dict({
+            k: int(v) for k, v in hole_assignments.items()
+        })
 
-        constant_arr = [int(s) for s in self.constant_set]
+        constant_arr = [s for s in self.constant_set]
 
         tofino_code_generator = TofinoCodeGenerator(
             self.sketch_name,
