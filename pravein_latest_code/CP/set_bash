@@ -1,0 +1,1 @@
+export LD_LIBRARY_PATH=/usr/local/lib/:/root/bf-sde-8.2.0/install/lib/:/root/bf-sde-8.2.0/install/lib/tofinopd/chip/

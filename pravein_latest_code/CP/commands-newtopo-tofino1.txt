@@ -1,0 +1,26 @@
+pd-chip
+pd mac_forward add_entry set_egr ethernet_dstAddr 0x3cfdfead82e0 action_egress_spec 192
+pd table_0x1 set_default_action action_0x1_1
+
+end
+ucli
+pm
+port-add 1/- 10G NONE
+an-set 1/- 2
+port-enb 1/-
+port-add 3/- 10G NONE
+an-set 3/- 2
+port-enb 3/-
+port-add 5/- 10G NONE
+port-enb 5/-
+port-add 7/- 10G NONE
+port-enb 7/-
+port-add 6/- 10G NONE
+port-enb 6/-
+port-add 8/- 10G NONE
+port-enb 8/-
+port-add 32/- 10G NONE
+an-set 32/- 2
+port-enb 32/-
+exit
+exit
