@@ -11,23 +11,23 @@ SPEC_DIR = path.join(BASE_PATH, '../example_specs/')
 
 
 class TofinoIterativeSolverTest(unittest.TestCase):
-    def test_learn_filter_1_3_tofino_alu_cex_mode(self):
+    def test_learn_filter_modified_for_test_1_3_tofino_alu_cex_mode(self):
         self.assertEqual(
             0,
             iterative_solver.main([
                 'iterative_solver',
-                path.join(SPEC_DIR, 'learn_filter.sk'),
+                path.join(SPEC_DIR, 'learn_filter_modified_for_test.sk'),
                 path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
                 '1', '3', '0,1,2,3', '10']),
         )
 
-    def test_learn_filter_2_2_tofino_alu_cex_mode(self):
+    def test_learn_filter_modified_for_test_2_2_tofino_alu_cex_mode(self):
         self.assertEqual(
             0,
             iterative_solver.main([
                 'iterative_solver',
-                path.join(SPEC_DIR, 'learn_filter.sk'),
+                path.join(SPEC_DIR, 'learn_filter_modified_for_test.sk'),
                 path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
                 '2', '2', '0,1,2,3', '10']),
