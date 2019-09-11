@@ -1,5 +1,9 @@
+from os import path
+
 from antlr4 import CommonTokenStream
 from antlr4 import FileStream
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
 
 from chipc.aluLexer import aluLexer
 from chipc.aluParser import aluParser
@@ -18,6 +22,14 @@ class TofinoCodeGenerator:
         self.hole_assignments_ = hole_assignments
         self.stateful_alu_file_ = stateful_alu_file
 
+        self.jinja2_env_ = Environment(
+            loader=FileSystemLoader(
+                [
+                    path.join(path.dirname(__file__), './templates')
+                ]
+            )
+        )
+
     def generate_alus(self):
         ret = ''
         for i in range(self.num_pipeline_stages_):
@@ -29,8 +41,14 @@ class TofinoCodeGenerator:
                 #     ]) + '\n'
                 pass
             for l in range(self.num_state_groups_):
-                ret += self.generate_stateful_alu('stateful_alu_' + str(i) +
-                                                  '_' + str(l)) + '\n'
+                template_args = self.generate_stateful_alu(
+                    'stateful_alu_' + str(i) + '_' + str(l))
+                template_args['alu_name'] = 'salu_' + str(i) + '_' + str(l)
+                template_args['reg_name'] = 'reg_' + str(i) + '_' + str(l)
+                print(template_args)
+
+                ret += self.jinja2_env_.get_template(
+                    'tofino.j2').render(template_args)
 
         return ret
 
@@ -48,7 +66,7 @@ class TofinoCodeGenerator:
         )
         tofino_stateful_alu_visitor.visit(tree)
 
-        return tofino_stateful_alu_visitor.main_function
+        return tofino_stateful_alu_visitor.template_args
 
     def run(self):
         alu_definitions = self.generate_alus()

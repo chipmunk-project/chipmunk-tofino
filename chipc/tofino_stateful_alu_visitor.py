@@ -36,7 +36,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
             'update_hi_2_value',
             'output_value',
         ])
-        self.instruction_dict = {}
+        self.template_args = {}
 
     def get_full_hole_name(self, hole_name):
         return self.alu_name + '_' + hole_name + '_global'
@@ -168,24 +168,32 @@ class TofinoStatefulAluVisitor(aluVisitor):
         assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
             'Every update must end with a semicolon.'
         self.main_function += ctx.getChild(0).getText()
-        self.main_function += self.visit(
+        var_name = self.visit(
             ctx.getChild(0, aluParser.Temp_varContext))
+        self.main_function += var_name
         self.main_function += '='
-        self.main_function += self.visit(ctx.getChild(0,
-                                                      aluParser.ExprContext))
+        expr = self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += expr
         self.main_function += ';'
+
+        if var_name in self.template_keywords:
+            self.template_args[var_name + '_expr'] = expr
 
     @overrides
     def visitStmtUpdateTempBit(self, ctx):
         assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
             'Every update must end with a semicolon.'
         self.main_function += ctx.getChild(0).getText()
-        self.main_function += self.visit(
+        var_name = self.visit(
             ctx.getChild(0, aluParser.Temp_varContext))
+        self.main_function += var_name
         self.main_function += '='
-        self.main_function += self.visit(ctx.getChild(0,
-                                                      aluParser.ExprContext))
+        expr = self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += expr
         self.main_function += ';'
+
+        if var_name in self.template_keywords:
+            self.template_args[var_name + '_expr'] = expr
 
     @overrides
     def visitAssertFalse(self, ctx):
