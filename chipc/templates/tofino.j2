@@ -1,96 +1,69 @@
 blackbox stateful_alu {{ alu_name }} {
-  reg: {{ reg_expr }}
+    reg: {{ reg_expr }}
 
-  // For optional values check whether the designated expr is not None
-  {% if selector_binding_expr is not None %}
-  selector_binding: {{ selector_binding_expr }}
-  {% endif %}
+    // Instructions ommitted for now
+    // selector_binding
+    // math_unit_input
+    // math_unit_output_scale
+    // math_unit_exponent_shift
+    // math_unit_exponent_invert
+    // math_unit_lookup_table
+    // reduction_or_group
+    // stateful_logging_mode
 
-  {% if initial_register_lo_value_expr is not None %}
-  initial_register_lo_value: {{ initial_register_lo_value_expr }}
-  {% endif %}
+    initial_register_lo_value: 0
+    initial_register_hi_value: 0
 
-  {% if initial_register_hi_value_expr is not None %}
-  initial_register_hi_value: {{ initial_register_hi_value_expr }}
-  {% endif %}
+    // For optional values check whether the designated expr is not None
+    {% if condition_hi_expr is not None %}
+    condition_hi: {{ condition_hi_expr }}
+    {% endif %}
 
-  {% if condition_hi_expr is not None %}
-  condition_hi: {{ condition_hi_expr }}
-  {% endif %}
+    {% if condition_lo_expr is not None %}
+    condition_lo: {{ condition_lo_expr }}
+    {% endif %}
 
-  {% if condition_lo_expr is not None %}
-  condition_lo: {{ condition_lo_expr }}
-  {% endif %}
+    {% if update_lo_1_predicate_expr is not None %}
+    update_lo_1_predicate: {{ update_lo_1_predicate_expr }}
+    {% endif %}
 
-  {% if update_lo_1_predicate_expr is not None %}
-  update_lo_1_predicate: {{ update_lo_1_predicate_expr }}
-  {% endif %}
+    {% if update_lo_1_value_expr is not None %}
+    update_lo_1_value: {{ update_lo_1_value_expr }}
+    {% endif %}
 
-  {% if update_lo_1_value_expr is not None %}
-  update_lo_1_value: {{ update_lo_1_value_expr }}
-  {% endif %}
+    {% if update_lo_2_predicate_expr is not None %}
+    update_lo_2_predicate: {{ update_lo_2_predicate_expr }}
+    {% endif %}
 
-  {% if update_lo_2_predicate_expr is not None %}
-  update_lo_2_predicate: {{ update_lo_2_predicate_expr }}
-  {% endif %}
+    {% if update_lo_2_value_expr is not None %}
+    update_lo_2_value: {{ update_lo_2_value_expr }}
+    {% endif %}
 
-  {% if update_lo_2_value_expr is not None %}
-  update_lo_2_value: {{ update_lo_2_value_expr }}
-  {% endif %}
+    {% if update_hi_1_predicate_expr is not None %}
+    update_hi_1_predicate: {{ update_hi_1_predicate_expr }}
+    {% endif %}
 
-  {% if update_hi_1_predicate_expr is not None %}
-  update_hi_1_predicate: {{ update_hi_1_predicate_expr }}
-  {% endif %}
+    {% if update_hi_1_value_expr is not None %}
+    update_hi_1_value: {{ update_hi_1_value_expr }}
+    {% endif %}
 
-  {% if update_hi_1_value_expr is not None %}
-  update_hi_1_value: {{ update_hi_1_value_expr }}
-  {% endif %}
+    {% if update_hi_2_predicate_expr is not None %}
+    update_hi_2_predicate: {{ update_hi_2_predicate_expr }}
+    {% endif %}
 
-  {% if update_hi_2_predicate_expr is not None %}
-  update_hi_2_predicate: {{ update_hi_2_predicate_expr }}
-  {% endif %}
+    {% if update_hi_2_value_expr is not None %}
+    update_hi_2_value: {{ update_hi_2_value_expr }}
+    {% endif %}
 
-  {% if update_hi_2_value_expr is not None %}
-  update_hi_2_value: {{ update_hi_2_value_expr }}
-  {% endif %}
+    // Always output.
+    output_predicate: 1
 
-  {% if output_predicate_expr is not None %}
-  output_predicate: {{ output_predicate_expr }}
-  {% endif %}
+    {% if output_value_expr is not None %}
+    output_value: {{ output_value_expr }}
+    {% endif %}
 
-  {% if output_value_expr is not None %}
-  output_value: {{ output_value_expr }}
-  {% endif %}
-
-  {% if output_dst_expr is not None %}
-  output_dst: {{ output_dst_expr }}
-  {% endif %}
-
-  {% if math_unit_input_expr is not None %}
-  math_unit_input: {{ math_unit_input_expr }}
-  {% endif %}
-
-  {% if math_unit_output_scale_expr is not None %}
-  math_unit_output_scale: {{ math_unit_output_scale_expr }}
-  {% endif %}
-
-  {% if math_unit_exponent_shift_expr is not None %}
-  math_unit_exponent_shift: {{ math_unit_exponent_shift_expr }}
-  {% endif %}
-
-  {% if math_unit_exponent_invert_expr is not None %}
-  math_unit_exponent_invert: {{ math_unit_exponent_invert_expr }}
-  {% endif %}
-
-  {% if math_unit_lookup_table_expr is not None %}
-  math_unit_lookup_table: {{ math_unit_lookup_table_expr }}
-  {% endif %}
-
-  {% if reduction_or_group_expr is not None %}
-  reduction_or_group: {{ reduction_or_group_expr }}
-  {% endif %}
-
-  {% if stateful_logging_mode_expr is not None %}
-  stateful_logging_mode: {{ stateful_logging_mode_expr }}
-  {% endif %}
+    // Can't be a register, only be ipv4 header from the chip.p4
+    {% if output_dst_expr is not None %}
+    output_dst: {{ output_dst_expr }}
+    {% endif %}
 }
