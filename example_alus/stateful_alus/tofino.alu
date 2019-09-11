@@ -64,4 +64,5 @@ if (update_lo_1_predicate && update_lo_2_predicate) {
 // let the output mux choose. To handle this, we would like to change all
 // stateful alus to return one single integer value and modify related Python
 // sketch generator scripts to accomodate this.
-return Mux5(pkt_1, pkt_0, state_0, state_1, 0);
+int output_value = Mux5(pkt_1, pkt_0, state_0, state_1, 0);
+return output_value;
