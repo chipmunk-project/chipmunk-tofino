@@ -23,6 +23,20 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.main_function = ''
         self.hole_assignments = hole_assignments
         self.constant_arr = constant_arr
+        self.template_keywords = set([
+            'condition_hi',
+            'condition_lo',
+            'update_lo_1_predicate',
+            'update_lo_1_value',
+            'update_lo_2_predicate',
+            'update_lo_2_value',
+            'update_hi_1_predicate',
+            'update_hi_1_value',
+            'update_hi_2_predicate',
+            'update_hi_2_value',
+            'output_value',
+        ])
+        self.instruction_dict = {}
 
     def get_full_hole_name(self, hole_name):
         return self.alu_name + '_' + hole_name + '_global'
