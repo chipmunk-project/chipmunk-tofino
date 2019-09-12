@@ -4,6 +4,7 @@ from antlr4 import CommonTokenStream
 from antlr4 import FileStream
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
+from jinja2 import StrictUndefined
 
 from chipc.aluLexer import aluLexer
 from chipc.aluParser import aluParser
@@ -27,7 +28,8 @@ class TofinoCodeGenerator:
                 [
                     path.join(path.dirname(__file__), './templates')
                 ]
-            )
+            ),
+            undefined=StrictUndefined
         )
 
     def generate_alus(self):

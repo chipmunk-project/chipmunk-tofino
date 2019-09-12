@@ -15,53 +15,20 @@ blackbox stateful_alu {{ alu_name }} {
     initial_register_hi_value: 0
 
     // For optional values check whether the designated expr is defined
-    {% if condition_hi_expr is defined -%}
+
     condition_hi: {{ condition_hi_expr }}
-    {% endif -%}
-
-    {% if condition_lo_expr is defined -%}
     condition_lo: {{ condition_lo_expr }}
-    {% endif -%}
-
-    {% if update_lo_1_predicate_expr is defined -%}
     update_lo_1_predicate: {{ update_lo_1_predicate_expr }}
-    {% endif -%}
-
-    {% if update_lo_1_value_expr is defined -%}
     update_lo_1_value: {{ update_lo_1_value_expr }}
-    {% endif -%}
-
-    {% if update_lo_2_predicate_expr is defined -%}
     update_lo_2_predicate: {{ update_lo_2_predicate_expr }}
-    {% endif -%}
-
-    {% if update_lo_2_value_expr is defined -%}
     update_lo_2_value: {{ update_lo_2_value_expr }}
-    {% endif -%}
-
-    {% if update_hi_1_predicate_expr is defined -%}
     update_hi_1_predicate: {{ update_hi_1_predicate_expr }}
-    {% endif -%}
-
-    {% if update_hi_1_value_expr is defined -%}
     update_hi_1_value: {{ update_hi_1_value_expr }}
-    {% endif -%}
-
-    {% if update_hi_2_predicate_expr is defined -%}
     update_hi_2_predicate: {{ update_hi_2_predicate_expr }}
-    {% endif -%}
-
-    {% if update_hi_2_value_expr is defined -%}
     update_hi_2_value: {{ update_hi_2_value_expr }}
-    {% endif -%}
-
     // Always output.
     output_predicate: 1
-    {% if output_value_expr is defined -%}
     output_value: {{ output_value_expr }}
-    {% endif -%}
-    {% if output_dst_expr is defined -%}
     // Can't be a register, only be ipv4 header from the chip.p4
     output_dst: {{ output_dst_expr }}
-    {%- endif %}
 }
