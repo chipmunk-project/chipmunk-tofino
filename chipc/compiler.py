@@ -111,6 +111,7 @@ class Compiler:
         codegen_code = self.sketch_code_generator.generate_sketch(
             program_file=self.program_file,
             mode=Mode.CODEGEN,
+            synthesized_allocation=self.synthesized_allocation,
             additional_constraints=additional_constraints,
             additional_testcases=additional_testcases)
 
@@ -219,6 +220,7 @@ class Compiler:
         sketch_to_verify = self.sketch_code_generator.generate_sketch(
             program_file=self.program_file,
             mode=Mode.VERIFY,
+            synthesized_allocation=self.synthesized_allocation,
             hole_assignments=hole_assignments
         )
 

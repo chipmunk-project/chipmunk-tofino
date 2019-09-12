@@ -110,8 +110,8 @@ class SketchCodeGenerator:
             x for x in sorted(
                 stateless_alu_sketch_generator.stateless_alu_args
             )]
-#        self.num_operands_to_stateless_alu_ = (
-#            stateless_alu_sketch_generator.num_packet_fields)
+        #        self.num_operands_to_stateless_alu_ = (
+        #            stateless_alu_sketch_generator.num_packet_fields)
 
         self.num_stateless_muxes_ = \
             stateless_alu_sketch_generator.num_packet_fields
@@ -143,6 +143,8 @@ class SketchCodeGenerator:
         return (stateful_alu_sketch_generator.helper_function_strings +
                 stateful_alu_sketch_generator.main_function)
 
+    # This allocator is only used for synthesized allocation
+    # for stateless_vars
     def generate_pkt_field_allocator(self):
         for j in range(self.num_phv_containers_):
             for k in range(self.num_fields_in_prog_):
@@ -166,6 +168,47 @@ class SketchCodeGenerator:
                     str(k) + '_' + str(j) + '+'
             assert_predicate += '0) == 1'
             self.add_assert(assert_predicate)
+
+    # This allocator is only used for synthesized allocation
+    # for stateful_vars
+    def generate_stateful_var_allocator(self):
+        # stateful_var_allocation_group_1_0_2 means
+        # group 1 has been allocate to stateful_alu No.2
+        # in stage 0
+        for i in range(self.num_state_groups_):
+            for j in range(self.num_pipeline_stages_):
+                for k in range(
+                        max(self.num_phv_containers_, self.num_state_groups_)):
+                    # Add hole_def for stateful_var_allocation_group_
+                    self.add_hole(
+                        'stateful_var_allocation_group_' + str(i) + '_' +
+                        str(j) + '_' + str(k), 1)
+
+        # add assert for stateful_var_allocation_group_
+        # any particular group can only be allocated to at most one
+        # stateful_alu
+        for i in range(self.num_state_groups_):
+            assert_predicate = '('
+            for j in range(self.num_pipeline_stages_):
+                for k in range(
+                        max(self.num_phv_containers_, self.num_state_groups_)):
+                    assert_predicate += 'stateful_var_allocation_group_' + \
+                        str(i) + '_' + str(j) + '_' + \
+                        str(k) + '+'
+            assert_predicate += '0) <= 1'
+            self.add_assert(assert_predicate)
+
+        # any stateful_alu can only be used by at most one stateful_group
+        for j in range(self.num_pipeline_stages_):
+            for k in range(
+                    min(self.num_phv_containers_, self.num_state_groups_)):
+                assert_predicate = '('
+                for i in range(self.num_state_groups_):
+                    assert_predicate += 'stateful_var_allocation_group_' + \
+                        str(i) + '_' + str(j) + '_' + \
+                        str(k) + '+'
+                assert_predicate += '0) <= 1'
+                self.add_assert(assert_predicate)
 
     def generate_state_allocator(self):
         for i in range(self.num_pipeline_stages_):
@@ -251,16 +294,13 @@ class SketchCodeGenerator:
                                                   '_' + str(l)) + '\n'
         return ret
 
-    def generate_sketch(self, program_file, mode, additional_constraints=[],
+    def generate_sketch(self, program_file, mode, synthesized_allocation,
+                        additional_constraints=[],
                         hole_assignments=OrderedDict(),
                         additional_testcases=''):
         self.reset_holes_and_asserts()
         assert(mode in [Mode.CODEGEN, Mode.VERIFY])
-        if (self.synthesized_allocation_):
-            template = self.jinja2_env_.get_template(
-                'code_generator_synthesized_allocation.j2')
-        else:
-            template = self.jinja2_env_.get_template('code_generator.j2')
+        template = self.jinja2_env_.get_template('code_generator.j2')
 
         # Create stateless and stateful ALUs, operand muxes for stateful ALUs,
         # and output muxes.
@@ -274,9 +314,11 @@ class SketchCodeGenerator:
         self.generate_state_allocator()
         if (self.synthesized_allocation_):
             self.generate_pkt_field_allocator()
+            self.generate_stateful_var_allocator()
 
         return template.render(
             mode=mode,
+            synthesized_allocation=synthesized_allocation,
             sketch_name=self.sketch_name_,
             program_file=program_file,
             num_pipeline_stages=self.num_pipeline_stages_,

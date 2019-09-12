@@ -31,7 +31,15 @@
     {% if stage_number == 0 %}
       // Read each PHV container from corresponding packet field.
       {% for field_number in range(num_fields_in_prog) %}
+        {% if synthesized_allocation %}
+        {% for container_number in range(num_phv_containers) %}
+           if (phv_config_{{field_number}}_{{container_number}} == 1){
+              input_0_{{container_number}} = state_and_packet.pkt_{{field_number}};
+           }
+        {% endfor %}
+        {% else %}
         input_0_{{field_number}} = state_and_packet.pkt_{{field_number}};
+        {% endif %}
       {% endfor %}
 
     {% else %}
@@ -118,11 +126,21 @@
     {% endfor %}
 
     {% for state_group_number in range(num_state_groups) %}
-      // Write state_{{state_group_number}}
+      // Write stateful_vars
       if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+        {% if synthesized_allocation%}
+           {% for state_group_number_for_synthesized_alloc in range(num_state_groups) %}
+              if (stateful_var_allocation_group_{{state_group_number_for_synthesized_alloc}}_{{stage_number}}_{{state_group_number}} == 1){
+                 {% for slot_number in range(num_state_slots) %}
+                    state_and_packet.state_group_{{state_group_number_for_synthesized_alloc}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
+                 {% endfor %}
+              }
+           {% endfor %}
+        {% else %}
         {% for slot_number in range(num_state_slots) %}
           state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
         {% endfor %}
+        {% endif %}
       }
     {% endfor %}
 
@@ -130,7 +148,15 @@
 
   {% for field_number in range(num_fields_in_prog) %}
     // Write pkt_{{field_number}}
+    {% if synthesized_allocation %}
+    {% for container_number in range(num_phv_containers) %}
+        if (phv_config_{{field_number}}_{{container_number}} == 1){
+            state_and_packet.pkt_{{field_number}} = output_{{num_pipeline_stages - 1}}_{{container_number}};
+        }
+    {% endfor %}
+    {% else%}
     state_and_packet.pkt_{{field_number}} = output_{{num_pipeline_stages - 1}}_{{field_number}};
+    {% endif %}
   {% endfor %}
 
   // Return updated packet fields and state vars
