@@ -14,16 +14,16 @@ from chipc.tofino_stateless_alu_visitor import TofinoStatelessAluVisitor
 
 class TofinoCodeGenerator:
     def __init__(self, sketch_name, num_alus_per_stage, num_pipeline_stages,
-                 num_state_groups, constant_arr, stateful_alu_file,
-                 stateless_alu_file, hole_assignments):
+                 num_state_groups, constant_arr, stateful_alu_filename,
+                 stateless_alu_filename, hole_assignments):
         self.sketch_name_ = sketch_name
         self.num_pipeline_stages_ = num_pipeline_stages
         self.num_alus_per_stage_ = num_alus_per_stage
         self.num_state_groups_ = num_state_groups
         self.constant_arr_ = constant_arr
         self.hole_assignments_ = hole_assignments
-        self.stateful_alu_file_ = stateful_alu_file
-        self.stateless_alu_file_ = stateless_alu_file
+        self.stateful_alu_filename_ = stateful_alu_filename
+        self.stateless_alu_filename_ = stateless_alu_filename
 
         self.jinja2_env_ = Environment(loader=FileSystemLoader(
             [path.join(path.dirname(__file__), './templates')]),
@@ -55,7 +55,7 @@ class TofinoCodeGenerator:
         return ret
 
     def generate_stateless_alu(self, alu_name):
-        input_stream = FileStream(self.stateless_alu_file_)
+        input_stream = FileStream(self.stateless_alu_filename_)
         lexer = aluLexer(input_stream)
         stream = CommonTokenStream(lexer)
         parser = aluParser(stream)
@@ -69,7 +69,7 @@ class TofinoCodeGenerator:
         return ''
 
     def generate_stateful_alu(self, alu_name):
-        input_stream = FileStream(self.stateful_alu_file_)
+        input_stream = FileStream(self.stateful_alu_filename_)
         lexer = aluLexer(input_stream)
         stream = CommonTokenStream(lexer)
         parser = aluParser(stream)

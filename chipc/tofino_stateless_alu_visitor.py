@@ -10,7 +10,7 @@ class TofinoStatelessAluVisitor(aluVisitor):
         self.constant_arr = constant_arr
         self.hole_assignments = hole_assignments
         # self.stateless_alu_name = stateless_alu_name
-        # self.stateless_alu_file = stateless_alu_file
+        # self.stateless_alu_filename = stateless_alu_filename
         # self.alu_name = alu_name
         # self.potential_operands = potential_operands
         # self.generate_stateless_mux = generate_stateless_mux
@@ -51,7 +51,7 @@ class TofinoStatelessAluVisitor(aluVisitor):
 
     # # Calculates number of bits to set opcode hole to
     # def find_opcode_bits(self):
-    #     with open(self.stateless_alu_file) as f:
+    #     with open(self.stateless_alu_filename) as f:
     #         first_line = f.readline()
     #         prog = re.compile(r'// Max value of opcode is (\d+)')
     #         result = int(prog.match(first_line).groups(0)[0])

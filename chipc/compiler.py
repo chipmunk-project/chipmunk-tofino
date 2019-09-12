@@ -252,8 +252,8 @@ class Compiler:
             self.num_pipeline_stages,
             self.num_state_groups,
             constant_arr,
-            self.stateful_alu_file,
-            self.stateless_alu_file,
+            self.stateful_alu_filename,
+            self.stateless_alu_filename,
             hole_assignments,
         )
 
