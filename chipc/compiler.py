@@ -253,6 +253,7 @@ class Compiler:
             self.num_state_groups,
             constant_arr,
             self.stateful_alu_file,
+            self.stateless_alu_file,
             hole_assignments,
         )
 

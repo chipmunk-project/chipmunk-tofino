@@ -1,11 +1,14 @@
 from overrides import overrides
 
+from chipc.aluParser import aluParser
 from chipc.aluVisitor import aluVisitor
 
 
-class TofinoStatelessAluVisitor (aluVisitor):
-    def __init__(self):
-        pass
+class TofinoStatelessAluVisitor(aluVisitor):
+    def __init__(self, alu_filename, constant_arr, hole_assignments):
+        self.alu_filename = alu_filename
+        self.constant_arr = constant_arr
+        self.hole_assignments = hole_assignments
         # self.stateless_alu_name = stateless_alu_name
         # self.stateless_alu_file = stateless_alu_file
         # self.alu_name = alu_name
@@ -100,6 +103,9 @@ class TofinoStatelessAluVisitor (aluVisitor):
 
     @overrides
     def visitAlu(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.State_indicatorContext))
+        self.visit(ctx.getChild(0, aluParser.State_varsContext))
+        self.visit(ctx.getChild(0, aluParser.Hole_defContext))
         pass
 
         # self.visit(ctx.getChild(0, aluParser.State_indicatorContext))
@@ -161,36 +167,6 @@ class TofinoStatelessAluVisitor (aluVisitor):
     def visitState_var_with_comma(self, ctx):
         pass
 
-    # TODO: Fix comma and int problem, line 230
-    @overrides
-    def visitHole_vars(self, ctx):
-        pass
-        # # Empty set of hole vars
-        # if (ctx.getChildCount() == 5):
-        #     return
-
-        # num_bits = 2
-        # if 'opcode' in ctx.getChild(4).getText():
-        #     num_bits = self.find_opcode_bits()
-        # self.add_hole(ctx.getChild(4).getText(), num_bits)
-        # self.main_function += 'int ' + ctx.getChild(4).getText() + (
-        #     '_hole_local,')
-        # if (ctx.getChildCount() > 5):
-        #     for i in range(5, ctx.getChildCount()-1):
-        #         self.visit(ctx.getChild(i))
-        #         if 'opcode' in ctx.getChild(i).getText():
-        #             num_bits = self.find_opcode_bits()
-        #         self.add_hole(ctx.getChild(i).getText()[1:].strip(), (
-        #             num_bits))
-
-        #         self.main_function += 'int ' + \
-        #             ctx.getChild(i).getText()[1:].strip() + \
-        #             '_hole_local,'
-
-    def visitHole_var_with_comma(self, ctx):
-        pass
-        # assert (ctx.getChild(0).getText() == ',')
-
     @overrides
     def visitPacket_fields(self, ctx):
         pass
@@ -212,11 +188,58 @@ class TofinoStatelessAluVisitor (aluVisitor):
 
     @overrides
     def visitVar(self, ctx):
-        pass
-        # self.main_function += ctx.getText()
+        var_name = ctx.getText()
+        # Handle constant propagation for immediate_operand hole
+        if var_name == 'immediate_operand' or var_name == 'opcode':
+            hole_name = self.alu_filename + '_' + var_name
+            return self.hole_assignments[hole_name]
+        return var_name
+
+    @overrides
+    def visitCondition_block(self, ctx):
+        # We only expect opcode == \d+ for the expression context
+        comparison_expr_ctx = ctx.getChild(0, aluParser.ExprContext)
+        opcode_expr_ctx = comparison_expr_ctx.getChild(0,
+                                                       aluParser.ExprContext)
+        constant_expr_ctx = comparison_expr_ctx.getChild(
+            1, aluParser.ExprContext)
+
+        if self.visit(opcode_expr_ctx) == self.visit(constant_expr_ctx):
+            self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
+            # TODO: add to expr dict
 
     @overrides
     def visitStmtIfElseIfElse(self, ctx):
+        condition_blocks = ctx.condition_block()
+        for block in condition_blocks:
+            self.visit(block)
+
+        # First, visit if_guard or elif_guard, if the opcode hole value equals
+        # to the specified constant in the guard. Then, if so, then return the
+        # if or elif body from here. Otherwise it's the else case, then return
+        # else body.
+
+        # if_guard case
+        # body_to_return = ctx.else_body
+
+        # guards = [ctx.if_guard]
+        # bodies = [ctx.if_body]
+
+        # elif_cnt = 0
+
+        # for i in ctx.getChildCount()
+
+        # if_ctx = ctx.if_guard
+        # # We only expect opcode == \d+, and the recursive visit will call
+        # # visitVar above and find the value associated with it.
+        # opcode_hole_assignment = self.visit(
+        #     if_ctx.getChild(0, aluParser.ExprContext))
+        # assert if_ctx.getChild(
+        #     1).getText() == '==', "Invalid syntax for if_guard"
+        # if opcode_hole_assignment == self.visit(
+        #         if_ctx.getChild(1, aluParser.ExprContext)):
+        #     boty_to_return =
+
         pass
         # self.main_function += '\tif ('
         # self.visit(ctx.if_guard)
@@ -340,8 +363,7 @@ class TofinoStatelessAluVisitor (aluVisitor):
 
     @overrides
     def visitNum(self, ctx):
-        pass
-        # self.main_function += ctx.getText()
+        return int(ctx.getText())
 
     @overrides
     def visitTernary(self, ctx):
