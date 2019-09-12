@@ -6,7 +6,7 @@ from chipc.aluVisitor import aluVisitor
 
 class TofinoStatefulAluVisitor(aluVisitor):
     def __init__(self, alu_filename, constant_arr, hole_assignments):
-        self.alu_name = alu_filename
+        self.alu_filename = alu_filename
         self.num_state_slots = 0
         self.num_packet_fields = 0
         self.mux5_count = 0
@@ -39,12 +39,12 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.template_args = {}
 
     def get_full_hole_name(self, hole_name):
-        return self.alu_name + '_' + hole_name + '_global'
+        return self.alu_filename + '_' + hole_name + '_global'
 
     @overrides
     def visitAlu(self, ctx):
         self.main_function += (
-            'int ' + self.alu_name + '(ref | StateGroup | state_group, ')
+            'int ' + self.alu_filename + '(ref | StateGroup | state_group, ')
 
         self.visit(ctx.getChild(0, aluParser.Packet_fieldsContext))
 
