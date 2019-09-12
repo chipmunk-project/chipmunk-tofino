@@ -1,3 +1,6 @@
+import math
+import re
+
 from overrides import overrides
 
 from chipc.aluParser import aluParser
@@ -5,8 +8,9 @@ from chipc.aluVisitor import aluVisitor
 
 
 class TofinoStatelessAluVisitor(aluVisitor):
-    def __init__(self, alu_filename, constant_arr, hole_assignments):
+    def __init__(self, alu_filename, alu_name, constant_arr, hole_assignments):
         self.alu_filename = alu_filename
+        self.alu_name = alu_name
         self.constant_arr = constant_arr
         self.hole_assignments = hole_assignments
         # self.stateless_alu_name = stateless_alu_name
@@ -27,6 +31,7 @@ class TofinoStatelessAluVisitor(aluVisitor):
         # self.main_function = ''
         # self.num_packet_fields = 0
         # self.packet_fields = []
+        self.opcode_bits = self.find_opcode_bits()
 
     # def add_hole(self, hole_name, hole_width):
     #     # immediate_operand forced down to immediate
@@ -49,13 +54,13 @@ class TofinoStatelessAluVisitor(aluVisitor):
     #     assert (hole_name not in self.stateless_alu_args)
     #     self.stateless_alu_args[hole_name+'_hole_local'] = hole_width
 
-    # # Calculates number of bits to set opcode hole to
-    # def find_opcode_bits(self):
-    #     with open(self.stateless_alu_filename) as f:
-    #         first_line = f.readline()
-    #         prog = re.compile(r'// Max value of opcode is (\d+)')
-    #         result = int(prog.match(first_line).groups(0)[0])
-    #         return math.ceil(math.log2(result))
+    # Calculates number of bits to set opcode hole to
+    def find_opcode_bits(self):
+        with open(self.alu_filename) as f:
+            first_line = f.readline()
+            prog = re.compile(r'// Max value of opcode is (\d+)')
+            result = int(prog.match(first_line).groups(0)[0])
+            return math.ceil(math.log2(result))
 
     # # Generates the mux ctrl paremeters
     # def write_mux_inputs(self):
