@@ -110,29 +110,26 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.main_function += ';'
 
     @overrides
-    def visitStmtIfElseIfElse(self, ctx):
-        self.main_function += '\tif ('
-        self.main_function += self.visit(ctx.if_guard)
-        self.main_function += ') {\n'
-
-        self.visit(ctx.if_body)
+    def visitCondition_block(self, ctx):
+        self.main_function += ' ('
+        self.main_function += self.visit(ctx.getChild(0,
+                                                      aluParser.ExprContext))
+        self.main_function += ')\n {'
+        self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
         self.main_function += '\n}\n'
-        elif_index = 7
-        while (ctx.getChildCount() > elif_index
-               and ctx.getChild(elif_index).getText() == 'elif'):
 
-            self.main_function += '\telse if ('
-            self.main_function += self.visit(ctx.elif_guard)
-            self.main_function += ') {\n'
-            self.visit(ctx.getChild(elif_index + 5))
+    @overrides
+    def visitStmtIfElseIfElse(self, ctx):
+        condition_blocks = ctx.condition_block()
 
-            self.main_function += '\n}\n'
-            elif_index += 7
+        for i, block in enumerate(condition_blocks):
+            if i != 0:
+                self.main_function += 'else '
+            self.main_function += 'if'
+            self.visit(block)
 
-        # if there is an else
-        if (ctx.getChildCount() > elif_index
-                and ctx.getChild(elif_index).getText() == 'else'):
-            self.main_function += '\telse {\n'
+        if ctx.else_body is not None:
+            self.main_function += 'else {\n'
             self.visit(ctx.else_body)
             self.main_function += '\n}\n'
 
