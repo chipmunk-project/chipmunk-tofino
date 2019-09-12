@@ -13,8 +13,8 @@ header_type ethernet_t {
 header ethernet_t ethernet;
 
 header_type ipv4_t {
-    fields { // Variable: can use these fields for output from packet processing program.
-             // Note: this is just for ease of prototyping. In practice, we would use a separate header for this.
+    fields {
+        // TODO: Have a hard limit on 5 fields for now. Ensure this in the tofino code generator.
         field1 : 32;
         field2 : 32;
         field3 : 32; 
@@ -52,56 +52,63 @@ register {{reg_name}} {
     instance_count : MAX_SIZE;
 }
 
-blackbox stateful_alu {{salu_name}} {
-    reg : {{reg_name}};
-    condition_lo : {{ condition_lo_expr }};
-    condition_hi : {{ condition_hi_expr }};
-    update_lo_1_predicate : {{ update_lo_1_predicate_expr }};
-    update_lo_1_value : {{ update_lo_1_value_expr }};
-    update_lo_2_predicate : {{ update_lo_2_predicate_expr }};
-    update_lo_2_value : {{update_lo_2_value_expr}};
-    update_hi_1_predicate : {{update_hi_1_predicate_expr}};
-    update_hi_1_value : {{update_hi_1_value_expr}};
-    update_hi_2_predicate : {{update_hi_2_predicate_expr}};
-    update_hi_2_value : {{update_hi_2_value_expr}};
-    output_predicate : {{output_predicate_expr}};
-    output_value : {{ output_value_expr }};
-    output_dst : {{ output_dst_expr }};
-    initial_register_lo_value : {{initial_register_lo_value_expr}};
-    initial_register_hi_value : {{initial_register_hi_value_expr}};
-}
-
-// Stateful ALU Action
-action {{salu_action_name}} () {
-    {{salu_name}}.execute_stateful_alu(0);
-    // TODO: Replace 0 with appropriate value for array-based registers.
-}
-
-// Stateful ALU table
-// (use pragmas to enforce table placement in certain stages)
-@pragma stage {{stage_number}}
-table {{salu_table_name}} {
-    actions {
-        {{salu_action_name}}; // action1 for SALU
+{% for i in range(num_pipeline_stages) %}
+  {% for j in range(num_state_groups) %}
+    // Stateful ALU blackbox
+    blackbox stateful_alu stateful_alu_{{i}}_{{j}}_blackbox {
+      reg : {{reg_name}};
+      condition_lo : {{ condition_lo_expr }};
+      condition_hi : {{ condition_hi_expr }};
+      update_lo_1_predicate : {{ update_lo_1_predicate_expr }};
+      update_lo_1_value : {{ update_lo_1_value_expr }};
+      update_lo_2_predicate : {{ update_lo_2_predicate_expr }};
+      update_lo_2_value : {{update_lo_2_value_expr}};
+      update_hi_1_predicate : {{update_hi_1_predicate_expr}};
+      update_hi_1_value : {{update_hi_1_value_expr}};
+      update_hi_2_predicate : {{update_hi_2_predicate_expr}};
+      update_hi_2_value : {{update_hi_2_value_expr}};
+      output_predicate : {{output_predicate_expr}};
+      output_value : {{ output_value_expr }};
+      output_dst : {{ output_dst_expr }};
+      initial_register_lo_value : {{initial_register_lo_value_expr}};
+      initial_register_hi_value : {{initial_register_hi_value_expr}};
     }
-    default_action: {{salu_action_name}};
-}
 
-// Stateless ALU action
-action {{stateless_alu_action_name}} () {
-   {{stateless_alu_expr}};
-}
-
-// Stateless ALU table
-@pragma stage {{stage_number}}
-table {{stateless_alu_table_name}} {
-    actions {
-        {{stateless_alu_action_name}};
+    // Stateful ALU Action
+    action stateful_alu_{{i}}_{{j}}_action () {
+        stateful_alu_{{i}}_{{j}}_blackbox.execute_stateful_alu(0);
+        // TODO: Replace 0 with appropriate value for array-based registers.
     }
-    default_action: {{stateless_alu_action_name}};
-}
 
-// Variable: Create as many stateful and stateless tables as required depending on the grid size.
+    // Stateful ALU table
+    // (use pragmas to enforce table placement in certain stages)
+    @pragma stage {{i}}
+    table stateful_alu_{{i}}_{{j}}_table () {
+        actions {
+            stateful_alu_{{i}}_{{j}}_action;
+        }
+        default_action: stateful_alu_{{i}}_{{j}}_action;
+    }
+  {% endfor %}
+{% endfor %}
+
+{% for i in range(num_pipeline_stages) %}
+  {% for j in range(num_alus_per_stage) %}
+    // Stateless ALU action
+    action stateless_alu_{{i}}_{{j}}_action () {
+       {{stateless_alu_expr}};
+    }
+
+    // Stateless ALU table
+    @pragma stage {{i}}
+    table stateless_alu_{{i}}_{{j}}_table {
+        actions {
+            stateless_alu_{{i}}_{{j}}_action;
+        }
+        default_action:  stateless_alu_{{i}}_{{j}}_action;
+    }
+  {% endfor %}
+{% endfor %}
 
 // Required: mac_forward table for forwarding to switch CPU.
 action set_egr(egress_spec) {
@@ -119,7 +126,14 @@ table mac_forward {
 
 control ingress {
     // Call all the required ALUs.
-    {{alu_apply_statements}}
+    {% for i in range(num_pipeline_stages) %}
+      {% for j in range(num_alus_per_stage) %}
+        apply(stateless_alu_{{i}}_{{j}});
+      {% endfor %}
+      {% for j in range(num_state_groups) %}
+        apply(stateful_alu_{{i}}_{{j}});
+      {% endfor %}
+    {% endfor %}
     // MAC Forwarding by default
     apply(mac_forward);
 }
