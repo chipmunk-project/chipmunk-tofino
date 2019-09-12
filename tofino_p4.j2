@@ -55,7 +55,7 @@ register {{reg_name}} {
 {% for i in range(num_pipeline_stages) %}
   {% for j in range(num_state_groups) %}
     // Stateful ALU blackbox
-    blackbox stateful_alu stateful_alu_{{i}}_{{j}}_blackbox {
+    blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
       {% set alu = stateful_alu[i][j] %}
       reg                       : {{alu.reg_name}};
       condition_lo              : {{alu.condition_lo_expr }};
@@ -76,19 +76,19 @@ register {{reg_name}} {
     }
 
     // Stateful ALU Action
-    action stateful_alu_{{i}}_{{j}}_action () {
-        stateful_alu_{{i}}_{{j}}_blackbox.execute_stateful_alu(0);
+    action {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action () {
+        {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox.execute_stateful_alu(0);
         // TODO: Replace 0 with appropriate value for array-based registers.
     }
 
     // Stateful ALU table
     // (use pragmas to enforce table placement in certain stages)
     @pragma stage {{i}}
-    table stateful_alu_{{i}}_{{j}}_table () {
+    table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table () {
         actions {
-            stateful_alu_{{i}}_{{j}}_action;
+            {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action;
         }
-        default_action: stateful_alu_{{i}}_{{j}}_action;
+        default_action: {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action;
     }
   {% endfor %}
 {% endfor %}
@@ -97,17 +97,17 @@ register {{reg_name}} {
   {% for j in range(num_alus_per_stage) %}
     // Stateless ALU action
     {% set alu = stateless_alu[i][j] %}
-    action stateless_alu_{{i}}_{{j}}_action () {
+    action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
        {{alu.expr}};
     }
 
     // Stateless ALU table
     @pragma stage {{i}}
-    table stateless_alu_{{i}}_{{j}}_table {
+    table {{sketch_name}}_stateless_alu_{{i}}_{{j}}_table {
         actions {
-            stateless_alu_{{i}}_{{j}}_action;
+            {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action;
         }
-        default_action:  stateless_alu_{{i}}_{{j}}_action;
+        default_action:  {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action;
     }
   {% endfor %}
 {% endfor %}
@@ -130,10 +130,10 @@ control ingress {
     // Call all the required ALUs.
     {% for i in range(num_pipeline_stages) %}
       {% for j in range(num_alus_per_stage) %}
-        apply(stateless_alu_{{i}}_{{j}});
+        apply({{sketch_name}}_stateless_alu_{{i}}_{{j}});
       {% endfor %}
       {% for j in range(num_state_groups) %}
-        apply(stateful_alu_{{i}}_{{j}});
+        apply({{sketch_name}}_stateful_alu_{{i}}_{{j}});
       {% endfor %}
     {% endfor %}
     // MAC Forwarding by default
