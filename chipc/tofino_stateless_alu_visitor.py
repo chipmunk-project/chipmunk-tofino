@@ -32,6 +32,7 @@ class TofinoStatelessAluVisitor(aluVisitor):
         # self.num_packet_fields = 0
         # self.packet_fields = []
         self.opcode_bits = self.find_opcode_bits()
+        self.template_args = {}
 
     # def add_hole(self, hole_name, hole_width):
     #     # immediate_operand forced down to immediate
@@ -108,10 +109,9 @@ class TofinoStatelessAluVisitor(aluVisitor):
 
     @overrides
     def visitAlu(self, ctx):
-        self.visit(ctx.getChild(0, aluParser.State_indicatorContext))
-        self.visit(ctx.getChild(0, aluParser.State_varsContext))
-        self.visit(ctx.getChild(0, aluParser.Hole_defContext))
-        pass
+        expr = self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
+
+        self.template_args['expr'] = expr
 
         # self.visit(ctx.getChild(0, aluParser.State_indicatorContext))
         # self.visit(ctx.getChild(0, aluParser.State_varsContext))
@@ -145,60 +145,8 @@ class TofinoStatelessAluVisitor(aluVisitor):
         #     self.main_function = self.main_function[:-1]
 
     @overrides
-    def visitState_indicator(self, ctx):
-        pass
-        # try:
-        #     assert ctx.getChildCount() == 3, 'Error: invalid state' + \
-        #         ' indicator argument provided for type. Insert + \
-        #         ''\'stateful\' or \'stateless\''
-
-        #     assert ctx.getChild(2).getText() == 'stateless', 'Error:  ' + \
-        #         'type is declared as ' + ctx.getChild(2).getText() + \
-        #         ' and not \'stateless\' for stateless ALU '
-
-        # except AssertionError:
-        #     raise
-
-    @overrides
-    def visitState_vars(self, ctx):
-        pass
-        # try:
-        #     assert ctx.getChildCount() == 5, 'Error: ' + \
-        #         'state variables given to stateless ALU'
-        # except AssertionError:
-        #     raise
-
-    @overrides
-    def visitState_var_with_comma(self, ctx):
-        pass
-
-    @overrides
-    def visitPacket_fields(self, ctx):
-        pass
-        # # Empty set of packet fields
-        # if (ctx.getChildCount() == 5):
-        #     return
-        # self.packet_fields.append(ctx.getChild(4).getText())
-        # self.num_packet_fields += 1
-        # if (ctx.getChildCount() > 5):
-        #     for i in range(5, ctx.getChildCount()-1):
-        #         self.packet_fields.append(ctx.getChild(i).getText()[1:])
-        #         self.num_packet_fields += 1
-
-    @overrides
-    def visitPacket_field_with_comma(self, ctx):
-        pass
-        # assert (ctx.getChild(0).getText() == ',')
-        # self.main_function += 'int '+ctx.getChild(1).getText() + ','
-
-    @overrides
-    def visitVar(self, ctx):
-        var_name = ctx.getText()
-        # Handle constant propagation for immediate_operand hole
-        if var_name == 'immediate_operand' or var_name == 'opcode':
-            hole_name = self.alu_filename + '_' + var_name
-            return self.hole_assignments[hole_name]
-        return var_name
+    def visitAlu_body(self, ctx):
+        return self.visit(ctx.getChild(0))
 
     @overrides
     def visitCondition_block(self, ctx):
@@ -209,219 +157,113 @@ class TofinoStatelessAluVisitor(aluVisitor):
         constant_expr_ctx = comparison_expr_ctx.getChild(
             1, aluParser.ExprContext)
 
-        if self.visit(opcode_expr_ctx) == self.visit(constant_expr_ctx):
-            self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
-            # TODO: add to expr dict
+        opcode_expr = self.visit(opcode_expr_ctx)
+        constant_expr = self.visit(constant_expr_ctx)
+        if int(opcode_expr) == int(constant_expr):
+            ret_val = self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
+            return ret_val
+
+        return None
 
     @overrides
     def visitStmtIfElseIfElse(self, ctx):
+        # Loop through all the boolean condition and body for 'if' and
+        # 'if else', and check whether the condition is satisfied. If so,
         condition_blocks = ctx.condition_block()
+        expr_to_return = None
         for block in condition_blocks:
-            self.visit(block)
+            expr_to_return = self.visit(block)
+            if expr_to_return is not None:
+                return expr_to_return
 
-        # First, visit if_guard or elif_guard, if the opcode hole value equals
-        # to the specified constant in the guard. Then, if so, then return the
-        # if or elif body from here. Otherwise it's the else case, then return
-        # else body.
+        # Now, simply visit the else_body clause and return.
+        assert ctx.else_body is not None
+        expr_to_return = self.visit(ctx.else_body)
 
-        # if_guard case
-        # body_to_return = ctx.else_body
-
-        # guards = [ctx.if_guard]
-        # bodies = [ctx.if_body]
-
-        # elif_cnt = 0
-
-        # for i in ctx.getChildCount()
-
-        # if_ctx = ctx.if_guard
-        # # We only expect opcode == \d+, and the recursive visit will call
-        # # visitVar above and find the value associated with it.
-        # opcode_hole_assignment = self.visit(
-        #     if_ctx.getChild(0, aluParser.ExprContext))
-        # assert if_ctx.getChild(
-        #     1).getText() == '==', "Invalid syntax for if_guard"
-        # if opcode_hole_assignment == self.visit(
-        #         if_ctx.getChild(1, aluParser.ExprContext)):
-        #     boty_to_return =
-
-        pass
-        # self.main_function += '\tif ('
-        # self.visit(ctx.if_guard)
-        # self.main_function += ') {\n'
-
-        # self.visit(ctx.if_body)
-        # self.main_function += '\n}\n'
-        # elif_index = 7
-        # while (ctx.getChildCount() > elif_index and
-        #         ctx.getChild(elif_index).getText() == 'elif'):
-
-        #     self.main_function += '\telse if ('
-        #     self.visit(ctx.getChild(elif_index+2))
-        #     self.main_function += ') {\n'
-        #     self.visit(ctx.getChild(elif_index+5))
-
-        #     self.main_function += '\n}\n'
-        #     elif_index += 7
-
-        # # if there is an else
-        # if (ctx.getChildCount() > elif_index and
-        #         ctx.getChild(elif_index).getText() == 'else'):
-        #     self.main_function += '\telse {\n'
-        #     self.visit(ctx.else_body)
-        #     self.main_function += '\n}\n'
-
-    @overrides
-    def visitStmtUpdateExpr(self, ctx):
-        pass
-        # assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
-        #     'Every update must end with a semicolon.'
-        # self.visit(ctx.getChild(0, aluParser.State_varContext))
-        # self.main_function += ' = '
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += ';'
-
-    @overrides
-    def visitStmtUpdateTempInt(self, ctx):
-        pass
-        # assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
-        #     'Every update must end with a semicolon.'
-        # self.main_function += ctx.getChild(0).getText()
-        # self.visit(ctx.getChild(0, aluParser.Temp_varContext))
-        # self.main_function += '='
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += ';'
-
-    @overrides
-    def visitStmtUpdateTempBit(self, ctx):
-        pass
-        # assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
-        #     'Every update must end with a semicolon.'
-        # self.main_function += ctx.getChild(0).getText()
-        # self.visit(ctx.getChild(0, aluParser.Temp_varContext))
-        # self.main_function += '='
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += ';'
+        return expr_to_return
 
     @overrides
     def visitReturn_statement(self, ctx):
-        pass
-        # self.main_function += '\t\treturn '
-        # self.visit(ctx.getChild(1))
-        # self.main_function += ';'
+        # Simply return the expression.
+        return self.visit(ctx.getChild(0, aluParser.ExprContext))
 
     @overrides
-    def visitEquals(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '=='
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
+    def visitVar(self, ctx):
+        var_name = ctx.getText()
+        # Handle constant propagation for immediate_operand hole
+        if var_name == 'immediate_operand' or var_name == 'opcode':
+            hole_name = self.alu_name + '_' + var_name
+            return str(self.hole_assignments[hole_name])
 
-    @overrides
-    def visitGreater(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '>'
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitGreaterEqual(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '>='
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitLess(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '<'
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitLessEqual(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '<='
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitOr(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '||'
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitAnd(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '&&'
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitNotEqual(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '!='
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitNum(self, ctx):
-        return int(ctx.getText())
-
-    @overrides
-    def visitTernary(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += '?'
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
-        # self.main_function += ':'
-        # self.visit(ctx.getChild(2, aluParser.ExprContext))
-
-    @overrides
-    def visitTrue(self, ctx):
-        pass
-        # self.main_function += 'true'
-
-    @overrides
-    def visitExprWithParen(self, ctx):
-        pass
-        # self.main_function += ctx.getChild(0).getText()
-        # self.visit(ctx.getChild(1))
-        # self.main_function += ctx.getChild(2).getText()
+        return var_name
 
     @overrides
     def visitExprWithOp(self, ctx):
-        pass
-        # self.visit(ctx.getChild(0, aluParser.ExprContext))
-        # self.main_function += ctx.getChild(1).getText()
-        # self.visit(ctx.getChild(1, aluParser.ExprContext))
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
 
     @overrides
-    def visitMux2(self, ctx):
-        assert False, 'Unexpected keyword Mux2 in stateless ALU.'
+    def visitExprWithParen(self, ctx):
+        return ctx.getChild(0).getText() + self.visit(
+            ctx.getChild(1)) + ctx.getChild(2).getText()
 
     @overrides
-    def visitMux3(self, ctx):
-        assert False, 'Unexpected keyword Mux3 in stateless ALU.'
+    def visitNum(self, ctx):
+        return ctx.getText()
 
     @overrides
-    def visitMux3WithNum(self, ctx):
-        assert False, 'Unexpected keyword Mux3 in stateless ALU.'
+    def visitEquals(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
 
     @overrides
-    def visitOpt(self, ctx):
-        assert False, 'Unexpected keyword Opt in stateless ALU.'
+    def visitGreater(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
 
     @overrides
-    def visitRelOp(self, ctx):
-        assert False, 'Unexpected keyword rel_op in stateless ALU.'
+    def visitGreaterEqual(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
 
     @overrides
-    def visitArithOp(self, ctx):
-        assert False, 'Unexpected keyword arith_op in stateless ALU.'
+    def visitLess(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
 
     @overrides
-    def visitConstant(self, ctx):
-        assert False, 'Unexpected keyword C() in stateless ALU.'
+    def visitLessEqual(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
+    def visitNotEqual(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
+    def visitAnd(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
+    def visitOr(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
+    def visitTernary(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext)) + \
+            ctx.getChild(3).getText() + \
+            self.visit(ctx.getChild(2, aluParser.ExprContext))

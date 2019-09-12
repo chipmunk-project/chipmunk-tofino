@@ -51,6 +51,7 @@ class TofinoCodeGenerator:
 
                 stateful_alus[i][l] = stateful_alu_template_dict
 
+        print(stateless_alus)
         print(stateful_alus)
         return ret
 
@@ -62,11 +63,11 @@ class TofinoCodeGenerator:
         tree = parser.alu()
 
         tofino_stateless_alu_visitor = TofinoStatelessAluVisitor(
-            self.sketch_name_ + '_' + alu_name, self.constant_arr_,
-            self.hole_assignments_)
+            self.stateless_alu_filename_, self.sketch_name_ + '_' + alu_name,
+            self.constant_arr_, self.hole_assignments_)
         tofino_stateless_alu_visitor.visit(tree)
 
-        return ''
+        return tofino_stateless_alu_visitor.template_args
 
     def generate_stateful_alu(self, alu_name):
         input_stream = FileStream(self.stateful_alu_filename_)

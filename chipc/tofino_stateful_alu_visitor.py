@@ -204,7 +204,14 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
     @overrides
     def visitExprWithParen(self, ctx):
-        return '(' + self.visit(ctx.getChild(0, aluParser.ExprContext)) + ')'
+        return ctx.getChild(0).getText() + self.visit(
+            ctx.getChild(1)) + ctx.getChild(2).getText()
+
+    @overrides
+    def visitEquals(self, ctx):
+        return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
+            ctx.getChild(1).getText() + \
+            self.visit(ctx.getChild(1, aluParser.ExprContext))
 
     @overrides
     def visitState_var(self, ctx):
