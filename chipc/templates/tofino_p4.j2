@@ -56,23 +56,33 @@ register {{reg_name}} {
   {% for j in range(num_state_groups) %}
     // Stateful ALU blackbox
     blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
-      {% set alu = stateful_alu[i][j] %}
-      reg                       : {{alu.reg_name}};
-      condition_lo              : {{alu.condition_lo_expr }};
-      condition_hi              : {{alu.condition_hi_expr }};
-      update_lo_1_predicate     : {{alu.update_lo_1_predicate_expr }};
-      update_lo_1_value         : {{alu.update_lo_1_value_expr }};
-      update_lo_2_predicate     : {{alu.update_lo_2_predicate_expr }};
-      update_lo_2_value         : {{alu.update_lo_2_value_expr}};
-      update_hi_1_predicate     : {{alu.update_hi_1_predicate_expr}};
-      update_hi_1_value         : {{alu.update_hi_1_value_expr}};
-      update_hi_2_predicate     : {{alu.update_hi_2_predicate_expr}};
-      update_hi_2_value         : {{alu.update_hi_2_value_expr}};
-      output_predicate          : {{alu.output_predicate_expr}};
-      output_value              : {{alu.output_value_expr }};
-      output_dst                : {{alu.output_dst_expr }};
-      initial_register_lo_value : {{alu.initial_register_lo_value_expr}};
-      initial_register_hi_value : {{alu.initial_register_hi_value_expr}};
+        {% set alu = stateful_alu[i][j] %}
+        reg                       : {{alu.reg_name}};
+        condition_lo              : {{alu.condition_lo_expr }};
+        condition_hi              : {{alu.condition_hi_expr }};
+        update_lo_1_predicate     : {{alu.update_lo_1_predicate_expr }};
+        update_lo_1_value         : {{alu.update_lo_1_value_expr }};
+        update_lo_2_predicate     : {{alu.update_lo_2_predicate_expr }};
+        update_lo_2_value         : {{alu.update_lo_2_value_expr}};
+        update_hi_1_predicate     : {{alu.update_hi_1_predicate_expr}};
+        update_hi_1_value         : {{alu.update_hi_1_value_expr}};
+        update_hi_2_predicate     : {{alu.update_hi_2_predicate_expr}};
+        update_hi_2_value         : {{alu.update_hi_2_value_expr}};
+        output_predicate          : {{alu.output_predicate_expr}};
+        output_value              : {{alu.output_value_expr }};
+        output_dst                : {{alu.output_dst_expr }};
+        initial_register_lo_value : {{alu.initial_register_lo_value_expr}};
+        initial_register_hi_value : {{alu.initial_register_hi_value_expr}};
+
+        // Instructions ommitted for now
+        // selector_binding
+        // math_unit_input
+        // math_unit_output_scale
+        // math_unit_exponent_shift
+        // math_unit_exponent_invert
+        // math_unit_lookup_table
+        // reduction_or_group
+        // stateful_logging_mode
     }
 
     // Stateful ALU Action
