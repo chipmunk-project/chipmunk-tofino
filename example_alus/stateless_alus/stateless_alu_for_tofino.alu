@@ -32,7 +32,7 @@ if (opcode == 0) {
   // bit_nor(mdata.result1, mdata.value1, mdata.value2);
   return (pkt_0 == 0) &&  (pkt_1 == 0);
 } elif (opcode == 8) {
-  // result1 = ~value1
+  // bit_not(mdata.result1, mdata.value1);
   return (pkt_0 == 0);
 } elif (opcode == 9) {
   // bit_or(mdata.result1, mdata.value1, mdata.value2);

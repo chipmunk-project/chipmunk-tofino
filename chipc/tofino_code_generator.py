@@ -30,17 +30,16 @@ class TofinoCodeGenerator:
             undefined=StrictUndefined)
 
     def generate_alus(self):
-        ret = ''
         stateful_alus = [[{}] * self.num_state_groups_
                          for i in range(self.num_pipeline_stages_)]
-        stateless_alus = [[{}] * self.num_alus_per_stage_
+        stateless_alus = [[0] * self.num_alus_per_stage_
                           for i in range(self.num_pipeline_stages_)]
         for i in range(self.num_pipeline_stages_):
             for j in range(self.num_alus_per_stage_):
-                stateless_alu_template_dict = self.generate_stateless_alu(
-                    'stateless_alu_' + str(i) + '_' + str(j))
-
-                stateless_alus[i][j] = stateless_alu_template_dict
+                stateless_alus[i][j] = self.hole_assignments_[
+                    self.sketch_name_ + '_stateless_alu_' +
+                    str(i) + '_' + str(j) + '_opcode'
+                ]
             for l in range(self.num_state_groups_):
                 stateful_alu_template_dict = self.generate_stateful_alu(
                     'stateful_alu_' + str(i) + '_' + str(l))
@@ -51,9 +50,7 @@ class TofinoCodeGenerator:
 
                 stateful_alus[i][l] = stateful_alu_template_dict
 
-        print(stateless_alus)
-        print(stateful_alus)
-        return ret
+        return stateful_alus, stateless_alus
 
     def generate_stateless_alu(self, alu_name):
         input_stream = FileStream(self.stateless_alu_filename_)
@@ -84,6 +81,15 @@ class TofinoCodeGenerator:
         return tofino_stateful_alu_visitor.template_args
 
     def run(self):
-        alu_definitions = self.generate_alus()
+        stateful_alus, stateless_alus = self.generate_alus()
 
-        print(alu_definitions)
+        template = self.jinja2_env_.get_template('tofino_p4.j2')
+
+        print(template.render(
+            sketch_name=self.sketch_name_,
+            num_pipeline_stages=self.num_pipeline_stages_,
+            num_state_groups=self.num_state_groups_,
+            num_alus_per_stage=self.num_alus_per_stage_,
+            stateful_alus=stateful_alus,
+            stateless_alus=stateless_alus
+        ))

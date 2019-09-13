@@ -46,17 +46,17 @@ parser parse_ipv4 {
 }
 
 // TODO: Derive MAX_SIZE from Domino program.
-#define MAX_SIZE 10
+{# #define MAX_SIZE 10
 register {{reg_name}} {
     width : 64;
     instance_count : MAX_SIZE;
-}
+} #}
 
 {% for i in range(num_pipeline_stages) %}
   {% for j in range(num_state_groups) %}
     // Stateful ALU blackbox
     blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
-        {% set alu = stateful_alu[i][j] %}
+        {% set alu = stateful_alus[i][j] %}
         reg                       : {{alu.reg_name}};
         condition_lo              : {{alu.condition_lo_expr }};
         condition_hi              : {{alu.condition_hi_expr }};
@@ -68,11 +68,11 @@ register {{reg_name}} {
         update_hi_1_value         : {{alu.update_hi_1_value_expr}};
         update_hi_2_predicate     : {{alu.update_hi_2_predicate_expr}};
         update_hi_2_value         : {{alu.update_hi_2_value_expr}};
-        output_predicate          : {{alu.output_predicate_expr}};
+        {# output_predicate          : {{alu.output_predicate_expr}}; #}
         output_value              : {{alu.output_value_expr }};
-        output_dst                : {{alu.output_dst_expr }};
+        {# output_dst                : {{alu.output_dst_expr }};
         initial_register_lo_value : {{alu.initial_register_lo_value_expr}};
-        initial_register_hi_value : {{alu.initial_register_hi_value_expr}};
+        initial_register_hi_value : {{alu.initial_register_hi_value_expr}}; #}
 
         // Instructions ommitted for now
         // selector_binding
@@ -106,9 +106,39 @@ register {{reg_name}} {
 {% for i in range(num_pipeline_stages) %}
   {% for j in range(num_alus_per_stage) %}
     // Stateless ALU action
-    {% set alu = stateless_alu[i][j] %}
+    {% set opcode = stateless_alus[i][j] %}
     action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
-       {{alu.expr}};
+        // NOTE: Please use the same opcode for the ones in
+        // stateless_alu_for_tofino.alu
+        {% if opcode == 0 %}
+        modify_field(mdata.result1, mdata.valu1);
+        {% elif opcode == 1 %}
+        add(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 2 %}
+        subtract(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 3 %}
+        bit_and(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 4 %}
+        bit_andca(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 5 %}
+        bit_andcb(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 6 %}
+        bit_nand(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 7 %}
+        bit_nor(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 8 %}
+        bit_not(mdata.result1, mdata.value1);
+        {% elif opcode == 9 %}
+        bit_or(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 10 %}
+        bit_orca(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 11 %}
+        bit_orcb(mdata.result1, mdata.value1, mdata.value2);
+        {% elif opcode == 12 %}
+        max(mdata.result1, mdata.value1, mdata.value2);
+        {% else %}
+        min(mdata.result1, mdata.value1, mdata.value2);
+        {% endif %}
     }
 
     // Stateless ALU table
