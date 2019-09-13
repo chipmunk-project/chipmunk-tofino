@@ -1,4 +1,5 @@
 from os import path
+from pathlib import Path
 
 from antlr4 import CommonTokenStream
 from antlr4 import FileStream
@@ -85,11 +86,13 @@ class TofinoCodeGenerator:
 
         template = self.jinja2_env_.get_template('tofino_p4.j2')
 
-        print(template.render(
+        p4_code = template.render(
             sketch_name=self.sketch_name_,
             num_pipeline_stages=self.num_pipeline_stages_,
             num_state_groups=self.num_state_groups_,
             num_alus_per_stage=self.num_alus_per_stage_,
             stateful_alus=stateful_alus,
             stateless_alus=stateless_alus
-        ))
+        )
+
+        Path(self.sketch_name_ + '.p4').write_text(p4_code)
