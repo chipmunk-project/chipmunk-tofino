@@ -15,11 +15,11 @@ header ethernet_t ethernet;
 header_type ipv4_t {
     fields {
         // TODO: Have a hard limit on 5 fields for now. Ensure this in the tofino code generator.
-        field1 : 32;
-        field2 : 32;
-        field3 : 32;
-        field4 : 32;
-        field5 : 32;
+        pkt_0 : 32;
+        pkt_1 : 32;
+        pkt_2 : 32;
+        pkt_3 : 32;
+        pkt_4 : 32;
     }
 }
 
@@ -113,31 +113,31 @@ action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     {% if opcode == 0 %}
     modify_field(mdata.result1, mdata.valu1);
     {% elif opcode == 1 %}
-    add(mdata.result1, mdata.value1, mdata.value2);
+    add(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 2 %}
-    subtract(mdata.result1, mdata.value1, mdata.value2);
+    subtract(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 3 %}
-    bit_and(mdata.result1, mdata.value1, mdata.value2);
+    bit_and(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 4 %}
-    bit_andca(mdata.result1, mdata.value1, mdata.value2);
+    bit_andca(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 5 %}
-    bit_andcb(mdata.result1, mdata.value1, mdata.value2);
+    bit_andcb(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 6 %}
-    bit_nand(mdata.result1, mdata.value1, mdata.value2);
+    bit_nand(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 7 %}
-    bit_nor(mdata.result1, mdata.value1, mdata.value2);
+    bit_nor(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 8 %}
-    bit_not(mdata.result1, mdata.value1);
+    bit_not(mdata.result1, mdata.pkt_0);
     {% elif opcode == 9 %}
-    bit_or(mdata.result1, mdata.value1, mdata.value2);
+    bit_or(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 10 %}
-    bit_orca(mdata.result1, mdata.value1, mdata.value2);
+    bit_orca(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 11 %}
-    bit_orcb(mdata.result1, mdata.value1, mdata.value2);
+    bit_orcb(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% elif opcode == 12 %}
-    max(mdata.result1, mdata.value1, mdata.value2);
+    max(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% else %}
-    min(mdata.result1, mdata.value1, mdata.value2);
+    min(mdata.result1, mdata.pkt_0, mdata.pkt_1);
     {% endif %}
 }
 
