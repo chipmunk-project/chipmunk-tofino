@@ -10,7 +10,6 @@ from jinja2 import StrictUndefined
 from chipc.aluLexer import aluLexer
 from chipc.aluParser import aluParser
 from chipc.tofino_stateful_alu_visitor import TofinoStatefulAluVisitor
-from chipc.tofino_stateless_alu_visitor import TofinoStatelessAluVisitor
 
 
 class TofinoCodeGenerator:
@@ -52,20 +51,6 @@ class TofinoCodeGenerator:
                 stateful_alus[i][l] = stateful_alu_template_dict
 
         return stateful_alus, stateless_alus
-
-    def generate_stateless_alu(self, alu_name):
-        input_stream = FileStream(self.stateless_alu_filename_)
-        lexer = aluLexer(input_stream)
-        stream = CommonTokenStream(lexer)
-        parser = aluParser(stream)
-        tree = parser.alu()
-
-        tofino_stateless_alu_visitor = TofinoStatelessAluVisitor(
-            self.stateless_alu_filename_, self.sketch_name_ + '_' + alu_name,
-            self.constant_arr_, self.hole_assignments_)
-        tofino_stateless_alu_visitor.visit(tree)
-
-        return tofino_stateless_alu_visitor.template_args
 
     def generate_stateful_alu(self, alu_name):
         input_stream = FileStream(self.stateful_alu_filename_)
