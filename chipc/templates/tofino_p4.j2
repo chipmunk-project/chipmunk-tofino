@@ -71,21 +71,26 @@ blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
     update_hi_1_value         : {{alu.update_hi_1_value_expr}};
     update_hi_2_predicate     : {{alu.update_hi_2_predicate_expr}};
     update_hi_2_value         : {{alu.update_hi_2_value_expr}};
-    {# output_predicate          : {{alu.output_predicate_expr}}; #}
+    {# TODO: Check back whether the output_predicate should always be 1. #}
+    output_predicate          : 1
     output_value              : {{alu.output_value_expr }};
+    {# TODO: Once we fix the issue with push vs pull mode. We should be able to
+    generate the expression for output_dst. #}
     {# output_dst                : {{alu.output_dst_expr }};
+    NOTE(taegyunk): These values might not matter for us now, but we should
+    revisit this later.
     initial_register_lo_value : {{alu.initial_register_lo_value_expr}};
     initial_register_hi_value : {{alu.initial_register_hi_value_expr}}; #}
 
-    // Instructions ommitted for now
-    // selector_binding
-    // math_unit_input
-    // math_unit_output_scale
-    // math_unit_exponent_shift
-    // math_unit_exponent_invert
-    // math_unit_lookup_table
-    // reduction_or_group
-    // stateful_logging_mode
+    {# Instructions ommitted for now
+    selector_binding
+    math_unit_input
+    math_unit_output_scale
+    math_unit_exponent_shift
+    math_unit_exponent_invert
+    math_unit_lookup_table
+    reduction_or_group
+    stateful_logging_mode #}
 }
 
 // Stateful ALU Action
@@ -112,8 +117,10 @@ table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table () {
 // Stateless ALU action
 {% set opcode = stateless_alus[i][j] %}
 action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
-    // NOTE: Please use the same opcode for the ones in
-    // stateless_alu_for_tofino.alu
+    {# NOTE: Please use the same opcode for the ones in
+    stateless_alu_for_tofino.alu
+    TODO: here the mdata.result1 should refer to a field in the header.
+    #}
     {% if opcode == 0 %}
     modify_field(mdata.result1, mdata.valu1);
     {% elif opcode == 1 %}
