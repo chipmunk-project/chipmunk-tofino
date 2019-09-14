@@ -46,18 +46,21 @@ parser parse_ipv4 {
 }
 
 // TODO: Derive MAX_SIZE from Domino program.
-{# #define MAX_SIZE 10
-register {{reg_name}} {
+#define MAX_SIZE 10
+{% for j in range(num_state_groups) %}
+register reg_{{j}} {
     width : 64;
     instance_count : MAX_SIZE;
-} #}
+}
+{% endfor %}
 
 {% for i in range(num_pipeline_stages) %}
   {% for j in range(num_state_groups) %}
+    {% if salu_configs[i][j] == 1 %}
 // Stateful ALU blackbox
 blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
     {% set alu = stateful_alus[i][j] %}
-    reg                       : {{alu.reg_name}};
+    reg                       : reg_{{j}};
     condition_lo              : {{alu.condition_lo_expr }};
     condition_hi              : {{alu.condition_hi_expr }};
     update_lo_1_predicate     : {{alu.update_lo_1_predicate_expr }};
@@ -100,6 +103,7 @@ table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table () {
     }
     default_action: {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action;
 }
+{% endif %}
   {% endfor %}
 {% endfor %}
 
@@ -173,7 +177,9 @@ control ingress {
         apply({{sketch_name}}_stateless_alu_{{i}}_{{j}});
       {% endfor %}
       {% for j in range(num_state_groups) %}
+        {% if salu_configs[i][j] == 1 %}
         apply({{sketch_name}}_stateful_alu_{{i}}_{{j}});
+        {% endif %}
       {% endfor %}
     {% endfor %}
     // MAC Forwarding by default
