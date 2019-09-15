@@ -72,7 +72,8 @@ class TofinoCodeGenerator:
             self.sketch_name_ + '_' + alu_name, self.constant_arr_,
             self.hole_assignments_)
         tofino_stateful_alu_visitor.visit(tree)
-
+        # Ensure changes to hole_assignments made by TofinoStatefulAluVisitor
+        # are reflected back in self.hole_assignments_
         self.hole_assignments_ = tofino_stateful_alu_visitor.hole_assignments
 
         return tofino_stateful_alu_visitor.template_args
