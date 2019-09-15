@@ -111,10 +111,6 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.packet_fields.append(packet_field_name)
 
     @overrides
-    def visitVar(self, ctx):
-        return ctx.getText()
-
-    @overrides
     def visitNum(self, ctx):
         return ctx.getText()
 
