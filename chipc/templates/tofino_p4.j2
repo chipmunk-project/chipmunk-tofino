@@ -82,7 +82,7 @@ blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
     initial_register_lo_value : {{alu.initial_register_lo_value_expr}};
     initial_register_hi_value : {{alu.initial_register_hi_value_expr}}; #}
 
-    {# Instructions ommitted for now
+    {# Instructions omitted for now
     selector_binding
     math_unit_input
     math_unit_output_scale
@@ -96,7 +96,9 @@ blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
 // Stateful ALU Action
 action {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action () {
     {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox.execute_stateful_alu(0);
-    // TODO: Replace 0 with appropriate value for array-based registers.
+    // TODO: Replace 0 with appropriate value for array-based registers. The
+    // appropriate value can be determined by parsing the .c file using the
+    // Domino compiler.
 }
 
 // Stateful ALU table
