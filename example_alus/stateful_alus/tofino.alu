@@ -1,5 +1,5 @@
 type : stateful
-state variables : {state_0, state_1} // register_lo, register_hi
+state variables : {register_lo, register_hi} // register_lo, register_hi
 hole variables : {}
 packet fields : {metadata_lo, metadata_hi} // metadata_lo, metadata_hi
 
@@ -8,22 +8,22 @@ packet fields : {metadata_lo, metadata_hi} // metadata_lo, metadata_hi
 
 // Model computation ALUs from Tofino salu.pdf
 int update_hi_1_value =
-    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(state_0, state_1, C()));
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(register_lo, register_hi, C()));
 int update_hi_2_value =
-    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(state_0, state_1, C()));
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(register_lo, register_hi, C()));
 int update_lo_1_value =
-    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(state_0, state_1, C()));
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(register_lo, register_hi, C()));
 int update_lo_2_value =
-    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(state_0, state_1, C()));
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(register_lo, register_hi, C()));
 
 // Comparison unit
 // NOTE: rel_op doesn't support >-, <= but it should be enough because
 // bool_op (used to compute the ALU predicates) has support for ~.
 bit condition_hi = rel_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)) +
-                              arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              arith_op(0, Mux3(register_lo, register_hi, 0)) + C(),
                           0);
 bit condition_lo = rel_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)) +
-                              arith_op(0, Mux3(state_0, state_1, 0)) + C(),
+                              arith_op(0, Mux3(register_lo, register_hi, 0)) + C(),
                           0);
 
 // ALU predicates
@@ -35,28 +35,28 @@ bit update_lo_2_predicate = bool_op(condition_hi, condition_lo);
 // Actually run the ALUs
 if (update_hi_1_predicate && update_hi_2_predicate) {
   // TODO: Implement necessary code to compute bitwise OR using bit vectors.
-  // Following line needs to be written as state_1 = update_hi_1_value | update_hi_2_value.
+  // Following line needs to be written as register_hi = update_hi_1_value | update_hi_2_value.
   // The bitwise OR of the two alu values. Sketch only supports bitwisse OR for
   // bit vectors not for ints. So we now leave this as assert(false) to catch
   // that certain benchmarks don't pass because of this.
     assert(false);
 } elif (update_hi_1_predicate && !update_hi_2_predicate) {
-    state_1 = update_hi_1_value;
+    register_hi = update_hi_1_value;
 } elif (!update_hi_1_predicate && update_hi_2_predicate) {
-    state_1 = update_hi_2_value;
+    register_hi = update_hi_2_value;
 } else {
-    state_1 = state_1;
+    register_hi = register_hi;
 }
 
 if (update_lo_1_predicate && update_lo_2_predicate) {
   // TODO: Same as above.
     assert(false);
 } elif (update_lo_1_predicate && !update_lo_2_predicate) {
-    state_0 = update_lo_1_value;
+    register_lo = update_lo_1_value;
 } elif (!update_lo_1_predicate && update_lo_2_predicate) {
-    state_0 = update_lo_2_value;
+    register_lo = update_lo_2_value;
 } else {
-    state_0 = state_0;
+    register_lo = register_lo;
 }
 
 // TODO: We can only update one metadata field, and we don't know at this point
@@ -64,5 +64,5 @@ if (update_lo_1_predicate && update_lo_2_predicate) {
 // let the output mux choose. To handle this, we would like to change all
 // stateful alus to return one single integer value and modify related Python
 // sketch generator scripts to accomodate this.
-int output_value = Mux5(metadata_hi, metadata_lo, state_0, state_1, 0);
+int output_value = Mux5(metadata_hi, metadata_lo, register_lo, register_hi, 0);
 return output_value;

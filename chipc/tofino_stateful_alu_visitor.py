@@ -100,10 +100,6 @@ class TofinoStatefulAluVisitor(aluVisitor):
         return ctx.getText()
 
     @overrides
-    def visitState_vars(self, ctx):
-        self.num_state_slots = ctx.getChildCount() - 5
-
-    @overrides
     def visitState_indicator(self, ctx):
         pass
 
