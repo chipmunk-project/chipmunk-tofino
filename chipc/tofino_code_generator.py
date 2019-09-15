@@ -57,10 +57,6 @@ class TofinoCodeGenerator:
             for j in range(self.num_state_groups_):
                 stateful_alu_template_dict = self.generate_stateful_alu(
                     'stateful_alu_' + str(i) + '_' + str(j))
-                stateful_alu_template_dict['alu_name'] = 'salu_' + str(
-                    i) + '_' + str(j)
-                stateful_alu_template_dict['reg_name'] = 'reg_' + str(j)
-
                 stateful_alus[i][j] = stateful_alu_template_dict
 
         return stateful_alus
