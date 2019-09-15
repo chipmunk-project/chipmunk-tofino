@@ -58,6 +58,10 @@ class TofinoCodeGenerator:
                 stateful_alu_template_dict = self.generate_stateful_alu(
                     'stateful_alu_' + str(i) + '_' + str(j))
                 stateful_alus[i][j] = stateful_alu_template_dict
+                stateful_alus[i][j]['output_dst'] = 'ipv4.pkt_' + \
+                    str(self.hole_assignments_.pop(
+                        self.sketch_name_ + '_stateful_alu_' +
+                        str(i) + '_' + str(j) + '_demux_ctrl'))
 
         return stateful_alus
 

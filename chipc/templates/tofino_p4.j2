@@ -73,7 +73,7 @@ blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
     update_hi_2_value         : {{alu['update_hi_2_value_expr']}};
     output_predicate          : 1
     output_value              : {{alu['output_value_expr']}};
-    output_dst                : {{alu['output_dst_expr']}};
+    output_dst                : {{alu['output_dst']}};
     {# TODO: Set initial values more sensibly. #}
     initial_register_lo_value : 0;
     initial_register_hi_value : 0;

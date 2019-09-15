@@ -35,6 +35,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
             'update_hi_2_predicate',
             'update_hi_2_value',
             'output_value',
+            'output_dst'
         ])
         self.template_args = {}
 
