@@ -19,11 +19,11 @@ int update_lo_2_value =
 // Comparison unit
 // NOTE: rel_op doesn't support >-, <= but it should be enough because
 // bool_op (used to compute the ALU predicates) has support for ~.
-bit condition_hi = rel_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)) +
-                              arith_op(0, Mux3(register_lo, register_hi, 0)) + C(),
+bit condition_hi = rel_op(arith_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)),
+                                   Mux3(register_lo, register_hi, 0)) + C(),
                           0);
-bit condition_lo = rel_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)) +
-                              arith_op(0, Mux3(register_lo, register_hi, 0)) + C(),
+bit condition_lo = rel_op(arith_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)),
+                                   Mux3(register_lo, register_hi, 0)) + C(),
                           0);
 
 // ALU predicates
