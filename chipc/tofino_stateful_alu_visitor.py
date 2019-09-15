@@ -251,8 +251,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op4 = self.visit(ctx.getChild(3, aluParser.ExprContext))
         op5 = self.visit(ctx.getChild(4, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'Mux5_' + str(self.mux5_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'Mux5_' + str(self.mux5_count)))
 
         self.mux5_count += 1
 
@@ -265,8 +265,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op3 = self.visit(ctx.getChild(2, aluParser.ExprContext))
         op4 = self.visit(ctx.getChild(3, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'Mux4_' + str(self.mux4_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'Mux4_' + str(self.mux4_count)))
 
         self.mux4_count += 1
 
@@ -278,8 +278,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
         op3 = self.visit(ctx.getChild(2, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'Mux3_' + str(self.mux3_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'Mux3_' + str(self.mux3_count)))
 
         self.mux3_count += 1
 
@@ -291,8 +291,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
         op3 = ctx.getChild(6).getText()
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'Mux3_' + str(self.mux3_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'Mux3_' + str(self.mux3_count)))
 
         self.mux3_count += 1
 
@@ -303,8 +303,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op1 = self.visit(ctx.getChild(0, aluParser.ExprContext))
         op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'Mux2_' + str(self.mux2_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'Mux2_' + str(self.mux2_count)))
 
         self.mux2_count += 1
 
@@ -315,8 +315,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op1 = self.visit(ctx.getChild(0, aluParser.ExprContext))
         op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'rel_op_' + str(self.rel_op_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'rel_op_' + str(self.rel_op_count)))
 
         self.rel_op_count += 1
 
@@ -327,8 +327,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op1 = self.visit(ctx.getChild(0, aluParser.ExprContext))
         op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'bool_op_' + str(self.bool_op_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'bool_op_' + str(self.bool_op_count)))
 
         self.bool_op_count += 1
 
@@ -339,8 +339,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op1 = self.visit(ctx.getChild(0, aluParser.ExprContext))
         op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'arith_op_' + str(self.arith_op_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'arith_op_' + str(self.arith_op_count)))
 
         self.arith_op_count += 1
 
@@ -350,16 +350,16 @@ class TofinoStatefulAluVisitor(aluVisitor):
     def visitOpt(self, ctx):
         op = self.visit(ctx.getChild(0, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'Opt_' + str(self.arith_op_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'Opt_' + str(self.arith_op_count)))
         self.opt_count += 1
 
         return self.generateOpt(op, opcode)
 
     @overrides
     def visitConstant(self, ctx):
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'const_' + str(self.constant_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'const_' + str(self.constant_count)))
 
         self.constant_count += 1
 
@@ -370,8 +370,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
         op1 = self.visit(ctx.getChild(0, aluParser.ExprContext))
         op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
 
-        opcode = self.hole_assignments[self.get_full_hole_name(
-            'compute_alu_' + str(self.compute_alu_count))]
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'compute_alu_' + str(self.compute_alu_count)))
 
         self.compute_alu_count += 1
 

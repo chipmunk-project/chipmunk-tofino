@@ -34,10 +34,10 @@ class TofinoCodeGenerator:
                           for _ in range(self.num_pipeline_stages_)]
         for i in range(self.num_pipeline_stages_):
             for j in range(self.num_alus_per_stage_):
-                stateless_alus[i][j] = self.hole_assignments_[
-                    self.sketch_name_ + '_stateless_alu_' +
-                    str(i) + '_' + str(j) + '_opcode'
-                ]
+                hole_name = self.sketch_name_ + '_stateless_alu_' + str(
+                    i) + '_' + str(j) + '_opcode'
+                hole_value = self.hole_assignments_.pop(hole_name)
+                stateless_alus[i][j] = hole_value
 
         return stateless_alus
 
@@ -68,6 +68,8 @@ class TofinoCodeGenerator:
             self.hole_assignments_)
         tofino_stateful_alu_visitor.visit(tree)
 
+        self.hole_assignments_ = tofino_stateful_alu_visitor.hole_assignments
+
         return tofino_stateful_alu_visitor.template_args
 
     def generate_salu_configs(self):
@@ -75,9 +77,10 @@ class TofinoCodeGenerator:
                         for _ in range(self.num_pipeline_stages_)]
         for i in range(self.num_pipeline_stages_):
             for j in range(self.num_state_groups_):
-                salu_configs[i][j] = self.hole_assignments_[
-                    self.sketch_name_ + '_salu_config_' + str(i) + '_' +
-                    str(j)]
+                hole_name = self.sketch_name_ + '_salu_config_' + str(
+                    i) + '_' + str(j)
+                hole_value = self.hole_assignments_.pop(hole_name)
+                salu_configs[i][j] = hole_value
 
         return salu_configs
 
@@ -98,4 +101,10 @@ class TofinoCodeGenerator:
             salu_configs=salu_configs
         )
 
-        Path(self.sketch_name_ + '.p4').write_text(p4_code)
+        print("List of holes that we haven't used to generate p4 code")
+        for hole, value in sorted(self.hole_assignments_.items()):
+            print('int', hole, '=', value)
+
+        p4_filename = self.sketch_name_ + '.p4'
+        Path(p4_filename).write_text(p4_code)
+        print('Compilation to p4 done. Output left at', p4_filename)
