@@ -479,6 +479,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
                 template_str = '({op2})'
             else:
                 template_str = '(-({op2}))'
+        elif op2 == '0':
+            template_str = '({op1})'
         else:
             if opcode == 0:
                 template_str = '({op1}) + ({op2})'
