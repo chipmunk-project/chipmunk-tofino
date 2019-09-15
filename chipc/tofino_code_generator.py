@@ -36,18 +36,20 @@ class TofinoCodeGenerator:
             for j in range(self.num_alus_per_stage_):
                 hole_prefix = self.sketch_name_ + '_stateless_alu_' + \
                     str(i) + '_' + str(j)
-                stateless_alus[i][j]['enable'] = self.hole_assignments_.pop(
+                alu_dict = dict()
+                alu_dict['enable'] = self.hole_assignments_.pop(
                     hole_prefix + '_demux_ctrl')
-                stateless_alus[i][j]['opcode'] = self.hole_assignments_.pop(
+                alu_dict['opcode'] = self.hole_assignments_.pop(
                     hole_prefix + '_opcode')
-                stateless_alus[i][j]['result'] = 'ipv4.pkt_' + str(j)
-                stateless_alus[i][j]['operand0'] = 'ipv4.pkt_' + str(
+                alu_dict['result'] = 'ipv4.pkt_' + str(j)
+                alu_dict['operand0'] = 'ipv4.pkt_' + str(
                     self.hole_assignments_.pop(hole_prefix +
                                                '_operand_mux_0_ctrl'))
-                stateless_alus[i][j]['operand1'] = 'ipv4.pkt_' + str(
+                alu_dict['operand1'] = 'ipv4.pkt_' + str(
                     self.hole_assignments_.pop(hole_prefix +
                                                '_operand_mux_1_ctrl'))
 
+                stateless_alus[i][j] = alu_dict
         return stateless_alus
 
     def generate_stateful_alus(self):
