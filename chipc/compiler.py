@@ -42,6 +42,7 @@ class Compiler:
                  num_pipeline_stages, num_alus_per_stage, sketch_name,
                  parallel_sketch, constant_set,
                  synthesized_allocation=False,
+                 target_tofino=False,
                  pkt_fields_to_check=[]):
         self.program_file = program_file
         self.stateful_alu_file = stateful_alu_file
@@ -52,6 +53,7 @@ class Compiler:
         self.parallel_sketch = parallel_sketch
         self.constant_set = constant_set
         self.synthesized_allocation = synthesized_allocation
+        self.target_tofino = target_tofino
 
         program_content = Path(program_file).read_text()
         self.num_fields_in_prog = get_num_pkt_fields(program_content)
@@ -89,7 +91,8 @@ class Compiler:
             stateful_alu_file=stateful_alu_file,
             stateless_alu_file=stateless_alu_file,
             constant_set=constant_set,
-            synthesized_allocation=synthesized_allocation)
+            synthesized_allocation=synthesized_allocation,
+            target_tofino=target_tofino)
 
     def update_constants_for_synthesis(self, constant_set):
         # Join the values in constant_set to get constant_array in sketch.

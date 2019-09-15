@@ -113,6 +113,22 @@
     {% endfor %}
 
     // Outputs
+    {% if target_tofino %}
+    // definition for output
+    {% for container_number in range(num_phv_containers) %}
+      int output_{{stage_number}}_{{container_number}};
+    {% endfor %}
+    {% for container_number in range(num_phv_containers) %}
+      if ({{sketch_name}}_stateless_output_demux_{{stage_number}}_{{container_number}}_ctrl == 1)
+         output_{{stage_number}}_{{container_number}} = destination_{{stage_number}}_{{container_number}};
+      {% for state_group_number in range(num_state_groups) %}
+      else if (({{sketch_name}}_stateful_output_demux_{{stage_number}}_{{state_group_number}}_ctrl == {{container_number}}) && ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1))
+         output_{{stage_number}}_{{container_number}} = returned_state_{{stage_number}}_{{state_group_number}};
+      {% endfor %}
+      else
+         assert(false);
+    {% endfor %}
+    {% else %}
     {% for container_number in range(num_phv_containers) %}
       int output_{{stage_number}}_{{container_number}} = {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}(
       {% for state_group_number in range(num_state_groups) %}
@@ -124,6 +140,7 @@
       {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}_ctrl
       );
     {% endfor %}
+    {% endif %}
 
     {% for state_group_number in range(num_state_groups) %}
       // Write stateful_vars

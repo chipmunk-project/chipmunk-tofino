@@ -19,6 +19,7 @@ class TofinoIterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'learn_filter_modified_for_test.sk'),
                 path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '--target-tofino',
                 '1', '3', '0,1,2,3', '10']),
         )
 
@@ -30,6 +31,7 @@ class TofinoIterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'learn_filter_modified_for_test.sk'),
                 path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '--target-tofino',
                 '2', '2', '0,1,2,3', '10']),
         )
 
@@ -41,6 +43,7 @@ class TofinoIterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'simple.sk'),
                 path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '--target-tofino',
                 '2', '2', '0,1,2,3', '10']),
         )
 
@@ -52,6 +55,7 @@ class TofinoIterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'simple2.sk'),
                 path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '--target-tofino',
                 '2', '2', '0,1,2,3', '10']),
         )
 
@@ -63,6 +67,7 @@ class TofinoIterativeSolverTest(unittest.TestCase):
                 path.join(SPEC_DIR, 'snap_heavy_hitter.sk'),
                 path.join(STATEFUL_ALU_DIR, 'tofino.alu'),
                 path.join(STATELESS_ALU_DIR, 'stateless_alu_for_tofino.alu'),
+                '--target-tofino',
                 '1', '1', '0,1,2,3', '10']),
         )
 

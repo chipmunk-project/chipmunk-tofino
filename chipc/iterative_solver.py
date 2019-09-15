@@ -131,6 +131,12 @@ def main(argv):
               use canonical allocation, i.e, first state variable assigned \
               to first phv container.'
     )
+    parser.add_argument(
+        '--target-tofino',
+        action='store_true',
+        help='If set, use the push mode instead of pull mode to update PHVs\
+              from stateful ALUs.'
+    )
 
     args = parser.parse_args(argv[1:])
     # Use program_content to store the program file text rather than using it
@@ -157,7 +163,9 @@ def main(argv):
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         sketch_name, args.parallel_sketch,
                         constant_set,
-                        args.synthesized_allocation, args.pkt_fields)
+                        args.synthesized_allocation,
+                        args.target_tofino,
+                        args.pkt_fields)
     # Repeatedly run synthesis at 2 bits and verification using all valid ints
     # until either verification succeeds or synthesis fails at 2 bits. Note
     # that the verification with all ints, might not work because sketch only

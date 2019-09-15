@@ -28,7 +28,7 @@ class SketchCodeGenerator:
                  num_alus_per_stage, num_pipeline_stages, num_fields_in_prog,
                  pkt_fields_to_check, jinja2_env, stateful_alu_file,
                  stateless_alu_file, constant_set,
-                 synthesized_allocation):
+                 synthesized_allocation, target_tofino):
         self.sketch_name_ = sketch_name
         self.total_hole_bits_ = 0
         self.hole_names_ = []
@@ -61,6 +61,7 @@ class SketchCodeGenerator:
         self.num_operands_to_stateful_alu_ = 0
         self.num_state_slots_ = 0
         self.synthesized_allocation_ = synthesized_allocation
+        self.target_tofino_ = target_tofino
 
     def reset_holes_and_asserts(self):
         self.total_hole_bits_ = 0
@@ -238,12 +239,14 @@ class SketchCodeGenerator:
         assert (n >= 1)
         num_bits = math.ceil(math.log(n, 2))
         operand_mux_template = self.jinja2_env_.get_template('mux.j2')
+        # As for demux, we do not need to generate operand_mux
         mux_code = operand_mux_template.render(
             mux_name=self.sketch_name_ + '_' + mux_name,
             operand_list=['input' + str(i) for i in range(0, n)],
             arg_list=['int input' + str(i) for i in range(0, n)],
             num_operands=n)
-        self.add_hole(self.sketch_name_ + '_' + mux_name + '_ctrl', num_bits)
+        self.add_hole(self.sketch_name_ + '_' +
+                      mux_name + '_ctrl', num_bits)
         return mux_code
 
     # Stateful operand muxes, stateless ones are part of generate_stateless_alu
@@ -272,11 +275,55 @@ class SketchCodeGenerator:
         # virtual output mux setting can be translated into the physical output
         # mux setting during post processing.
         ret = ''
-        for i in range(self.num_pipeline_stages_):
-            for k in range(self.num_phv_containers_):
-                ret += self.generate_mux(
-                    self.num_state_groups_ * self.num_state_slots_ + 1,
-                    'output_mux_phv_' + str(i) + '_' + str(k)) + '\n'
+        if self.target_tofino_:
+            for i in range(self.num_pipeline_stages_):
+                for k in range(self.num_phv_containers_):
+                    self.add_hole(self.sketch_name_ +
+                                  '_stateless_output_demux_'
+                                  + str(i) + '_' + str(k) + '_ctrl', 1)
+            for i in range(self.num_pipeline_stages_):
+                for k in range(self.num_state_groups_):
+                    self.add_hole(self.sketch_name_ +
+                                  '_stateful_output_demux_'
+                                  + str(i) + '_' + str(k) + '_ctrl',
+                                  math.ceil(math.log2(self.num_phv_containers_)
+                                            ))
+
+            # Generate assert for demux for every phv container j
+            # i.e assert(
+            # ((stateless_demux_i_j == 1) +
+            # sum_(k) ((stateful_demux_i_k == 0 && salu_config_i_k == 1))
+            # == 1)
+            # In English, PHV container j is fed by exactly
+            # stateless ALU j or exactly one of the active stateful ALUs,
+            # but not both
+            for i in range(self.num_pipeline_stages_):
+                for j in range(self.num_phv_containers_):
+                    # TODO: maybe we need to specially
+                    # consider the case j=self.num_phv_containers_ - 1
+                    assert_predicate = '(('
+                    assert_predicate += '(' + self.sketch_name_ + \
+                                        '_stateless_output_demux_' + str(i) +\
+                                        '_' + str(j) + '_ctrl' + \
+                                        ' == 1 ) +'
+                    for k in range(self.num_state_groups_):
+                        assert_predicate += '((' + self.sketch_name_ + \
+                                            '_stateful_output_demux_' + \
+                                            str(i) + \
+                                            '_' + str(k) + '_ctrl' + \
+                                            ' == ' + str(j) + ')  && (' + \
+                                            self.sketch_name_ + '_' + \
+                                            'salu_config_' + \
+                                            str(i) + '_' + \
+                            str(k) + '== 1)) + '
+                    assert_predicate += ' 0) == 1)'
+                    self.add_assert(assert_predicate)
+        else:
+            for i in range(self.num_pipeline_stages_):
+                for k in range(self.num_phv_containers_):
+                    ret += self.generate_mux(
+                        self.num_state_groups_ * self.num_state_slots_ + 1,
+                        'output_mux_phv_' + str(i) + '_' + str(k)) + '\n'
         return ret
 
     def generate_alus(self):
@@ -319,6 +366,7 @@ class SketchCodeGenerator:
         return template.render(
             mode=mode,
             synthesized_allocation=synthesized_allocation,
+            target_tofino=self.target_tofino_,
             sketch_name=self.sketch_name_,
             program_file=program_file,
             num_pipeline_stages=self.num_pipeline_stages_,
