@@ -7,7 +7,7 @@ from chipc.aluVisitor import aluVisitor
 class TofinoStatefulAluVisitor(aluVisitor):
     def __init__(self, alu_filename, constant_arr, hole_assignments):
         self.alu_filename = alu_filename
-        self.num_state_slots = 0
+        self.state_vars = []
         self.packet_fields = []
         self.mux5_count = 0
         self.mux4_count = 0
@@ -48,18 +48,40 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.visit(ctx.getChild(0, aluParser.Packet_field_defContext))
 
-        self.visit(ctx.getChild(0, aluParser.State_varsContext))
+        self.visit(ctx.getChild(0, aluParser.State_var_defContext))
 
         self.main_function += \
             ') {\n'
 
-        assert (self.num_state_slots > 0)
-        for slot in range(self.num_state_slots):
-            self.main_function += '\nint state_' + str(
-                slot) + ' = state_group.state_' + str(slot) + ';'
+        assert len(self.state_vars) > 0
+        for idx, state_var in enumerate(self.state_vars):
+            self.main_function += '\nint ' + state_var + \
+                ' = state_group.state_' + str(idx) + ';'
 
         self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
         self.main_function += '\n\n}'
+
+    @overrides
+    def visitState_var_def(self, ctx):
+        self.visitChildren(ctx)
+
+    @overrides
+    def visitState_var_seq(self, ctx):
+        if ctx.getChildCount() > 0:
+            self.visitChildren(ctx)
+
+    @overrides
+    def visitSingleStateVar(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.State_varContext))
+
+    @overrides
+    def visitMultipleStateVars(self, ctx):
+        self.visitChildren(ctx)
+
+    @overrides
+    def visitState_var(self, ctx):
+        state_var_name = ctx.getText()
+        self.state_vars.append(state_var_name)
 
     @overrides
     def visitPacket_field_def(self, ctx):
@@ -105,9 +127,9 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
     @overrides
     def visitReturn_statement(self, ctx):
-        for slot in range(self.num_state_slots):
+        for idx, state_var in enumerate(self.state_vars):
             self.main_function += '\nstate_group.state_' + str(
-                slot) + ' = state_' + str(slot) + ';'
+                idx) + ' = ' + state_var + ';'
 
         self.main_function += 'return '
         self.main_function += self.visit(ctx.getChild(1))
@@ -158,7 +180,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
         assert ctx.getChild(ctx.getChildCount() - 1).getText() == ';', \
             'Every update must end with a semicolon.'
         self.main_function += self.visit(
-            ctx.getChild(0, aluParser.State_varContext))
+            ctx.getChild(0, aluParser.VariableContext))
         self.main_function += ' = '
         self.main_function += self.visit(ctx.getChild(0,
                                                       aluParser.ExprContext))
@@ -201,6 +223,10 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.main_function += ctx.getChild(0).getText()
 
     @overrides
+    def visitVariable(self, ctx):
+        return ctx.getText()
+
+    @overrides
     def visitExprWithOp(self, ctx):
         return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
             ctx.getChild(1).getText() + \
@@ -216,10 +242,6 @@ class TofinoStatefulAluVisitor(aluVisitor):
         return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
             ctx.getChild(1).getText() + \
             self.visit(ctx.getChild(1, aluParser.ExprContext))
-
-    @overrides
-    def visitState_var(self, ctx):
-        return ctx.getChild(0).getText()
 
     @overrides
     def visitMux5(self, ctx):
