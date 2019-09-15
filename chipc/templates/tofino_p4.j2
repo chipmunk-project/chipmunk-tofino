@@ -114,12 +114,12 @@ table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table () {
 
 {% for i in range(num_pipeline_stages) %}
   {% for j in range(num_alus_per_stage) %}
-{% if stateless_alus[i][j].enable == 1 %}
+{% if stateless_alus[i][j]['enable'] == 1 %}
 // Stateless ALU action
-{% set opcode   = stateless_alus[i][j].opcode %}
-{% set operand0 = stateless_alus[i][j].operand0 %}
-{% set operand1 = stateless_alus[i][j].operand1 %}
-{% set result   = stateless_alus[i][j].result %}
+{% set opcode   = stateless_alus[i][j]['opcode'] %}
+{% set operand0 = stateless_alus[i][j]['operand0'] %}
+{% set operand1 = stateless_alus[i][j]['operand1'] %}
+{% set result   = stateless_alus[i][j]['result'] %}
 action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     {# NOTE: Please use the same opcode for the ones in
     stateless_alu_for_tofino.alu #}

@@ -30,14 +30,23 @@ class TofinoCodeGenerator:
             undefined=StrictUndefined)
 
     def generate_stateless_alus(self):
-        stateless_alus = [[0] * self.num_alus_per_stage_
+        stateless_alus = [[dict()] * self.num_alus_per_stage_
                           for _ in range(self.num_pipeline_stages_)]
         for i in range(self.num_pipeline_stages_):
             for j in range(self.num_alus_per_stage_):
-                hole_name = self.sketch_name_ + '_stateless_alu_' + str(
-                    i) + '_' + str(j) + '_opcode'
-                hole_value = self.hole_assignments_.pop(hole_name)
-                stateless_alus[i][j] = hole_value
+                hole_prefix = self.sketch_name_ + '_stateless_alu_' + \
+                    str(i) + '_' + str(j)
+                stateless_alus[i][j]['enable'] = self.hole_assignments_.pop(
+                    hole_prefix + '_demux_ctrl')
+                stateless_alus[i][j]['opcode'] = self.hole_assignments_.pop(
+                    hole_prefix + '_opcode')
+                stateless_alus[i][j]['result'] = 'ipv4.pkt_' + str(j)
+                stateless_alus[i][j]['operand0'] = 'ipv4.pkt_' + str(
+                    self.hole_assignments_.pop(hole_prefix +
+                                               '_operand_mux_0_ctrl'))
+                stateless_alus[i][j]['operand1'] = 'ipv4.pkt_' + str(
+                    self.hole_assignments_.pop(hole_prefix +
+                                               '_operand_mux_1_ctrl'))
 
         return stateless_alus
 
