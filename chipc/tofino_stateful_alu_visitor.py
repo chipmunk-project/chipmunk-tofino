@@ -5,7 +5,8 @@ from chipc.aluVisitor import aluVisitor
 
 
 class TofinoStatefulAluVisitor(aluVisitor):
-    def __init__(self, alu_filename, constant_arr, hole_assignments):
+    def __init__(self, alu_filename, constant_arr, hole_assignments,
+                 operand0, operand1):
         self.alu_filename = alu_filename
         self.state_vars = []
         self.packet_fields = []
@@ -38,6 +39,8 @@ class TofinoStatefulAluVisitor(aluVisitor):
             'output_dst'
         ])
         self.template_args = {}
+        self.operand0 = operand0
+        self.operand1 = operand1
 
     def get_full_hole_name(self, hole_name):
         return self.alu_filename + '_' + hole_name + '_global'
@@ -221,7 +224,16 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
     @overrides
     def visitVariable(self, ctx):
-        return ctx.getText()
+        # TODO: Need to clean this up because it assumes the
+        # .alu files have the name metadata_hi and metadata_lo
+        # used in a very particular way.
+        var_name = ctx.getText()
+        if var_name == 'metadata_lo':
+            return self.operand0
+        elif var_name == 'metadata_hi':
+            return self.operand1
+        else:
+            return var_name
 
     @overrides
     def visitExprWithOp(self, ctx):

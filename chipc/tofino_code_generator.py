@@ -72,9 +72,17 @@ class TofinoCodeGenerator:
         parser = aluParser(stream)
         tree = parser.alu()
 
+        operand0 = 'ipv4.pkt_' + str(self.hole_assignments_.pop(
+                   self.sketch_name_ + '_' + alu_name +
+                   '_operand_mux_0_ctrl'))
+        operand1 = 'ipv4.pkt_' + str(self.hole_assignments_.pop(
+                   self.sketch_name_ + '_' + alu_name +
+                   '_operand_mux_1_ctrl'))
         tofino_stateful_alu_visitor = TofinoStatefulAluVisitor(
             self.sketch_name_ + '_' + alu_name, self.constant_arr_,
-            self.hole_assignments_)
+            self.hole_assignments_,
+            operand0,
+            operand1)
         tofino_stateful_alu_visitor.visit(tree)
         # Ensure changes to hole_assignments made by TofinoStatefulAluVisitor
         # are reflected back in self.hole_assignments_
