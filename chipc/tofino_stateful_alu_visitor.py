@@ -8,7 +8,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
     def __init__(self, alu_filename, constant_arr, hole_assignments):
         self.alu_filename = alu_filename
         self.num_state_slots = 0
-        self.num_packet_fields = 0
+        self.packet_fields = []
         self.mux5_count = 0
         self.mux4_count = 0
         self.mux3_count = 0
@@ -46,7 +46,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.main_function += (
             'int ' + self.alu_filename + '(ref | StateGroup | state_group, ')
 
-        self.visit(ctx.getChild(0, aluParser.Packet_fieldsContext))
+        self.visit(ctx.getChild(0, aluParser.Packet_field_defContext))
 
         self.visit(ctx.getChild(0, aluParser.State_varsContext))
 
@@ -62,22 +62,30 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.main_function += '\n\n}'
 
     @overrides
-    def visitPacket_fields(self, ctx):
-        self.main_function += 'int '
-        self.main_function += ctx.getChild(
-            0, aluParser.Packet_fieldContext).getText() + ','
-        self.num_packet_fields = 1
-        if (ctx.getChildCount() > 6):
-            for i in range(5, ctx.getChildCount() - 1):
-                self.visit(ctx.getChild(i))
-                self.num_packet_fields += 1
-        self.main_function = self.main_function[:-1]  # Trim out the last comma
+    def visitPacket_field_def(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.Packet_field_seqContext))
 
     @overrides
-    def visitPacket_field_with_comma(self, ctx):
+    def visitPacket_field_seq(self, ctx):
+        if ctx.getChildCount() > 0:
+            self.visitChildren(ctx)
+
+    @overrides
+    def visitSinglePacketField(self, ctx):
+        self.visitChildren(ctx)
+
+    @overrides
+    def visitMultiplePacketFields(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.Packet_fieldContext))
+        self.main_function += ', '
+        self.visit(ctx.getChild(0, aluParser.Packet_fieldsContext))
+
+    @overrides
+    def visitPacket_field(self, ctx):
+        packet_field_name = ctx.getText()
         self.main_function += 'int '
-        assert (ctx.getChild(0).getText() == ',')
-        self.main_function += ctx.getChild(1).getText() + ','
+        self.main_function += packet_field_name
+        self.packet_fields.append(packet_field_name)
 
     @overrides
     def visitVar(self, ctx):
