@@ -441,33 +441,33 @@ class TofinoStatefulAluVisitor(aluVisitor):
         if opcode == 0:
             template_str = 'false'
         elif opcode == 1:
-            template_str = '~(({op1}) || ({op2}))'
+            template_str = '~(({op1}) | ({op2}))'
         elif opcode == 2:
-            template_str = '(~({op1})) && ({op2})'
+            template_str = '(~({op1})) & ({op2})'
         elif opcode == 3:
             template_str = '~({op1})'
         elif opcode == 4:
-            template_str = '({op1}) && (~({op2}))'
+            template_str = '({op1}) & (~({op2}))'
         elif opcode == 5:
             template_str = '~({op2})'
         elif opcode == 6:
             template_str = '({op1}) ^ ({op2})'
         elif opcode == 7:
-            template_str = '~(({op1}) && ({op2}))'
+            template_str = '~(({op1}) & ({op2}))'
         elif opcode == 8:
-            template_str = '({op1}) && ({op2})'
+            template_str = '({op1}) & ({op2})'
         elif opcode == 9:
             template_str = '~(({op1}) ^ ({op2}))'
         elif opcode == 10:
             template_str = '({op2})'
         elif opcode == 11:
-            template_str = '(~({op1})) || ({op2})'
+            template_str = '(~({op1})) | ({op2})'
         elif opcode == 12:
             template_str = '({op1})'
         elif opcode == 13:
-            template_str = '({op1}) || (~({op2}))'
+            template_str = '({op1}) | (~({op2}))'
         elif opcode == 14:
-            template_str = '({op1}) || ({op2})'
+            template_str = '({op1}) | ({op2})'
         else:
             template_str = 'true'
 
