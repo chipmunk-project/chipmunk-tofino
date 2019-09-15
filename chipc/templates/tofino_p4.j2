@@ -100,7 +100,7 @@ action {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action () {
 // Stateful ALU table
 // (use pragmas to enforce table placement in certain stages)
 @pragma stage {{i}}
-table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table () {
+table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table {
     actions {
         {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action;
     }
