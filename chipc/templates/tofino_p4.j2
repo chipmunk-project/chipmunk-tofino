@@ -98,7 +98,8 @@ action {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action () {
 }
 
 // Stateful ALU table
-// (use pragmas to enforce table placement in certain stages)
+{{ignore_all_table_deps}}
+@pragma stage {{i}}
 table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table {
     actions {
         {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action;
@@ -152,6 +153,8 @@ action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
 }
 
 // Stateless ALU table
+{{ignore_all_table_deps}}
+@pragma stage {{i}}
 table {{sketch_name}}_stateless_alu_{{i}}_{{j}}_table {
     actions {
         {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action;

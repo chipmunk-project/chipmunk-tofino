@@ -111,6 +111,22 @@ class TofinoCodeGenerator:
 
         template = self.jinja2_env_.get_template('tofino_p4.j2')
 
+        # pragma to remove all table dependencies and (hopefully)
+        # take matters into our own hands
+        ignore_all_table_deps = ''
+        for i in range(self.num_pipeline_stages_):
+            for j in range(self.num_alus_per_stage_):
+                if stateless_alus[i][j]['enable'] == 1:
+                    ignore_all_table_deps += \
+                        '@pragma ignore_table_dependency ' + \
+                        self.sketch_name_ + '_stateless_alu_' + \
+                        str(i) + '_' + str(j) + '_table\n'
+            for k in range(self.num_state_groups_):
+                if salu_configs[i][k] == 1:
+                    ignore_all_table_deps += \
+                        '@pragma ignore_table_dependency ' + \
+                        self.sketch_name_ + '_stateful_alu_' + \
+                        str(i) + '_' + str(k) + '_table\n'
         p4_code = template.render(
             sketch_name=self.sketch_name_,
             num_pipeline_stages=self.num_pipeline_stages_,
@@ -118,7 +134,8 @@ class TofinoCodeGenerator:
             num_alus_per_stage=self.num_alus_per_stage_,
             stateful_alus=stateful_alus,
             stateless_alus=stateless_alus,
-            salu_configs=salu_configs
+            salu_configs=salu_configs,
+            ignore_all_table_deps=ignore_all_table_deps
         )
 
         print("List of holes that we haven't used to generate p4 code")
