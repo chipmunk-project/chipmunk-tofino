@@ -183,12 +183,12 @@ control ingress {
     {% for i in range(num_pipeline_stages) %}
       {% for j in range(num_alus_per_stage) %}
         {% if stateless_alus[i][j].enable == 1 %}
-          apply({{sketch_name}}_stateless_alu_{{i}}_{{j}});
+          apply({{sketch_name}}_stateless_alu_{{i}}_{{j}}_table);
         {% endif %}
       {% endfor %}
       {% for j in range(num_state_groups) %}
         {% if salu_configs[i][j] == 1 %}
-          apply({{sketch_name}}_stateful_alu_{{i}}_{{j}});
+          apply({{sketch_name}}_stateful_alu_{{i}}_{{j}}_table);
         {% endif %}
       {% endfor %}
     {% endfor %}
