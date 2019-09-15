@@ -501,16 +501,12 @@ class TofinoStatefulAluVisitor(aluVisitor):
         elif opcode == 1:
             template_str = '({op1}) - ({op2})'
         elif opcode == 2:
-            template_str = '({op1}) > ({op2}) ? ({op2}) : ({op1})'
-        elif opcode == 3:
-            template_str = '({op1}) > ({op2}) ? ({op1}) : ({op2})'
-        elif opcode == 4:
             template_str = '({op2}) - ({op1})'
-        elif opcode == 5:
+        elif opcode == 3:
             template_str = '({op2})'
-        elif opcode == 6:
+        elif opcode == 4:
             template_str = '({op1})'
-        elif opcode == 7:
+        elif opcode == 5:
             template_str = '0'
         else:
             template_str = '1'
