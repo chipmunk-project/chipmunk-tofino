@@ -61,26 +61,24 @@ register reg_{{j}} {
 blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
     {% set alu = stateful_alus[i][j] %}
     reg                       : reg_{{j}};
-    condition_lo              : {{alu.condition_lo_expr }};
-    condition_hi              : {{alu.condition_hi_expr }};
-    update_lo_1_predicate     : {{alu.update_lo_1_predicate_expr }};
-    update_lo_1_value         : {{alu.update_lo_1_value_expr }};
-    update_lo_2_predicate     : {{alu.update_lo_2_predicate_expr }};
-    update_lo_2_value         : {{alu.update_lo_2_value_expr}};
-    update_hi_1_predicate     : {{alu.update_hi_1_predicate_expr}};
-    update_hi_1_value         : {{alu.update_hi_1_value_expr}};
-    update_hi_2_predicate     : {{alu.update_hi_2_predicate_expr}};
-    update_hi_2_value         : {{alu.update_hi_2_value_expr}};
-    {# TODO: Check back whether the output_predicate should always be 1. #}
+    condition_lo              : {{alu['condition_lo_expr']}};
+    condition_hi              : {{alu['condition_hi_expr']}};
+    update_lo_1_predicate     : {{alu['update_lo_1_predicate_expr']}};
+    update_lo_1_value         : {{alu['update_lo_1_value_expr']}};
+    update_lo_2_predicate     : {{alu['update_lo_2_predicate_expr']}};
+    update_lo_2_value         : {{alu['update_lo_2_value_expr']}};
+    update_hi_1_predicate     : {{alu['update_hi_1_predicate_expr']}};
+    update_hi_1_value         : {{alu['update_hi_1_value_expr']}};
+    update_hi_2_predicate     : {{alu['update_hi_2_predicate_expr']}};
+    update_hi_2_value         : {{alu['update_hi_2_value_expr']}};
     output_predicate          : 1
-    output_value              : {{alu.output_value_expr }};
+    output_value              : {{alu['output_value_expr']}};
     {# TODO: Once we fix the issue with push vs pull mode. We should be able to
     generate the expression for output_dst. #}
-    {# output_dst                : {{alu.output_dst_expr }};
-    NOTE(taegyunk): These values might not matter for us now, but we should
-    revisit this later.
-    initial_register_lo_value : {{alu.initial_register_lo_value_expr}};
-    initial_register_hi_value : {{alu.initial_register_hi_value_expr}}; #}
+    {# output_dst                : {{alu['output_dst_expr']}}; #}
+    {# TODO: Set initial values more sensibly. #}
+    initial_register_lo_value : 0;
+    initial_register_hi_value : 0;
 
     {# Instructions omitted for now
     selector_binding
@@ -116,42 +114,43 @@ table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table () {
 
 {% for i in range(num_pipeline_stages) %}
   {% for j in range(num_alus_per_stage) %}
+{% if stateless_alus[i][j].enable == 1 %}
 // Stateless ALU action
 {% set opcode   = stateless_alus[i][j].opcode %}
+{% set operand0 = stateless_alus[i][j].operand0 %}
 {% set operand1 = stateless_alus[i][j].operand1 %}
-{% set operand2 = stateless_alus[i][j].operand2 %}
 {% set result   = stateless_alus[i][j].result %}
 action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     {# NOTE: Please use the same opcode for the ones in
     stateless_alu_for_tofino.alu #}
     {% if opcode == 0 %}
-    modify_field(result_field, operand1);
+    modify_field(result_field, operand0);
     {% elif opcode == 1 %}
-    add(result, operand1, operand2);
+    add(result, operand0, operand1);
     {% elif opcode == 2 %}
-    subtract(result, operand1, operand2);
+    subtract(result, operand0, operand1);
     {% elif opcode == 3 %}
-    bit_and(result, operand1, operand2);
+    bit_and(result, operand0, operand1);
     {% elif opcode == 4 %}
-    bit_andca(result, operand1, operand2);
+    bit_andca(result, operand0, operand1);
     {% elif opcode == 5 %}
-    bit_andcb(result, operand1, operand2);
+    bit_andcb(result, operand0, operand1);
     {% elif opcode == 6 %}
-    bit_nand(result, operand1, operand2);
+    bit_nand(result, operand0, operand1);
     {% elif opcode == 7 %}
-    bit_nor(result, operand1, operand2);
+    bit_nor(result, operand0, operand1);
     {% elif opcode == 8 %}
-    bit_not(result, operand1);
+    bit_not(result, operand0);
     {% elif opcode == 9 %}
-    bit_or(result, operand1, operand2);
+    bit_or(result, operand0, operand1);
     {% elif opcode == 10 %}
-    bit_orca(result, operand1, operand2);
+    bit_orca(result, operand0, operand1);
     {% elif opcode == 11 %}
-    bit_orcb(result, operand1, operand2);
+    bit_orcb(result, operand0, operand1);
     {% elif opcode == 12 %}
-    max(result, operand1, operand2);
+    max(result, operand0, operand1);
     {% else %}
-    min(result, operand1, operand2);
+    min(result, operand0, operand1);
     {% endif %}
 }
 
@@ -163,6 +162,7 @@ table {{sketch_name}}_stateless_alu_{{i}}_{{j}}_table {
     }
     default_action:  {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action;
 }
+{% endif %}
   {% endfor %}
 {% endfor %}
 
@@ -184,11 +184,13 @@ control ingress {
     // Call all the required ALUs.
     {% for i in range(num_pipeline_stages) %}
       {% for j in range(num_alus_per_stage) %}
-        apply({{sketch_name}}_stateless_alu_{{i}}_{{j}});
+        {% if stateless_alus[i][j].enable == 1 %}
+          apply({{sketch_name}}_stateless_alu_{{i}}_{{j}});
+        {% endif %}
       {% endfor %}
       {% for j in range(num_state_groups) %}
         {% if salu_configs[i][j] == 1 %}
-        apply({{sketch_name}}_stateful_alu_{{i}}_{{j}});
+          apply({{sketch_name}}_stateful_alu_{{i}}_{{j}});
         {% endif %}
       {% endfor %}
     {% endfor %}
