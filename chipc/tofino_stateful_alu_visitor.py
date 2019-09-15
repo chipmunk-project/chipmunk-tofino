@@ -256,7 +256,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.mux5_count += 1
 
-        return self.generateMux5(op1, op2, op3, op4, op5, opcode)
+        return self.eval_mux5(op1, op2, op3, op4, op5, opcode)
 
     @overrides
     def visitMux4(self, ctx):
@@ -270,7 +270,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.mux4_count += 1
 
-        return self.generateMux4(op1, op2, op3, op4, opcode)
+        return self.eval_mux4(op1, op2, op3, op4, opcode)
 
     @overrides
     def visitMux3(self, ctx):
@@ -283,7 +283,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.mux3_count += 1
 
-        return self.generateMux3(op1, op2, op3, opcode)
+        return self.eval_mux3(op1, op2, op3, opcode)
 
     @overrides
     def visitMux3WithNum(self, ctx):
@@ -296,7 +296,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.mux3_count += 1
 
-        return self.generateMux3(op1, op2, op3, opcode)
+        return self.eval_mux3(op1, op2, op3, opcode)
 
     @overrides
     def visitMux2(self, ctx):
@@ -308,7 +308,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.mux2_count += 1
 
-        return self.generateMux2(op1, op2, opcode)
+        return self.eval_mux2(op1, op2, opcode)
 
     @overrides
     def visitRelOp(self, ctx):
@@ -320,7 +320,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.rel_op_count += 1
 
-        return self.generateRelOp(op1, op2, opcode)
+        return self.eval_rel_op(op1, op2, opcode)
 
     @overrides
     def visitBoolOp(self, ctx):
@@ -332,7 +332,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.bool_op_count += 1
 
-        return self.generateBoolOp(op1, op2, opcode)
+        return self.eval_bool_op(op1, op2, opcode)
 
     @overrides
     def visitArithOp(self, ctx):
@@ -344,7 +344,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.arith_op_count += 1
 
-        return self.generateArithOp(op1, op2, opcode)
+        return self.eval_arith_op(op1, op2, opcode)
 
     @overrides
     def visitOpt(self, ctx):
@@ -354,7 +354,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
             'Opt_' + str(self.arith_op_count)))
         self.opt_count += 1
 
-        return self.generateOpt(op, opcode)
+        return self.eval_opt(op, opcode)
 
     @overrides
     def visitConstant(self, ctx):
@@ -363,7 +363,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.constant_count += 1
 
-        return self.generateConstant(opcode)
+        return self.eval_constant(opcode)
 
     @overrides
     def visitComputeAlu(self, ctx):
@@ -375,9 +375,9 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         self.compute_alu_count += 1
 
-        return self.generateComputeAlu(op1, op2, opcode)
+        return self.eval_compute_alu(op1, op2, opcode)
 
-    def generateMux5(self, op1, op2, op3, op4, op5, opcode):
+    def eval_mux5(self, op1, op2, op3, op4, op5, opcode):
         if opcode == 0:
             return op1
         elif opcode == 1:
@@ -389,7 +389,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
         else:
             return op5
 
-    def generateMux4(self, op1, op2, op3, op4, opcode):
+    def eval_mux4(self, op1, op2, op3, op4, opcode):
         if opcode == 0:
             return op1
         elif opcode == 1:
@@ -399,7 +399,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
         else:
             return op4
 
-    def generateMux3(self, op1, op2, op3, opcode):
+    def eval_mux3(self, op1, op2, op3, opcode):
         if opcode == 0:
             return op1
         elif opcode == 1:
@@ -407,16 +407,16 @@ class TofinoStatefulAluVisitor(aluVisitor):
         else:
             return op3
 
-    def generateMux2(self, op1, op2, opcode):
+    def eval_mux2(self, op1, op2, opcode):
         if opcode == 0:
             return op1
         else:
             return op2
 
-    def generateConstant(self, opcode):
+    def eval_constant(self, opcode):
         return self.constant_arr[opcode]
 
-    def generateRelOp(self, op1, op2, opcode):
+    def eval_rel_op(self, op1, op2, opcode):
         if opcode == 0:
             template_str = '({op1}) != ({op2})'
         elif opcode == 1:
@@ -428,7 +428,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         return template_str.format(op1=op1, op2=op2)
 
-    def generateBoolOp(self, op1, op2, opcode):
+    def eval_bool_op(self, op1, op2, opcode):
         if opcode == 0:
             template_str = 'false'
         elif opcode == 1:
@@ -464,7 +464,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         return template_str.format(op1=op1, op2=op2)
 
-    def generateArithOp(self, op1, op2, opcode):
+    def eval_arith_op(self, op1, op2, opcode):
         if op1 == '0':
             if opcode == 0:
                 template_str = '({op2})'
@@ -478,13 +478,13 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         return template_str.format(op1=op1, op2=op2)
 
-    def generateOpt(self, op, enable):
+    def eval_opt(self, op, enable):
         if enable != 0:
             return '0'
         else:
             return op
 
-    def generateComputeAlu(self, op1, op2, opcode):
+    def eval_compute_alu(self, op1, op2, opcode):
         if opcode == 0:
             template_str = '({op1}) + ({op2})'
         elif opcode == 1:
