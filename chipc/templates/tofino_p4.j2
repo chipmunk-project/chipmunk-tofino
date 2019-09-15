@@ -122,33 +122,33 @@ action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     {# NOTE: Please use the same opcode for the ones in
     stateless_alu_for_tofino.alu #}
     {% if opcode == 0 %}
-    modify_field(result_field, operand0);
+    modify_field({{result}}, {{operand0}});
     {% elif opcode == 1 %}
-    add(result, operand0, operand1);
+    add({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 2 %}
-    subtract(result, operand0, operand1);
+    subtract({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 3 %}
-    bit_and(result, operand0, operand1);
+    bit_and({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 4 %}
-    bit_andca(result, operand0, operand1);
+    bit_andca({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 5 %}
-    bit_andcb(result, operand0, operand1);
+    bit_andcb({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 6 %}
-    bit_nand(result, operand0, operand1);
+    bit_nand({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 7 %}
-    bit_nor(result, operand0, operand1);
+    bit_nor({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 8 %}
-    bit_not(result, operand0);
+    bit_not({{result}}, {{operand0}});
     {% elif opcode == 9 %}
-    bit_or(result, operand0, operand1);
+    bit_or({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 10 %}
-    bit_orca(result, operand0, operand1);
+    bit_orca({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 11 %}
-    bit_orcb(result, operand0, operand1);
+    bit_orcb({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 12 %}
-    max(result, operand0, operand1);
+    max({{result}}, {{operand0}}, {{operand1}});
     {% else %}
-    min(result, operand0, operand1);
+    min({{result}}, {{operand0}}, {{operand1}});
     {% endif %}
 }
 
