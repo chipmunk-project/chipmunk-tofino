@@ -14,6 +14,16 @@
   // One variable for each stateful ALU's state operand
   // This will be allocated to a state variable from the program using indicator variables.
   {% for stage_number in range(num_pipeline_stages) %}
+    {% if synthesized_allocation %}
+    {% for container_number in range(num_phv_containers) %}
+      |StateGroup| state_operand_salu_{{stage_number}}_{{container_number}} =  |StateGroup|(
+                                                                                    {% for slot_number in range(num_state_slots-1) %}
+                                                                                       state_{{slot_number}} = 0,
+                                                                                    {% endfor %}
+                                                                                       state_{{num_state_slots-1}} = 0
+                                                                                 );
+    {% endfor %}
+    {% else %}
     {% for state_group_number in range(num_state_groups) %}
       |StateGroup| state_operand_salu_{{stage_number}}_{{state_group_number}} =  |StateGroup|(
                                                                                     {% for slot_number in range(num_state_slots-1) %}
@@ -22,6 +32,7 @@
                                                                                        state_{{num_state_slots-1}} = 0
                                                                                  );
     {% endfor %}
+    {% endif %}
   {% endfor %}
 
   {% for stage_number in range(num_pipeline_stages) %}
@@ -70,6 +81,21 @@
     {% endfor %}
 
     // Stateful operands
+    {% if synthesized_allocation %}
+    {% for stateful_container_num in range(num_phv_containers) %}
+      {% for operand_number in range(num_operands_to_stateful_alu) %}
+        int packet_operand_salu{{stage_number}}_{{stateful_container_num}}_{{operand_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{stateful_container_num}}_operand_mux_{{operand_number}}(
+        {% for container_number in range(num_phv_containers) %}
+          {% if container_number != num_phv_containers - 1 %}
+            input_{{stage_number}}_{{container_number}},
+          {% else %}
+            input_{{stage_number}}_{{container_number}}
+          {% endif %}
+        {% endfor %}
+      , {{sketch_name}}_stateful_alu_{{stage_number}}_{{stateful_container_num}}_operand_mux_{{operand_number}}_ctrl);
+      {% endfor %}
+    {% endfor %}
+    {% else %}
     {% for state_group_number in range(num_state_groups) %}
       {% for operand_number in range(num_operands_to_stateful_alu) %}
         int packet_operand_salu{{stage_number}}_{{state_group_number}}_{{operand_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}_operand_mux_{{operand_number}}(
@@ -83,8 +109,25 @@
       , {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}_operand_mux_{{operand_number}}_ctrl);
       {% endfor %}
     {% endfor %}
+    {% endif %}
 
     // Read stateful ALU slots from allocated state vars.
+    {% if synthesized_allocation %}
+    {% for state_group_number in range(num_state_groups) %}
+    {% for container_number in range(num_phv_containers) %}
+        if ({{sketch_name}}_salu_config_{{state_group_number}}_{{stage_number}}_{{container_number}}  == 1){
+        state_operand_salu_{{stage_number}}_{{container_number}} =
+        |StateGroup|({% for slot_number in range(num_state_slots) %}
+                       {% if slot_number < num_state_slots - 1 %}
+                         state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}},
+                       {% else %}
+                         state_{{slot_number}} = state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}}
+                       {% endif %}
+                     {%endfor%});
+        }
+    {% endfor %}
+    {% endfor %}
+    {% else %}
     {% for state_group_number in range(num_state_groups) %}
       if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
         state_operand_salu_{{stage_number}}_{{state_group_number}} =
@@ -96,8 +139,20 @@
                        {% endif %}
                      {%endfor%});}
     {% endfor %}
+    {% endif %}
 
     // Stateful ALUs
+    // TODO: maybe we need to combine the following if-else branch together because they share a lot of common things
+    {% if synthesized_allocation %}
+    {% for container_number in range(num_phv_containers)  %}
+      int returned_state_{{stage_number}}_{{container_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{container_number}}(state_operand_salu_{{stage_number}}_{{container_number}},
+      {% for operand_number in range(num_operands_to_stateful_alu) %}
+        packet_operand_salu{{stage_number}}_{{container_number}}_{{operand_number}},
+      {% endfor %}
+      {% set prefix_string = sketch_name + "_stateful_alu_" + (stage_number|string) + "_" + (container_number|string) + "_" %}
+      {{stateful_alu_hole_arguments|map('add_prefix_suffix', prefix_string, "_global")|join(',')}});
+    {% endfor %}
+    {% else %}
     {% for state_group_number in range(num_state_groups) %}
       int returned_state_{{stage_number}}_{{state_group_number}} = {{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}(state_operand_salu_{{stage_number}}_{{state_group_number}},
       {% for operand_number in range(num_operands_to_stateful_alu) %}
@@ -106,6 +161,7 @@
       {% set prefix_string = sketch_name + "_stateful_alu_" + (stage_number|string) + "_" + (state_group_number|string) + "_" %}
       {{stateful_alu_hole_arguments|map('add_prefix_suffix', prefix_string, "_global")|join(',')}});
     {% endfor %}
+    {% endif %}
 
     // Outputs
     {% if target_tofino %}
@@ -116,6 +172,7 @@
     {% for container_number in range(num_phv_containers) %}
       if ({{sketch_name}}_stateless_alu_{{stage_number}}_{{container_number}}_demux_ctrl == 1)
          output_{{stage_number}}_{{container_number}} = destination_{{stage_number}}_{{container_number}};
+      // TODO: now we only use canonicalized alloc for target_tofino, if we use synthesized_alloc, we need to make changes to this part
       {% for state_group_number in range(num_state_groups) %}
       else if (({{sketch_name}}_stateful_alu_{{stage_number}}_{{state_group_number}}_demux_ctrl == {{container_number}}) && ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1))
          output_{{stage_number}}_{{container_number}} = returned_state_{{stage_number}}_{{state_group_number}};
@@ -126,11 +183,19 @@
     {% else %}
     {% for container_number in range(num_phv_containers) %}
       int output_{{stage_number}}_{{container_number}} = {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}(
+      {% if synthesized_allocation %}
+      {% for container_number in range(num_phv_containers) %}
+        {% for state_slot in range(num_state_slots) %}
+          returned_state_{{stage_number}}_{{container_number}},
+        {% endfor %}
+      {% endfor %}
+      {% else %}
       {% for state_group_number in range(num_state_groups) %}
         {% for state_slot in range(num_state_slots) %}
           returned_state_{{stage_number}}_{{state_group_number}},
         {% endfor %}
       {% endfor %}
+      {% endif %}
       destination_{{stage_number}}_{{container_number}},
       {{sketch_name}}_output_mux_phv_{{stage_number}}_{{container_number}}_ctrl
       );
@@ -139,24 +204,23 @@
 
     {% for state_group_number in range(num_state_groups) %}
       // Write stateful_vars
-      if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
-        {% if synthesized_allocation%}
-           {% for state_group_number_for_synthesized_alloc in range(num_state_groups) %}
-              if (stateful_var_allocation_group_{{state_group_number_for_synthesized_alloc}}_{{stage_number}}_{{state_group_number}} == 1){
+      {% if synthesized_allocation %}
+           {% for container_number in range(num_phv_containers) %}
+              if ({{sketch_name}}_salu_config_{{state_group_number}}_{{stage_number}}_{{container_number}} == 1){
                  {% for slot_number in range(num_state_slots) %}
-                    state_and_packet.state_group_{{state_group_number_for_synthesized_alloc}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
+                    state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{container_number}}.state_{{slot_number}};
                  {% endfor %}
               }
            {% endfor %}
-        {% else %}
-        {% for slot_number in range(num_state_slots) %}
-          state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
-        {% endfor %}
-        {% endif %}
-      }
+      {% else %}
+          if ({{sketch_name}}_salu_config_{{stage_number}}_{{state_group_number}} == 1) {
+            {% for slot_number in range(num_state_slots) %}
+              state_and_packet.state_group_{{state_group_number}}_state_{{slot_number}} = state_operand_salu_{{stage_number}}_{{state_group_number}}.state_{{slot_number}};
+            {% endfor %}
+          }
+      {% endif %}
     {% endfor %}
-
-  {% endfor %}
+    {% endfor %}
 
   {% for field_number in range(num_fields_in_prog) %}
     // Write pkt_{{field_number}}
