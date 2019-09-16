@@ -53,7 +53,6 @@ stateful  : 'stateful';
 state_indicator : 'type' ':' stateless
                 | 'type' ':' stateful;
 
-
 state_var_def : 'state' 'variables' ':' '{' state_var_seq '}';
 
 state_var_seq : /* epsilon */
@@ -63,7 +62,6 @@ state_var_seq : /* epsilon */
 state_vars : state_var                  #SingleStateVar
            | state_var ',' state_vars   #MultipleStateVars
            ;
-
 
 hole_def : 'hole' 'variables' ':' '{' hole_seq '}';
 
@@ -136,3 +134,4 @@ expr   : variable #Var
        ;
 
 alu: state_indicator state_var_def hole_def packet_field_def alu_body;
+

@@ -200,6 +200,8 @@ def main(argv):
 
         if len(pkt_fields) == 0 and len(state_vars) == 0:
             compilation_success(sketch_name, hole_assignments, output)
+            if args.target_tofino:
+                compiler.compile_to_tofino(hole_assignments)
             return 0
 
         print('Verification failed.')

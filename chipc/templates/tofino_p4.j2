@@ -1,0 +1,197 @@
+#include <tofino/intrinsic_metadata.p4>
+#include "tofino/stateful_alu_blackbox.p4"
+
+/* Declare Header */
+header_type ethernet_t {
+    fields {
+        dstAddr : 48;
+        srcAddr : 48;
+        etherType : 16;
+    }
+}
+
+header ethernet_t ethernet;
+
+header_type ipv4_t {
+    fields {
+        // TODO: Have a hard limit on 5 fields for now. Ensure this in the tofino code generator.
+        pkt_0 : 32;
+        pkt_1 : 32;
+        pkt_2 : 32;
+        pkt_3 : 32;
+        pkt_4 : 32;
+    }
+}
+
+header ipv4_t ipv4;
+
+/* Declare Parser */
+parser start {
+	return select(current(96,16)){
+		0x0800: parse_ethernet;
+	}
+}
+
+parser parse_ethernet {
+    extract(ethernet);
+    return select(latest.etherType) {
+        /** Fill Whatever ***/
+        0x0800     : parse_ipv4;
+        default: ingress;
+    }
+}
+parser parse_ipv4 {
+    extract(ipv4);
+    return ingress;
+}
+
+// TODO: Derive MAX_SIZE from Domino program.
+#define MAX_SIZE 10
+{% for j in range(num_state_groups) %}
+register reg_{{j}} {
+    width : 64;
+    instance_count : MAX_SIZE;
+}
+{% endfor %}
+
+{% for i in range(num_pipeline_stages) %}
+  {% for j in range(num_state_groups) %}
+    {% if salu_configs[i][j] == 1 %}
+// Stateful ALU blackbox
+blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
+    {% set alu = stateful_alus[i][j] %}
+    reg                       : reg_{{j}};
+    condition_lo              : {{alu['condition_lo_expr']}};
+    condition_hi              : {{alu['condition_hi_expr']}};
+    update_lo_1_predicate     : {{alu['update_lo_1_predicate_expr']}};
+    update_lo_1_value         : {{alu['update_lo_1_value_expr']}};
+    update_lo_2_predicate     : {{alu['update_lo_2_predicate_expr']}};
+    update_lo_2_value         : {{alu['update_lo_2_value_expr']}};
+    update_hi_1_predicate     : {{alu['update_hi_1_predicate_expr']}};
+    update_hi_1_value         : {{alu['update_hi_1_value_expr']}};
+    update_hi_2_predicate     : {{alu['update_hi_2_predicate_expr']}};
+    update_hi_2_value         : {{alu['update_hi_2_value_expr']}};
+    output_predicate          : 1;
+    output_value              : {{alu['output_value_expr']}};
+    output_dst                : {{alu['output_dst']}};
+    {# TODO: Set initial values more sensibly. #}
+    initial_register_lo_value : 19; // Magic value TODO: needs to be changed.
+    initial_register_hi_value : 0;
+
+    {# Instructions omitted for now
+    selector_binding
+    math_unit_input
+    math_unit_output_scale
+    math_unit_exponent_shift
+    math_unit_exponent_invert
+    math_unit_lookup_table
+    reduction_or_group
+    stateful_logging_mode #}
+}
+
+// Stateful ALU Action
+action {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action () {
+    {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox.execute_stateful_alu(0);
+    // TODO: Replace 0 with appropriate value for array-based registers. The
+    // appropriate value can be determined by parsing the .c file using the
+    // Domino compiler.
+}
+
+// Stateful ALU table
+{{ignore_all_table_deps}}
+@pragma stage {{i}}
+table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table {
+    actions {
+        {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action;
+    }
+    default_action: {{sketch_name}}_stateful_alu_{{i}}_{{j}}_action;
+}
+{% endif %}
+  {% endfor %}
+{% endfor %}
+
+{% for i in range(num_pipeline_stages) %}
+  {% for j in range(num_alus_per_stage) %}
+{% if stateless_alus[i][j]['enable'] == 1 %}
+// Stateless ALU action
+{% set opcode            = stateless_alus[i][j]['opcode'] %}
+{% set operand0          = stateless_alus[i][j]['operand0'] %}
+{% set operand1          = stateless_alus[i][j]['operand1'] %}
+{% set result            = stateless_alus[i][j]['result'] %}
+{% set immediate_operand = stateless_alus[i][j]['immediate_operand'] %}
+action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
+    {# NOTE: Please use the same opcode for the ones in
+    stateless_alu_for_tofino.alu #}
+    {% if opcode == 0 %}
+    modify_field({{result}}, {{operand0}});
+    {% elif opcode == 1 %}
+    modify_field({{result}}, {{immediate_operand}});
+    {% elif opcode == 2 %}
+    add({{result}}, {{operand0}}, {{operand1}});
+    {% elif opcode == 3 %}
+    add({{result}}, {{operand0}}, {{immediate_operand}});
+    {% elif opcode == 4 %}
+    subtract({{result}}, {{operand0}}, {{operand1}});
+    {% elif opcode == 5 %}
+    subtract({{result}}, {{operand0}}, {{immediate_operand}});
+    {% elif opcode == 6 %}
+    subtract({{result}}, {{immediate_operand}}, {{operand0}});
+    {% elif opcode == 7 %}
+    max({{result}}, {{operand0}}, {{operand1}});
+    {% elif opcode == 8 %}
+    max({{result}}, {{operand0}}, {{immediate_operand}});
+    {% elif opcode == 9 %}
+    min({{result}}, {{operand0}}, {{operand1}});
+    {% else %}
+    min({{result}}, {{operand0}}, {{immediate_operand}});
+    {% endif %}
+}
+
+// Stateless ALU table
+{{ignore_all_table_deps}}
+@pragma stage {{i}}
+table {{sketch_name}}_stateless_alu_{{i}}_{{j}}_table {
+    actions {
+        {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action;
+    }
+    default_action:  {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action;
+}
+{% endif %}
+  {% endfor %}
+{% endfor %}
+
+// Required: mac_forward table for forwarding to switch CPU.
+action set_egr(egress_spec) {
+    modify_field(ig_intr_md_for_tm.ucast_egress_port, egress_spec);
+}
+table mac_forward {
+    reads {
+        ethernet.dstAddr : exact;
+    }
+    actions {
+        set_egr;
+    }
+    size:1;
+}
+
+control ingress {
+    // Call all the required ALUs.
+    {% for i in range(num_pipeline_stages) %}
+      {% for j in range(num_alus_per_stage) %}
+        {% if stateless_alus[i][j].enable == 1 %}
+          apply({{sketch_name}}_stateless_alu_{{i}}_{{j}}_table);
+        {% endif %}
+      {% endfor %}
+      {% for j in range(num_state_groups) %}
+        {% if salu_configs[i][j] == 1 %}
+          apply({{sketch_name}}_stateful_alu_{{i}}_{{j}}_table);
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+    // MAC Forwarding by default
+    apply(mac_forward);
+}
+
+control egress {
+
+}
