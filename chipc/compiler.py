@@ -1,6 +1,5 @@
 import concurrent.futures as cf
 import itertools
-import math
 import os
 import signal
 from collections import OrderedDict
@@ -17,6 +16,7 @@ from chipc import z3_utils
 from chipc.mode import Mode
 from chipc.sketch_code_generator import SketchCodeGenerator
 from chipc.tofino_code_generator import TofinoCodeGenerator
+from chipc.utils import get_hole_bit_width
 from chipc.utils import get_hole_value_assignments
 from chipc.utils import get_num_pkt_fields
 from chipc.utils import get_state_group_info
@@ -103,8 +103,8 @@ class Compiler:
         self.sketch_code_generator.constant_arr_def_ = \
             'int[{}]'.format(str(len(constant_set))) + \
             'constant_vector = {};\n\n'.format(new_constant_set_str)
-        self.sketch_code_generator.constant_arr_size_ = math.ceil(
-            math.log2(len(constant_set)))
+        self.sketch_code_generator.constant_arr_size_ = get_hole_bit_width(
+            len(constant_set))
 
     def single_codegen_run(self, compiler_input):
         additional_constraints = compiler_input[0]

@@ -1,4 +1,3 @@
-import math
 from collections import OrderedDict
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from chipc.aluParser import aluParser
 from chipc.mode import Mode
 from chipc.sketch_stateful_alu_visitor import SketchStatefulAluVisitor
 from chipc.sketch_stateless_alu_visitor import SketchStatelessAluVisitor
+from chipc.utils import get_hole_bit_width
 
 
 class Hole:
@@ -56,8 +56,7 @@ class SketchCodeGenerator:
             '] constant_vector = ' + \
             constant_set_str + \
             ';\n\n'
-        self.constant_arr_size_ = math.ceil(
-            math.log2(len(constant_set)))
+        self.constant_arr_size_ = get_hole_bit_width(len(constant_set))
         self.num_operands_to_stateful_alu_ = 0
         self.num_state_slots_ = 0
         self.synthesized_allocation_ = synthesized_allocation
@@ -232,7 +231,7 @@ class SketchCodeGenerator:
     # Sketch code for an n-to-1 mux
     def generate_mux(self, n, mux_name):
         assert (n >= 1)
-        num_bits = math.ceil(math.log(n, 2))
+        num_bits = get_hole_bit_width(n)
         operand_mux_template = self.jinja2_env_.get_template('mux.j2')
         mux_code = operand_mux_template.render(
             mux_name=mux_name,
@@ -291,8 +290,7 @@ class SketchCodeGenerator:
                     self.add_hole(self.sketch_name_ +
                                   '_stateful_alu_'
                                   + str(i) + '_' + str(k) + '_demux_ctrl',
-                                  math.ceil(math.log2(self.num_phv_containers_)
-                                            ))
+                                  get_hole_bit_width(self.num_phv_containers_))
 
             # Generate assert for demux for every phv container j
             # i.e assert(

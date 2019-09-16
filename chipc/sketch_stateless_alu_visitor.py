@@ -1,4 +1,3 @@
-import math
 import re
 from collections import OrderedDict
 
@@ -6,6 +5,7 @@ from overrides import overrides
 
 from chipc.aluParser import aluParser
 from chipc.aluVisitor import aluVisitor
+from chipc.utils import get_hole_bit_width
 
 
 class SketchStatelessAluVisitor (aluVisitor):
@@ -53,9 +53,7 @@ class SketchStatelessAluVisitor (aluVisitor):
             first_line = f.readline()
             prog = re.compile(r'// Max value of opcode is (\d+)')
             result = int(prog.match(first_line).groups(0)[0])
-            # FIXME: When the result is a power of 2, i.e. 2^n, this returns n
-            # instead of n + 1.
-            return math.ceil(math.log2(result))
+            return get_hole_bit_width(result + 1)
 
     # Generates the mux ctrl paremeters
     def write_mux_inputs(self):

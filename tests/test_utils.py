@@ -1,5 +1,6 @@
 import unittest
 
+from chipc.utils import get_hole_bit_width
 from chipc.utils import get_hole_value_assignments
 from chipc.utils import get_state_group_info
 
@@ -13,6 +14,13 @@ class GetHoleValueAssignmentsTest(unittest.TestCase):
             ['a', 'b', 'c'], 'a__one = 3; b__two = 4 c__three = 5')
 
         self.assertEqual(holes_to_values, {'a': '3', 'b': '4', 'c': '5'})
+
+
+class GetBitWidthsTest(unittest.TestCase):
+    def test_success(self):
+        self.assertEqual(1, get_hole_bit_width(2))
+        self.assertEqual(3, get_hole_bit_width(5))
+        self.assertEqual(4, get_hole_bit_width(11))
 
 
 class GetStateGroupInfoTest(unittest.TestCase):
