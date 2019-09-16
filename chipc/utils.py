@@ -1,4 +1,5 @@
 """Utilities for Chipmunk"""
+import math
 from collections import OrderedDict
 from pathlib import Path
 from re import findall
@@ -56,6 +57,13 @@ def get_hole_value_assignments(hole_names, sketch):
         holes_to_values[name] = values[0]
 
     return holes_to_values
+
+
+def get_hole_bit_width(k: int) -> int:
+    """Returns the number of bits to represent k number of different options
+    in binary."""
+
+    return math.ceil(math.log2(k))
 
 
 def compilation_success(sketch_name, hole_assignments, output):
