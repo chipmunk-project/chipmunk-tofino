@@ -55,7 +55,7 @@ class SketchStatelessAluVisitor (aluVisitor):
             result = int(prog.match(first_line).groups(0)[0])
             # FIXME: When the result is a power of 2, i.e. 2^n, this returns n
             # instead of n + 1.
-            return math.ceil(math.log2(result))
+            return math.ceil(math.log2(result)) + 1
 
     # Generates the mux ctrl paremeters
     def write_mux_inputs(self):
