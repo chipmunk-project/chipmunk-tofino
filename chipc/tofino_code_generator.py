@@ -132,6 +132,12 @@ class TofinoCodeGenerator:
                         '@pragma ignore_table_dependency ' + \
                         self.sketch_name_ + '_stateful_alu_' + \
                         str(i) + '_' + str(k) + '_table\n'
+
+        if len(self.hole_assignments_) > 0:
+            print("List of holes that we haven't used to generate p4 code")
+        for hole, value in sorted(self.hole_assignments_.items()):
+            print('int', hole, '=', value)
+
         p4_code = template.render(
             sketch_name=self.sketch_name_,
             num_pipeline_stages=self.num_pipeline_stages_,
@@ -142,10 +148,6 @@ class TofinoCodeGenerator:
             salu_configs=salu_configs,
             ignore_all_table_deps=ignore_all_table_deps
         )
-
-        print("List of holes that we haven't used to generate p4 code")
-        for hole, value in sorted(self.hole_assignments_.items()):
-            print('int', hole, '=', value)
 
         p4_filename = self.sketch_name_ + '.p4'
         Path(p4_filename).write_text(p4_code)
