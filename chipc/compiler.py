@@ -38,15 +38,14 @@ def kill_child_processes(parent_pid, sig=signal.SIGTERM):
 
 
 class Compiler:
-    def __init__(self, program_file, stateful_alu_file, stateless_alu_file,
-                 num_pipeline_stages, num_alus_per_stage, sketch_name,
-                 parallel_sketch, constant_set,
-                 synthesized_allocation=False,
-                 target_tofino=False,
-                 pkt_fields_to_check=[]):
-        self.program_file = program_file
-        self.stateful_alu_file = stateful_alu_file
-        self.stateless_alu_file = stateless_alu_file
+    def __init__(self, spec_filename, stateful_alu_filename,
+                 stateless_alu_filename, num_pipeline_stages,
+                 num_alus_per_stage, sketch_name, parallel_sketch,
+                 constant_set, synthesized_allocation=False,
+                 target_tofino=False, pkt_fields_to_check=[]):
+        self.spec_filename = spec_filename
+        self.stateful_alu_filename = stateful_alu_filename
+        self.stateless_alu_filename = stateless_alu_filename
         self.num_pipeline_stages = num_pipeline_stages
         self.num_alus_per_stage = num_alus_per_stage
         self.sketch_name = sketch_name
@@ -55,7 +54,7 @@ class Compiler:
         self.synthesized_allocation = synthesized_allocation
         self.target_tofino = target_tofino
 
-        program_content = Path(program_file).read_text()
+        program_content = Path(spec_filename).read_text()
         self.num_fields_in_prog = get_num_pkt_fields(program_content)
         self.num_state_groups = len(get_state_group_info(program_content))
 
@@ -69,7 +68,8 @@ class Compiler:
             loader=FileSystemLoader(
                 [path.join(path.dirname(__file__), './templates'),
                  path.join(os.getcwd(),
-                           stateless_alu_file[:stateless_alu_file.rfind('/')]),
+                           stateless_alu_filename[
+                               :stateless_alu_filename.rfind('/')]),
                  '.', '/']),
             undefined=StrictUndefined,
             trim_blocks=True,
@@ -88,8 +88,8 @@ class Compiler:
             num_fields_in_prog=self.num_fields_in_prog,
             pkt_fields_to_check=pkt_fields_to_check,
             jinja2_env=self.jinja2_env,
-            stateful_alu_file=stateful_alu_file,
-            stateless_alu_file=stateless_alu_file,
+            stateful_alu_filename=stateful_alu_filename,
+            stateless_alu_filename=stateless_alu_filename,
             constant_set=constant_set,
             synthesized_allocation=synthesized_allocation,
             target_tofino=target_tofino)
@@ -112,7 +112,7 @@ class Compiler:
 
         """Codegeneration"""
         codegen_code = self.sketch_code_generator.generate_sketch(
-            program_file=self.program_file,
+            spec_filename=self.spec_filename,
             mode=Mode.CODEGEN,
             synthesized_allocation=self.synthesized_allocation,
             additional_constraints=additional_constraints,
@@ -221,7 +221,7 @@ class Compiler:
         # Generate a sketch file to verify the hole value assignments with
         # the specified input bit lengths.
         sketch_to_verify = self.sketch_code_generator.generate_sketch(
-            program_file=self.program_file,
+            spec_filename=self.spec_filename,
             mode=Mode.VERIFY,
             synthesized_allocation=self.synthesized_allocation,
             hole_assignments=hole_assignments

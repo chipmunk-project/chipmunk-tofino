@@ -33,17 +33,7 @@ if (opcode == 0) {
 } elif (opcode == 13) {
   return (pkt_0 < immediate_operand);
 } elif (opcode == 14) {
-  if ( pkt_0 != 0 ){
-    return pkt_1;
-  }
-  else {
-    return pkt_2;
-  }
+  return pkt_0 != 0 ? pkt_1 : pkt_2;
 } else {
-  if ( pkt_0 != 0 ){
-    return pkt_1;
-  }
-  else {
-    return immediate_operand;
-  }
+  return pkt_0 != 0 ? pkt_1 : immediate_operand
 }

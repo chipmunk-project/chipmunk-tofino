@@ -9,14 +9,15 @@ __pycache__
 *.java
 *.interp
 *.tokens
-*Lexer.py
-*Parser.py
-*Visitor.py
-*Listener.py
+aluLexer.py
+aluParser.py
+aluVisitor.py
+aluListener.py
 *.egg-info
 *.smt2
 *.dag
 *_output.txt
 .vscode/
+*.p4
 
 !tests/data/*.sk

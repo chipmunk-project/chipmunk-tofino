@@ -82,10 +82,11 @@ def generate_counterexample_asserts(pkt_fields, state_vars, num_fields_in_prog,
 def main(argv):
     parser = argparse.ArgumentParser(description='Iterative solver.')
     parser.add_argument(
-        'program_file', help='Program specification in .sk file')
-    parser.add_argument('stateful_alu_file', help='Stateful ALU file to use.')
+        'spec_filename', help='Program specification in .sk file')
+    parser.add_argument('stateful_alu_filename',
+                        help='Stateful ALU file to use.')
     parser.add_argument(
-        'stateless_alu_file', help='Stateless ALU file to use.')
+        'stateless_alu_filename', help='Stateless ALU file to use.')
     parser.add_argument(
         'num_pipeline_stages', type=int, help='Number of pipeline stages')
     parser.add_argument(
@@ -141,15 +142,15 @@ def main(argv):
     args = parser.parse_args(argv[1:])
     # Use program_content to store the program file text rather than using it
     # twice
-    program_content = Path(args.program_file).read_text()
+    program_content = Path(args.spec_filename).read_text()
     num_fields_in_prog = get_num_pkt_fields(program_content)
 
     # Get the state vars information
     # TODO: add the max_input_bit into sketch_name
     state_group_info = get_state_group_info(program_content)
-    sketch_name = args.program_file.split('/')[-1].split('.')[0] + \
-        '_' + args.stateful_alu_file.split('/')[-1].split('.')[0] + \
-        '_' + args.stateless_alu_file.split('/')[-1].split('.')[0] + \
+    sketch_name = args.spec_filename.split('/')[-1].split('.')[0] + \
+        '_' + args.stateful_alu_filename.split('/')[-1].split('.')[0] + \
+        '_' + args.stateless_alu_filename.split('/')[-1].split('.')[0] + \
         '_' + str(args.num_pipeline_stages) + \
         '_' + str(args.num_alus_per_stage)
 
@@ -158,8 +159,8 @@ def main(argv):
     # ordered.
     constant_set = OrderedSet(args.constant_set.split(','))
 
-    compiler = Compiler(args.program_file, args.stateful_alu_file,
-                        args.stateless_alu_file,
+    compiler = Compiler(args.spec_filename, args.stateful_alu_filename,
+                        args.stateless_alu_filename,
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         sketch_name, args.parallel_sketch,
                         constant_set,

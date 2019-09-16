@@ -8,41 +8,34 @@ from chipc.aluParser import aluParser
 from chipc.aluVisitor import aluVisitor
 
 
-class StatelessAluSketchGenerator (aluVisitor):
-    def __init__(self, stateless_alu_file, stateless_alu_name,
-                 alu_name,
-                 potential_operands,
-                 generate_stateless_mux,
-                 constant_arr_size):
-        self.stateless_alu_name = stateless_alu_name
-        self.stateless_alu_file = stateless_alu_file
+class SketchStatelessAluVisitor (aluVisitor):
+    def __init__(self, alu_filename, alu_name, potential_operands,
+                 generate_stateless_mux, constant_arr_size):
+        # TODO: alu_filename is need to open the alu template file and get the
+        # maximum possible value of opcode as specified in there. However, this
+        # can also be handled by the parser and visitor. Remove this argument
+        # by doing so.
+        # NOTE: alu_name is stateless_alu prefixed and postfixed with the
+        # original spec name and pipeline stage, and alu number within that
+        # stage. See find_opcode_bis()
+        self.alu_filename = alu_filename
         self.alu_name = alu_name
         self.potential_operands = potential_operands
         self.generate_stateless_mux = generate_stateless_mux
         self.constant_arr_size = constant_arr_size
-        self.mux3_count = 0
-        self.mux2_count = 0
-        self.rel_cop_count = 0
-        self.arith_op_count = 0
-        self.opt_count = 0
-        self.const_count = 0
         self.helper_function_strings = '\n\n\n'
         self.global_holes = OrderedDict()
         self.stateless_alu_args = OrderedDict()
         self.main_function = ''
-        self.num_packet_fields = 0
         self.packet_fields = []
 
+        self.opcode_bits = self.find_opcode_bits()
+
     def add_hole(self, hole_name, hole_width):
-        # immediate_operand forced down to immediate
-        # for global name.
+        prefixed_hole = self.alu_name + '_' + hole_name
+
         if 'immediate_operand' in hole_name:
-            prefixed_hole = self.stateless_alu_name + '_' + \
-                hole_name[:hole_name.index('_')]
-            # Set num_bits for immediate
             hole_width = self.constant_arr_size
-        else:
-            prefixed_hole = self.stateless_alu_name + '_' + hole_name
         assert (prefixed_hole not in self.global_holes)
         try:
             assert prefixed_hole not in self.global_holes, prefixed_hole + \
@@ -56,20 +49,20 @@ class StatelessAluSketchGenerator (aluVisitor):
 
     # Calculates number of bits to set opcode hole to
     def find_opcode_bits(self):
-        with open(self.stateless_alu_file) as f:
+        with open(self.alu_filename) as f:
             first_line = f.readline()
             prog = re.compile(r'// Max value of opcode is (\d+)')
             result = int(prog.match(first_line).groups(0)[0])
+            # FIXME: When the result is a power of 2, i.e. 2^n, this returns n
+            # instead of n + 1.
             return math.ceil(math.log2(result))
 
     # Generates the mux ctrl paremeters
     def write_mux_inputs(self):
-        mux_index = 1
-        for i in range((self.num_packet_fields)):
-            self.main_function += '\tint ' + 'mux' + str(mux_index) + \
-                '_ctrl_hole_local,'
-            mux_index += 1
-        self.main_function = self.main_function[:-1]
+        for mux_index in range(len(self.packet_fields)):
+            self.main_function += ', '
+            self.main_function += 'int ' + 'operand_mux_' + str(mux_index) + \
+                '_ctrl_hole_local'
 
     # Reassigns hole variable parameters to inputs specified
     # in ALU file
@@ -88,17 +81,18 @@ class StatelessAluSketchGenerator (aluVisitor):
 
     # Generates code that calls muxes from within stateless ALU
     def write_mux_call(self):
-        mux_index = 1
+        mux_index = 0
         mux_input_str = ''
         for operand in self.potential_operands:
             mux_input_str += operand+','
-        for p in self.packet_fields:
-            mux_ctrl = 'mux' + str(mux_index) + '_ctrl_hole_local'
+        for i, p in enumerate(self.packet_fields):
+            assert(i == mux_index)
+            mux_ctrl = 'operand_mux_' + str(mux_index) + '_ctrl_hole_local'
             self.main_function += '\tint ' + p + ' = ' + \
-                self.stateless_alu_name + '_' + 'mux' + \
+                self.alu_name + '_operand_mux_' + \
                 str(mux_index) + '(' + mux_input_str + \
                 mux_ctrl + ');\n'
-            full_name = self.alu_name + '_' + 'mux' + str(mux_index)
+            full_name = self.alu_name + '_operand_mux_' + str(mux_index)
             self.helper_function_strings += \
                 self.generate_stateless_mux(
                     len(self.potential_operands), full_name)
@@ -107,19 +101,18 @@ class StatelessAluSketchGenerator (aluVisitor):
 
     @overrides
     def visitAlu(self, ctx):
-
         self.visit(ctx.getChild(0, aluParser.State_indicatorContext))
-        self.visit(ctx.getChild(0, aluParser.State_varsContext))
+        self.visit(ctx.getChild(0, aluParser.State_var_defContext))
 
-        self.main_function += 'int ' + self.stateless_alu_name + '('
+        self.main_function += 'int ' + self.alu_name + '('
         # Takes in all phv_containers as parameters
         for p in self.potential_operands:
             self.main_function += 'int ' + p + ','
         # Records packet fields being used (results from the muxes)
-        self.visit(ctx.getChild(0, aluParser.Packet_fieldsContext))
+        self.visit(ctx.getChild(0, aluParser.Packet_field_defContext))
 
         # Adds hole variables to parameters
-        self.visit(ctx.getChild(0, aluParser.Hole_varsContext))
+        self.visit(ctx.getChild(0, aluParser.Hole_defContext))
         self.write_mux_inputs()
         self.main_function += ' %s){\n'
         self.write_temp_hole_vars()
@@ -154,90 +147,81 @@ class StatelessAluSketchGenerator (aluVisitor):
             raise
 
     @overrides
-    def visitState_vars(self, ctx):
-        try:
-            assert ctx.getChildCount() == 5, 'Error: ' + \
-                'state variables given to stateless ALU'
-        except AssertionError:
-            raise
+    def visitHole_def(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.Hole_seqContext))
 
     @overrides
-    def visitState_var_with_comma(self, ctx):
-        pass
+    def visitHole_seq(self, ctx):
+        if ctx.getChildCount() > 0:
+            self.visitChildren(ctx)
 
-    # TODO: Fix comma and int problem, line 230
     @overrides
-    def visitHole_vars(self, ctx):
-        # Empty set of hole vars
-        if (ctx.getChildCount() == 5):
-            return
+    def visitSingleHoleVar(self, ctx):
+        self.visitChildren(ctx)
+
+    @overrides
+    def visitMultipleHoleVars(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.Hole_varContext))
+        self.main_function += ', '
+        self.visit(ctx.getChild(0, aluParser.Hole_varsContext))
+
+    @overrides
+    def visitHole_var(self, ctx):
+        var_name = ctx.getText()
 
         num_bits = 2
-        if 'opcode' in ctx.getChild(4).getText():
-            num_bits = self.find_opcode_bits()
-        self.add_hole(ctx.getChild(4).getText(), num_bits)
-        self.main_function += 'int ' + ctx.getChild(4).getText() + (
-            '_hole_local,')
-        if (ctx.getChildCount() > 5):
-            for i in range(5, ctx.getChildCount()-1):
-                self.visit(ctx.getChild(i))
-                if 'opcode' in ctx.getChild(i).getText():
-                    num_bits = self.find_opcode_bits()
-                self.add_hole(ctx.getChild(i).getText()[1:].strip(), (
-                    num_bits))
-
-                self.main_function += 'int ' + \
-                    ctx.getChild(i).getText()[1:].strip() + \
-                    '_hole_local,'
-
-    def visitHole_var_with_comma(self, ctx):
-        assert (ctx.getChild(0).getText() == ',')
+        if var_name == 'opcode':
+            num_bits = self.opcode_bits
+        self.add_hole(var_name, num_bits)
+        self.main_function += 'int ' + var_name + '_hole_local'
 
     @overrides
-    def visitPacket_fields(self, ctx):
-        # Empty set of packet fields
-        if (ctx.getChildCount() == 5):
-            return
-        self.packet_fields.append(ctx.getChild(4).getText())
-        self.num_packet_fields += 1
-        if (ctx.getChildCount() > 5):
-            for i in range(5, ctx.getChildCount()-1):
-                self.packet_fields.append(ctx.getChild(i).getText()[1:])
-                self.num_packet_fields += 1
+    def visitPacket_field_def(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.Packet_field_seqContext))
 
     @overrides
-    def visitPacket_field_with_comma(self, ctx):
-        assert (ctx.getChild(0).getText() == ',')
-        self.main_function += 'int '+ctx.getChild(1).getText() + ','
+    def visitPacket_field_seq(self, ctx):
+        if ctx.getChildCount() > 0:
+            self.visitChildren(ctx)
+
+    @overrides
+    def visitSinglePacketField(self, ctx):
+        self.visitChildren(ctx)
+
+    @overrides
+    def visitMultiplePacketFields(self, ctx):
+        self.visit(ctx.getChild(0, aluParser.Packet_fieldContext))
+        self.visit(ctx.getChild(0, aluParser.Packet_fieldsContext))
+
+    @overrides
+    def visitPacket_field(self, ctx):
+        packet_field_name = ctx.getText()
+        self.packet_fields.append(packet_field_name)
 
     @overrides
     def visitVar(self, ctx):
         self.main_function += ctx.getText()
 
     @overrides
-    def visitStmtIfElseIfElse(self, ctx):
-        self.main_function += '\tif ('
-        self.visit(ctx.if_guard)
-        self.main_function += ') {\n'
-
-        self.visit(ctx.if_body)
+    def visitCondition_block(self, ctx):
+        self.main_function += ' ('
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ')\n {'
+        self.visit(ctx.getChild(0, aluParser.Alu_bodyContext))
         self.main_function += '\n}\n'
-        elif_index = 7
-        while (ctx.getChildCount() > elif_index and
-                ctx.getChild(elif_index).getText() == 'elif'):
 
-            self.main_function += '\telse if ('
-            self.visit(ctx.getChild(elif_index+2))
-            self.main_function += ') {\n'
-            self.visit(ctx.getChild(elif_index+5))
+    @overrides
+    def visitStmtIfElseIfElse(self, ctx):
+        condition_blocks = ctx.condition_block()
 
-            self.main_function += '\n}\n'
-            elif_index += 7
+        for i, block in enumerate(condition_blocks):
+            if i != 0:
+                self.main_function += 'else '
+            self.main_function += 'if'
+            self.visit(block)
 
-        # if there is an else
-        if (ctx.getChildCount() > elif_index and
-                ctx.getChild(elif_index).getText() == 'else'):
-            self.main_function += '\telse {\n'
+        if ctx.else_body is not None:
+            self.main_function += 'else {\n'
             self.visit(ctx.else_body)
             self.main_function += '\n}\n'
 
