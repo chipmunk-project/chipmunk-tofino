@@ -1,4 +1,4 @@
-// Max value of opcode is 13
+// Max value of opcode is 4
 type : stateless
 state variables : {}
 hole variables : {opcode, immediate_operand}
@@ -17,40 +17,6 @@ if (opcode == 0) {
   // subtract(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_1 - pkt_0;
 } elif (opcode == 3) {
-  // bit_and(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 != 0) && (pkt_1 != 0);
-} elif (opcode == 4) {
-  // bit_andca(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 == 0) && (pkt_1 != 0);
-} elif (opcode == 5) {
-  // bit_andcb(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 != 0) && (pkt_1 == 0);
-} elif (opcode == 6) {
-  // bit_nand(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 == 0) || (pkt_1 == 0);
-} elif (opcode == 7) {
-  // bit_nor(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 == 0) &&  (pkt_1 == 0);
-} elif (opcode == 8) {
-  // bit_not(mdata.result1, mdata.pkt_0);
-  return (pkt_0 == 0);
-} elif (opcode == 9) {
-  // bit_or(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 != 0) || (pkt_1 != 0);
-} elif (opcode == 10) {
-  // bit_orca(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 == 0) || (pkt_1 != 0);
-} elif (opcode == 11) {
-  // bit_orcb(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return (pkt_0 != 0) || (pkt_1 == 0);
-  // TODO: add bitwise Nor back
-  // } elif (opcode == 12) {
-  // bit_xnor(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  // return ~(pkt_0 ^ pkt_1);
-  // } elif (opcode == 13) {
-  // bit_xor(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  // return (pkt_0 ^ pkt_1);
-} elif (opcode == 12) {
   // max(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
 } else {
