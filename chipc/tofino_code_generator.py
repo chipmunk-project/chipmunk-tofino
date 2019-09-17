@@ -29,6 +29,15 @@ class TofinoCodeGenerator:
             [path.join(path.dirname(__file__), './templates')]),
             undefined=StrictUndefined)
 
+    # TODO: Add an assert to the original sketch program so that the opcode
+    # value can't equal to or greater than the number of options possible,
+    # instead of manually checking like this.
+    def get_packet_field_idx(self, opcode_val):
+        if opcode_val >= self.num_alus_per_stage_:
+            return self.num_alus_per_stage_ - 1
+        else:
+            return opcode_val
+
     def generate_stateless_alus(self):
         stateless_alus = [[dict()] * self.num_alus_per_stage_
                           for _ in range(self.num_pipeline_stages_)]
@@ -43,11 +52,13 @@ class TofinoCodeGenerator:
                     hole_prefix + '_opcode')
                 alu_dict['result'] = 'ipv4.pkt_' + str(j)
                 alu_dict['operand0'] = 'ipv4.pkt_' + str(
-                    self.hole_assignments_.pop(hole_prefix +
-                                               '_operand_mux_0_ctrl'))
+                    self.get_packet_field_idx(
+                        self.hole_assignments_.pop(hole_prefix +
+                                                   '_operand_mux_0_ctrl')))
                 alu_dict['operand1'] = 'ipv4.pkt_' + str(
-                    self.hole_assignments_.pop(hole_prefix +
-                                               '_operand_mux_1_ctrl'))
+                    self.get_packet_field_idx(
+                        self.hole_assignments_.pop(hole_prefix +
+                                                   '_operand_mux_1_ctrl')))
                 alu_dict['immediate'] = self.constant_arr_[
                     self.hole_assignments_.pop(hole_prefix +
                                                '_immediate_operand')]
