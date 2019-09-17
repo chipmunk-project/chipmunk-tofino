@@ -17,13 +17,13 @@ if (opcode == 0) {
   // add(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 + pkt_1;
 } elif (opcode == 3) {
+  return pkt_0 + immediate_operand;
+} elif (opcode == 4) {
   // subtract(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 - pkt_1;
-} elif (opcode == 4) {
+} elif (opcode == 5) {
   // max(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
-} elif (opcode == 5) {
-  return pkt_0 + immediate_operand;
 } else {
   // min(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
