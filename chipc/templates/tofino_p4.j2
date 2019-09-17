@@ -75,7 +75,7 @@ blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
     output_value              : {{alu['output_value_expr']}};
     output_dst                : {{alu['output_dst']}};
     {# TODO: Set initial values more sensibly. #}
-    initial_register_lo_value : 19; // Magic value TODO: needs to be changed.
+    initial_register_lo_value : 0x56782312; // Magic value TODO: needs to be changed.
     initial_register_hi_value : 0;
 
     {# Instructions omitted for now
@@ -118,6 +118,7 @@ table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table {
 {% set operand0 = stateless_alus[i][j]['operand0'] %}
 {% set operand1 = stateless_alus[i][j]['operand1'] %}
 {% set result   = stateless_alus[i][j]['result'] %}
+{% set immediate= stateless_alus[i][j]['immediate']%}
 action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     {# NOTE: Please use the same opcode for the ones in
     stateless_alu_for_tofino.alu #}
@@ -129,6 +130,8 @@ action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     subtract({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 3 %}
     max({{result}}, {{operand0}}, {{operand1}});
+    {% elif opcode == 4 %}
+    add({{result}}, {{operand0}}, {{immediate}});
     {% else %}
     min({{result}}, {{operand0}}, {{operand1}});
     {% endif %}

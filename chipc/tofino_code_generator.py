@@ -48,6 +48,9 @@ class TofinoCodeGenerator:
                 alu_dict['operand1'] = 'ipv4.pkt_' + str(
                     self.hole_assignments_.pop(hole_prefix +
                                                '_operand_mux_1_ctrl'))
+                alu_dict['immediate'] = self.constant_arr_[
+                    self.hole_assignments_.pop(hole_prefix +
+                                               '_immediate_operand')]
 
                 stateless_alus[i][j] = alu_dict
         return stateless_alus
