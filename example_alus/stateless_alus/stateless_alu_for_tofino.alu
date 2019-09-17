@@ -1,4 +1,4 @@
-// Max value of opcode is 4
+// Max value of opcode is 9
 type : stateless
 state variables : {}
 hole variables : {opcode, immediate_operand}
@@ -8,20 +8,35 @@ packet fields : {pkt_0, pkt_1}
 // for and, or, nand, etc.
 
 if (opcode == 0) {
-  // modify_field(mdata.result1, mdata.pkt_0);
-  return pkt_0;
+    // modify_field(mdata.result1, mdata.pkt_0);
+    return pkt_0;
 } elif (opcode == 1) {
-  // add(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return pkt_0 + pkt_1;
+    // modify_field(mdata.result1, immediate_operand)
+    return immediate_operand;
 } elif (opcode == 2) {
-  // subtract(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return pkt_1 - pkt_0;
+    // add(mdata.result1, mdata.pkt_0, mdata.pkt_1);
+    return pkt_0 + pkt_1;
 } elif (opcode == 3) {
-  // max(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
+    // add(mdata.reseult1, mdata.pkt_0, immediate_operand);
+    return pkt_0 + immediate_operand;
+} elif (opcode == 4) {
+    // subtract(mdata.result1, mdata.pkt_0, mdata.pkt_1);
+    return pkt_0 - pkt_1;
+} elif (opcode == 5) {
+    // subtract(mdata.result1, immediate_operand, mdata.pkt_0);
+    return immediate_operand - pkt_0;
+} elif (opcode == 6) {
+    // max(mdata.result1, mdata.pkt_0, mdata.pkt_1);
+    return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
+} elif (opcode == 7) {
+    // max(mdata.result1, mdata.pkt_0, immediate_operand);
+    return pkt_0 > immediate_operand ? pkt_0 : immediate_operand;
+} elif (opcode == 8) {
+    // min(mdata.result1, mdata.pkt_0, mdata.pkt_1);
+    return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
 } else {
-  // min(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-  return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
+    // min(mdata.result1, mdata.pkt_0, immediate_operand);
+    return pkt_0 > immediate_operand ? immediate_operand : pkt_0;
 }
   // TODO: add back left shift and right shift
   // elif (opcode == 14) {

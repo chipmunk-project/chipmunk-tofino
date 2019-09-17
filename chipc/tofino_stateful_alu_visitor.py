@@ -450,14 +450,10 @@ class TofinoStatefulAluVisitor(aluVisitor):
             template_str = '({op1}) and (not({op2}))'
         elif opcode == 5:
             template_str = 'not({op2})'
-        elif opcode == 6:
-            template_str = '({op1}) ^ ({op2})'
         elif opcode == 7:
             template_str = 'not(({op1}) and ({op2}))'
         elif opcode == 8:
             template_str = '({op1}) and ({op2})'
-        elif opcode == 9:
-            template_str = 'not(({op1}) ^ ({op2}))'
         elif opcode == 10:
             template_str = '({op2})'
         elif opcode == 11:
@@ -473,8 +469,20 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         return template_str.format(op1=op1, op2=op2)
 
+    def is_int(self, x):
+        try:
+            int(x)
+            return True
+        except ValueError:
+            return False
+
     def eval_arith_op(self, op1, op2, opcode):
-        if op1 == '0':
+        if self.is_int(op1) and self.is_int(op2):
+            if opcode == 0:
+                template_str = str(int(op1) + int(op2))
+            else:
+                template_str = str(int(op1) - int(op2))
+        elif op1 == '0':
             if opcode == 0:
                 template_str = '({op2})'
             else:
@@ -497,15 +505,42 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
     def eval_compute_alu(self, op1, op2, opcode):
         if opcode == 0:
-            template_str = '({op1}) + ({op2})'
+            if self.is_int(op1) and self.is_int(op2):
+                template_str = str(int(op1) + int(op2))
+            elif op1 == '0':
+                template_str = '({op2})'
+            elif op2 == '0':
+                template_str = '({op1})'
+            else:
+                template_str = '({op1}) + ({op2})'
         elif opcode == 1:
-            template_str = '({op1}) - ({op2})'
+            if self.is_int(op1) and self.is_int(op2):
+                template_str = str(int(op1) - int(op2))
+            elif op1 == '0':
+                template_str = '(-({op2}))'
+            elif op2 == '0':
+                template_str = '({op1})'
+            else:
+                template_str = '({op1}) - ({op2})'
         elif opcode == 2:
-            template_str = '({op2}) - ({op1})'
+            if self.is_int(op1) and self.is_int(op2):
+                template_str = str(int(op2) - int(op2))
+            elif op1 == '0':
+                template_str = '({op2})'
+            elif op2 == '0':
+                template_str = '(-({op1}))'
+            else:
+                template_str = '({op2}) - ({op1})'
         elif opcode == 3:
-            template_str = '({op2})'
+            if op2 == '0':
+                template_str = '0'
+            else:
+                template_str = '({op2})'
         elif opcode == 4:
-            template_str = '({op1})'
+            if op1 == '0':
+                template_str = '0'
+            else:
+                template_str = '({op1})'
         elif opcode == 5:
             template_str = '0'
         else:

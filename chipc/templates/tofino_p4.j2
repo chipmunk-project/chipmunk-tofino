@@ -75,8 +75,8 @@ blackbox stateful_alu {{sketch_name}}_stateful_alu_{{i}}_{{j}}_blackbox {
     output_value              : {{alu['output_value_expr']}};
     output_dst                : {{alu['output_dst']}};
     {# TODO: Set initial values more sensibly. #}
-    initial_register_lo_value : 19; // Magic value TODO: needs to be changed.
-    initial_register_hi_value : 0;
+    initial_register_lo_value : 19; // Magic value TODO: needs to be changed. 0x13
+    initial_register_hi_value : 236;  // Magic value TODO: needs to be changed. 0xEC
 
     {# Instructions omitted for now
     selector_binding
@@ -114,23 +114,34 @@ table {{sketch_name}}_stateful_alu_{{i}}_{{j}}_table {
   {% for j in range(num_alus_per_stage) %}
 {% if stateless_alus[i][j]['enable'] == 1 %}
 // Stateless ALU action
-{% set opcode   = stateless_alus[i][j]['opcode'] %}
-{% set operand0 = stateless_alus[i][j]['operand0'] %}
-{% set operand1 = stateless_alus[i][j]['operand1'] %}
-{% set result   = stateless_alus[i][j]['result'] %}
+{% set opcode            = stateless_alus[i][j]['opcode'] %}
+{% set operand0          = stateless_alus[i][j]['operand0'] %}
+{% set operand1          = stateless_alus[i][j]['operand1'] %}
+{% set result            = stateless_alus[i][j]['result'] %}
+{% set immediate_operand = stateless_alus[i][j]['immediate_operand'] %}
 action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     {# NOTE: Please use the same opcode for the ones in
     stateless_alu_for_tofino.alu #}
     {% if opcode == 0 %}
     modify_field({{result}}, {{operand0}});
     {% elif opcode == 1 %}
-    add({{result}}, {{operand0}}, {{operand1}});
+    modify_field({{result}}, {{immediate_operand}});
     {% elif opcode == 2 %}
-    subtract({{result}}, {{operand0}}, {{operand1}});
+    add({{result}}, {{operand0}}, {{operand1}});
     {% elif opcode == 3 %}
+    add({{result}}, {{operand0}}, {{immediate_operand}});
+    {% elif opcode == 4 %}
+    subtract({{result}}, {{operand0}}, {{operand1}});
+    {% elif opcode == 5 %}
+    subtract({{result}}, {{immediate_operand}}, {{operand0}});
+    {% elif opcode == 6 %}
     max({{result}}, {{operand0}}, {{operand1}});
-    {% else %}
+    {% elif opcode == 7 %}
+    max({{result}}, {{operand0}}, {{immediate_operand}});
+    {% elif opcode == 8 %}
     min({{result}}, {{operand0}}, {{operand1}});
+    {% else %}
+    min({{result}}, {{operand0}}, {{immediate_operand}});
     {% endif %}
 }
 
