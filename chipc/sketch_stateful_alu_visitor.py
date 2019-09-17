@@ -465,22 +465,18 @@ bit {alu_name}_bool_op_{bool_op_count} (bit op1, bit op2, int opcode) {{
   }} else if (opcode == 5) {{
     return ~op2;
   }} else if (opcode == 6) {{
-    return op1 ^ op2;
-  }} else if (opcode == 7) {{
     return ~(op1 && op2);
-  }} else if (opcode == 8) {{
+  }} else if (opcode == 7) {{
     return op1 && op2;
-  }} else if (opcode == 9) {{
-    return ~(op1 ^ op2);
-  }} else if (opcode == 10) {{
+  }} else if (opcode == 8) {{
     return op2;
-  }} else if (opcode == 11) {{
+  }} else if (opcode == 9) {{
     return (~op1) || op2;
-  }} else if (opcode == 12) {{
+  }} else if (opcode == 10) {{
     return op1;
-  }} else if (opcode == 13) {{
+  }} else if (opcode == 11) {{
     return op1 || (~op2);
-  }} else if (opcode == 14) {{
+  }} else if (opcode == 12) {{
     return op1 || op2;
   }} else {{
     return true;
