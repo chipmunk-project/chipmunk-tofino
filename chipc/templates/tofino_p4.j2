@@ -135,8 +135,12 @@ action {{sketch_name}}_stateless_alu_{{i}}_{{j}}_action () {
     subtract({{result}}, {{immediate}}, {{operand0}});
     {% elif opcode == 6 %}
     max({{result}}, {{operand0}}, {{operand1}});
-    {% else %}
+    {% elif opcode == 7 %}
+    max({{result}}, {{operand0}}, {{immediate}});
+    {% elif opcode == 8 %}
     min({{result}}, {{operand0}}, {{operand1}});
+    {% else %}
+    min({{result}}, {{operand0}}, {{immediate}});
     {% endif %}
 }
 
