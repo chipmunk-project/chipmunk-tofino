@@ -74,10 +74,23 @@ class TofinoCodeGenerator:
                 stateful_alu_template_dict = self.generate_stateful_alu(
                     'stateful_alu_' + str(i) + '_' + str(j))
                 stateful_alus[i][j] = stateful_alu_template_dict
-                stateful_alus[i][j]['output_dst'] = 'ipv4.pkt_' + \
-                    str(self.hole_assignments_.pop(
-                        self.sketch_name_ + '_stateful_alu_' +
-                        str(i) + '_' + str(j) + '_demux_ctrl'))
+                # NOTE: The semantics of stateful ALU demux ctrl hole is
+                # slightly different from what we assume for other holes. We
+                # want to have the hole value to be exactly one of
+                # 0, 1, 2, ..., num_phvs - 1
+                # If the value is greater or equal to num_phvs, then we don't
+                # want to set the output_dst.
+                phv_idx = self.hole_assignments_.pop(
+                    self.sketch_name_ + '_stateful_alu_' +
+                    str(i) + '_' + str(j) + '_demux_ctrl')
+
+                if phv_idx < self.num_alus_per_stage_:
+                    stateful_alus[i][j]['output_dst'] = 'ipv4.pkt_' + \
+                        str(phv_idx)
+                    stateful_alus[i][j]['output_predicate_expr'] = 1
+                else:
+                    stateful_alus[i][j].pop('output_value_expr', None)
+                    stateful_alus[i][j]['output_predicate_expr'] = 0
 
         return stateful_alus
 
@@ -88,12 +101,14 @@ class TofinoCodeGenerator:
         parser = aluParser(stream)
         tree = parser.alu()
 
-        operand0 = 'ipv4.pkt_' + str(self.hole_assignments_.pop(
+        operand0 = 'ipv4.pkt_' + str(self.get_packet_field_idx(
+            self.hole_assignments_.pop(
                    self.sketch_name_ + '_' + alu_name +
-                   '_operand_mux_0_ctrl'))
-        operand1 = 'ipv4.pkt_' + str(self.hole_assignments_.pop(
+                   '_operand_mux_0_ctrl')))
+        operand1 = 'ipv4.pkt_' + str(self.get_packet_field_idx(
+            self.hole_assignments_.pop(
                    self.sketch_name_ + '_' + alu_name +
-                   '_operand_mux_1_ctrl'))
+                   '_operand_mux_1_ctrl')))
         tofino_stateful_alu_visitor = TofinoStatefulAluVisitor(
             self.sketch_name_ + '_' + alu_name, self.constant_arr_,
             self.hole_assignments_,
