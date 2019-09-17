@@ -1,4 +1,4 @@
-// Max value of opcode is 5
+// Max value of opcode is 6
 type : stateless
 state variables : {}
 hole variables : {opcode, immediate_operand}
@@ -11,15 +11,18 @@ if (opcode == 0) {
   // modify_field(mdata.result1, mdata.pkt_0);
   return pkt_0;
 } elif (opcode == 1) {
+    // modify_field(dst, immediate_operand);
+    return immediate_operand;
+} elif (opcode == 2) {
   // add(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 + pkt_1;
-} elif (opcode == 2) {
+} elif (opcode == 3) {
   // subtract(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 - pkt_1;
-} elif (opcode == 3) {
+} elif (opcode == 4) {
   // max(mdata.result1, mdata.pkt_0, mdata.pkt_1);
   return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
-} elif (opcode == 4) {
+} elif (opcode == 5) {
   return pkt_0 + immediate_operand;
 } else {
   // min(mdata.result1, mdata.pkt_0, mdata.pkt_1);
