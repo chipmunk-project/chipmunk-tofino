@@ -534,4 +534,4 @@ int {alu_name}_compute_alu_{compute_alu_count}(int op1, int op2, int opcode) {{
             function_str.format(alu_name=self.alu_name,
                                 compute_alu_count=str(self.compute_alu_count)))
 
-        self.add_hole('compute_alu_' + str(self.compute_alu_count), 5)
+        self.add_hole('compute_alu_' + str(self.compute_alu_count), 3)
