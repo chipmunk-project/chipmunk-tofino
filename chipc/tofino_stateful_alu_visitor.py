@@ -10,6 +10,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.alu_filename = alu_filename
         self.state_vars = []
         self.packet_fields = []
+        self.mux6_count = 0
         self.mux5_count = 0
         self.mux4_count = 0
         self.mux3_count = 0
@@ -200,6 +201,9 @@ class TofinoStatefulAluVisitor(aluVisitor):
         self.main_function += ';'
 
         if var_name in self.template_keywords:
+            if var_name == 'output_value':
+                print(var_name, expr)
+
             self.template_args[var_name + '_expr'] = expr
 
     @overrides
@@ -232,6 +236,10 @@ class TofinoStatefulAluVisitor(aluVisitor):
             return self.operand0
         elif var_name == 'metadata_hi':
             return self.operand1
+        elif var_name == 'old_register_hi':
+            return 'register_hi'
+        elif var_name == 'old_register_lo':
+            return 'register_lo'
         else:
             return var_name
 
@@ -251,6 +259,25 @@ class TofinoStatefulAluVisitor(aluVisitor):
         return self.visit(ctx.getChild(0, aluParser.ExprContext)) + \
             ctx.getChild(1).getText() + \
             self.visit(ctx.getChild(1, aluParser.ExprContext))
+
+    @overrides
+    def visitMux6(self, ctx):
+        op1 = self.visit(ctx.getChild(0, aluParser.ExprContext))
+        op2 = self.visit(ctx.getChild(1, aluParser.ExprContext))
+        op3 = self.visit(ctx.getChild(2, aluParser.ExprContext))
+        op4 = self.visit(ctx.getChild(3, aluParser.ExprContext))
+        op5 = self.visit(ctx.getChild(4, aluParser.ExprContext))
+        op6 = self.visit(ctx.getChild(5, aluParser.ExprContext))
+
+        opcode = self.hole_assignments.pop(self.get_full_hole_name(
+            'Mux6_' + str(self.mux6_count)))
+
+        self.mux6_count += 1
+        print(self.get_full_hole_name(
+            'Mux6_' + str(self.mux6_count)))
+        print(op1, op2, op3, op4, op5, op6, opcode)
+
+        return self.eval_mux6(op1, op2, op3, op4, op5, op6, opcode)
 
     @overrides
     def visitMux5(self, ctx):
@@ -386,6 +413,21 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
         return self.eval_compute_alu(op1, op2, opcode)
 
+    def eval_mux6(self, op1, op2, op3, op4, op5, op6, opcode):
+        print(type(opcode), opcode)
+        if opcode == 0:
+            return op1
+        elif opcode == 1:
+            return op2
+        elif opcode == 2:
+            return op3
+        elif opcode == 3:
+            return op4
+        elif opcode == 4:
+            return op5
+        else:
+            return op6
+
     def eval_mux5(self, op1, op2, op3, op4, op5, opcode):
         if opcode == 0:
             return op1
@@ -431,7 +473,11 @@ class TofinoStatefulAluVisitor(aluVisitor):
         elif opcode == 1:
             template_str = '({op1}) < ({op2})'
         elif opcode == 2:
+            template_str = '({op1}) <= ({op2})'
+        elif opcode == 3:
             template_str = '({op1}) > ({op2})'
+        elif opcode == 4:
+            template_str = '({op1}) >= ({op2})'
         else:
             template_str = '({op1}) == ({op2})'
 
@@ -439,7 +485,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
 
     def eval_bool_op(self, op1, op2, opcode):
         if opcode == 0:
-            template_str = 'false'
+            template_str = '0'
         elif opcode == 1:
             template_str = 'not(({op1}) or ({op2}))'
         elif opcode == 2:
@@ -465,7 +511,7 @@ class TofinoStatefulAluVisitor(aluVisitor):
         elif opcode == 12:
             template_str = '({op1}) or ({op2})'
         else:
-            template_str = 'true'
+            template_str = '1'
 
         return template_str.format(op1=op1, op2=op2)
 

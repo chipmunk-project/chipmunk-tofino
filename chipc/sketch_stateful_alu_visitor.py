@@ -11,6 +11,7 @@ class SketchStatefulAluVisitor(aluVisitor):
     def __init__(self, alu_name, constant_arr_size):
         self.alu_name = alu_name
         self.constant_arr_size = constant_arr_size
+        self.mux6_count = 0
         self.mux5_count = 0
         self.mux4_count = 0
         self.mux3_count = 0
@@ -220,6 +221,25 @@ class SketchStatefulAluVisitor(aluVisitor):
         self.main_function += ')'
 
     @overrides
+    def visitMux6(self, ctx):
+        self.main_function += self.alu_name + '_' + 'Mux6_' + str(
+            self.mux6_count) + '('
+        self.visit(ctx.getChild(0, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(1, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(2, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(3, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(4, aluParser.ExprContext))
+        self.main_function += ','
+        self.visit(ctx.getChild(5, aluParser.ExprContext))
+        self.main_function += ',' + 'Mux6_' + str(self.mux6_count) + ')'
+        self.generateMux6()
+        self.mux6_count += 1
+
+    @overrides
     def visitMux5(self, ctx):
         self.main_function += self.alu_name + '_' + 'Mux5_' + str(
             self.mux5_count) + '('
@@ -356,6 +376,24 @@ class SketchStatefulAluVisitor(aluVisitor):
         self.generateComputeAlu()
         self.compute_alu_count += 1
 
+    def generateMux6(self):
+        function_str = """\
+int {alu_name}_Mux6_{mux6_count}(int op1, int op2, int op3, int op4, int op5,
+                                 int op6, int opcode) {{
+    if (opcode == 0) return op1;
+    else if (opcode == 1) return op2;
+    else if (opcode == 2) return op3;
+    else if (opcode == 3) return op4;
+    else if (opcode == 4) return op5;
+    else return op6;
+}}
+"""
+        self.helper_function_strings += dedent(
+            function_str.format(
+                alu_name=self.alu_name,
+                mux6_count=str(self.mux6_count)))
+        self.add_hole('Mux6_' + str(self.mux6_count), 3)
+
     def generateMux5(self):
         function_str = """\
 int {alu_name}_Mux5_{mux5_count}(int op1, int op2, int op3, int op4, int op5,
@@ -442,12 +480,16 @@ int {alu_name}_Mux4_{mux4_count}(int op1, int op2, int op3, int op4,
     } else if (opcode == 1) {
       return (operand1 < operand2) ? 1 : 0;
     } else if (opcode == 2) {
+      return (operand1 <= operand2) ? 1: 0;
+    } else if (opcode == 3) {
       return (operand1 > operand2) ? 1 : 0;
+    } else if (opcode == 4) {
+      return (operand1 >= operand2) ? 1 : 0;
     } else {
       return (operand1 == operand2) ? 1 : 0;
     }
     } \n\n"""
-        self.add_hole('rel_op_' + str(self.rel_op_count), 2)
+        self.add_hole('rel_op_' + str(self.rel_op_count), 3)
 
     def generateBoolOp(self):
         function_str = """\

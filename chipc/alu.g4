@@ -10,6 +10,7 @@ ARITHOP          : 'arith_op'; // Captures +/- used in slide 14 of salu.pdf
 COMPUTEALU       : 'compute_alu'; // Captures everything from slide 15 of salu.pdf
 // TODO: Instead of having numbered MUX, maybe implement a support one mux that
 // can take variable number of arguments.
+MUX6             : 'Mux6';
 MUX5             : 'Mux5';      // 5-to-1 mux
 MUX4             : 'Mux4';
 MUX3             : 'Mux3';   // 3-to-1 mux
@@ -125,6 +126,7 @@ expr   : variable #Var
        | MUX3 '(' expr ',' expr ',' expr ')' #Mux3
        | MUX4 '(' expr ',' expr ',' expr ',' expr ')' #Mux4
        | MUX5 '(' expr ',' expr ',' expr ',' expr ',' expr ')' #Mux5
+       | MUX6 '(' expr ',' expr ',' expr ',' expr ',' expr ',' expr ')' #Mux6
        | OPT '(' expr ')' #Opt
        | CONSTANT #Constant
        | ARITHOP '(' expr ',' expr ')' # ArithOp
@@ -134,4 +136,3 @@ expr   : variable #Var
        ;
 
 alu: state_indicator state_var_def hole_def packet_field_def alu_body;
-
