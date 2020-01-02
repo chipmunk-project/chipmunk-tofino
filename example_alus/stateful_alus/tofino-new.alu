@@ -1,0 +1,87 @@
+type : stateful state variables : {register_lo, register_hi}
+                                  // register_lo, register_hi
+                                  hole variables : {}
+packet fields : { metadata_lo, metadata_hi } // metadata_lo, metadata_hi
+
+// compute_alu(A, B), where A can be metadata or constant
+// where B can be register or constant
+
+int lo = register_lo;
+int hi = register_hi;
+
+bit cond_lo = rel_op(
+    arith_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)), Mux3(lo, hi, 0)) +
+        C(),
+    0);
+bit cond_hi = rel_op(
+    arith_op(arith_op(0, Mux3(metadata_lo, metadata_hi, 0)), Mux3(lo, hi, 0)) +
+        C(),
+    0);
+
+bit pred_lo_1 = bool_op(cond_lo, cond_hi);
+bit pred_lo_2 = bool_op(cond_lo, cond_hi);
+bit pred_hi_1 = bool_op(cond_lo, cond_hi);
+bit pred_hi_2 = bool_op(cond_lo, cond_hi);
+
+// Model computation ALUs from Tofino salu.pdf
+int update_lo_1_value =
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(lo, hi, C()));
+int update_lo_2_value =
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(lo, hi, C()));
+int update_hi_1_value =
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(lo, hi, C()));
+int update_hi_2_value =
+    compute_alu(Mux3(metadata_lo, metadata_hi, C()), Mux3(lo, hi, C()));
+
+int alu_lo = 0;
+int alu_hi = 0;
+
+int tmp1 = 0;
+int tmp2 = 0;
+
+if (pred_lo_1) {
+  tmp1 = update_lo_1_value;
+}
+if (pred_lo_2) {
+  tmp2 = update_lo_2_value;
+}
+if (pred_lo_1 || pred_lo_2) {
+  // TODO: Implement necessary code to compute bitwise OR using bit vectors.
+  // Following line needs to be written as register_hi = update_hi_1_value |
+  // update_hi_2_value. The bitwise OR of the two alu values. Sketch only
+  // supports bitwisse OR for bit vectors not for ints. So we now leave this as
+  // assert(false) to catch that certain benchmarks don't pass because of this.
+  // alu_lo = bit_or(tmp1, tmp2);
+  assert(false);
+} else {
+  alu_lo = lo;
+}
+
+tmp1 = 0;
+tmp2 = 0;
+
+if (pred_hi_1) {
+  tmp1 = update_hi_1_value;
+}
+if (pred_hi_2) {
+  tmp2 = update_hi_2_value;
+}
+if (pred_lo_1 || pred_lo_2) {
+  // alu_hi = bit_or(tmp1, tmp2);
+  assert(false);
+} else {
+  alu_hi = hi;
+}
+
+int output_value = Mux5(metadata_lo, metadata_hi, lo, hi, 0);
+
+// Corresponds to the call to write_to_register().
+register_lo = alu_lo;
+register_hi = alu_hi;
+
+// TODO: We can only update one metadata field, and we don't know at this point
+// which one will get updated. We would return simply one value from here and
+// let the output mux choose. To handle this, we would like to change all
+// stateful alus to return one single integer value and modify related Python
+// sketch generator scripts to accomodate this.
+return output_value;
