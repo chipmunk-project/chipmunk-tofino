@@ -365,8 +365,12 @@ class stateful_alu : public ExternType, public StatefulALUIface {
   }
 
   void execute_gen(size_t index) {
+    // Initialize register_lo and hi to 0.
     RegisterV lo(0), hi(0);
+    // Read values from actual registers.
     read_from_register(index, &lo, &hi);
+    // Variable to store register_{lo, hi} and cond_{lo, hi} and pass them
+    // to functions.
     std::vector<Data> locals_registers;
     locals_registers.emplace_back(lo);
     locals_registers.emplace_back(hi);
