@@ -18,6 +18,11 @@ scp rcp_tofino_stateless_alu_for_tofino_1_3.p4 \
     root@tofino1.cs.nyu.edu:/tmp/autogen.p4
 ```
 
+ssh into tofino1.cs.nyu.edu
+```shell
+ssh root@tofino1.cs.nyu.edu
+```
+
 Make sure to verify that the file indeed is what you just transferred by opening it.
 
 Now navigate to Barefoot SDE directory
@@ -34,6 +39,8 @@ Build the P4 program using following command
 ```shell
 ./p4_build.sh /tmp/autogen.p4
 ```
+
+TODO: If the program fails to build, you may need to manually fix some portions of the P4 program based on the error messages. We should fix this going forward.
 
 Load the control plane program
 ```shell
