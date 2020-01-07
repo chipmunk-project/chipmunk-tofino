@@ -74,7 +74,6 @@ hole_vars : hole_var                 #SingleHoleVar
           ;
 
 packet_field_def : 'packet' 'fields' ':' '{' packet_field_seq '}';
-
 packet_field_seq : /* epsilon */
                  | packet_fields
                  ;
@@ -134,4 +133,3 @@ expr   : variable #Var
        ;
 
 alu: state_indicator state_var_def hole_def packet_field_def alu_body;
-

@@ -55,7 +55,9 @@ def set_default_values(pkt_fields, state_vars, num_fields_in_prog,
 
 
 def generate_counterexample_asserts(pkt_fields, state_vars, num_fields_in_prog,
-                                    state_group_info, count):
+                                    state_group_info, count,
+                                    output_packet_fields,
+                                    state_group_to_check, group_size):
     counterexample_defs = ''
     counterexample_asserts = ''
 
@@ -73,9 +75,58 @@ def generate_counterexample_asserts(pkt_fields, state_vars, num_fields_in_prog,
         else:
             counterexample_defs += ');\n'
 
-    counterexample_asserts += 'assert (pipeline(' + 'x_' + str(
-        count) + ')' + ' == ' + 'program(' + 'x_' + str(
-            count) + '));\n'
+    if output_packet_fields is None and state_group_to_check is None:
+        counterexample_asserts += 'assert (pipeline(' + 'x_' + str(
+            count) + ')' + ' == ' + 'program(' + 'x_' + str(
+                count) + '));\n'
+    elif output_packet_fields is not None and state_group_to_check is None:
+        # If our spec only cares about specific packet fields,
+        # the counterexample generated should also care about
+        # the same packet fields
+        # For example, we only care about pkt_0 then the counterexample
+        # assert should be assert(pipeline(x_1).pkt_0 == program(x_1).pkt_0)
+
+        # Same case for stateful_groups except we should care about the size
+        # of state group
+        # For example, we only care about the state_group_0 with the size
+        # of this group to be 2, then the counterexample assert should be
+        # assert(pipeline(x_1).state_group_0_state_0 ==
+        # program(x_1).state_group_0_state_0)
+        # assert(pipeline(x_1).state_group_0_state_1 ==
+        # program(x_1).state_group_0_state_1)
+        for i in range(len(output_packet_fields)):
+            counterexample_asserts += 'assert (pipeline(' + 'x_' + str(
+                count) + ').pkt_' + str(output_packet_fields[i]) + \
+                ' == ' + 'program(' + 'x_' + str(
+                count) + ').pkt_' + str(output_packet_fields[i]) + ');\n'
+    elif output_packet_fields is not None and state_group_to_check is not None:
+        # counterexample for packet fields
+        for i in range(len(output_packet_fields)):
+            counterexample_asserts += 'assert (pipeline(' + 'x_' + str(
+                count) + ').pkt_' + str(output_packet_fields[i]) + \
+                ' == ' + 'program(' + 'x_' + str(
+                count) + ').pkt_' + str(output_packet_fields[i]) + ');\n'
+        # counterexample for stateful groups
+        for i in range(len(state_group_to_check)):
+            for j in range(group_size):
+                counterexample_asserts += 'assert (pipeline(' + 'x_' + str(
+                    count) + ').state_group_' + \
+                    str(state_group_to_check[i]) + \
+                    '_state_' + str(j) + ' == ' + 'program(' + 'x_' + str(
+                    count) + ').state_group_' + \
+                    str(state_group_to_check[i]) + '_state_' + str(j) + ');\n'
+    else:
+        assert output_packet_fields is None
+        assert state_group_to_check is not None
+        for i in range(len(state_group_to_check)):
+            for j in range(group_size):
+                counterexample_asserts += 'assert (pipeline(' + 'x_' + str(
+                    count) + ').state_group_' + \
+                    str(state_group_to_check[i]) + \
+                    '_state_' + str(j) + ' == ' + 'program(' + 'x_' + str(
+                    count) + ').state_group_' + str(state_group_to_check[i]) +\
+                    '_state_' + str(j) + ');\n'
+
     return counterexample_defs + counterexample_asserts
 
 
@@ -109,6 +160,23 @@ def main(argv):
         type=int,
         nargs='+',
         help='Packet fields to check correctness')
+    parser.add_argument(
+        '--state-groups',
+        type=int,
+        nargs='+',
+        help='State groups to check correctness')
+    parser.add_argument(
+        '--input-packet',
+        type=int,
+        nargs='+',
+        help='This is intended to provide user with choice\
+                to pick up the packet fields that will \
+                influence the packet fields/states we\
+                want to check correctness for to feed into chipmunk.\
+                For example, in example_specs/blue_decrease.sk, \
+                packet field pkt_1 only depends on pkt_0, \
+                so we can specify --input-packet=0 when we \
+                set - -pkt-fields=1.')
     parser.add_argument(
         '-p',
         '--parallel',
@@ -154,6 +222,21 @@ def main(argv):
         '_' + str(args.num_pipeline_stages) + \
         '_' + str(args.num_alus_per_stage)
 
+    # Get how many members in each state group
+    # state_group_info is OrderedDict which stores the num of state group and
+    # the how many stateful vars in each state group
+    # state_group_info[item] specifies the
+    # num of stateful vars in each state group
+    # In our example, each state group has the same size, so we only pick up
+    # one of them to get the group size
+    # For example,
+    # if state_group_info = OrderedDict([('0', OrderedSet(['0', '1']))])
+    # state_group_info[item] = OrderedSet(['0', '1'])
+    # group_size = 2
+    for item in state_group_info:
+        group_size = len(state_group_info[item])
+        break
+
     # Use OrderedSet here for deterministic compilation results. We can also
     # use built-in dict() for Python versions 3.6 and later, as it's inherently
     # ordered.
@@ -165,8 +248,8 @@ def main(argv):
                         sketch_name, args.parallel_sketch,
                         constant_set,
                         args.synthesized_allocation,
-                        args.target_tofino,
-                        args.pkt_fields)
+                        args.pkt_fields, args.state_groups,
+                        args.input_packet, args.target_tofino)
     # Repeatedly run synthesis at 2 bits and verification using all valid ints
     # until either verification succeeds or synthesis fails at 2 bits. Note
     # that the verification with all ints, might not work because sketch only
@@ -238,7 +321,7 @@ def main(argv):
 
             additional_testcases += generate_counterexample_asserts(
                 pkt_fields, state_vars, num_fields_in_prog, state_group_info,
-                count)
+                count, args.pkt_fields, args.state_groups, group_size)
 
         count += 1
 

@@ -1,0 +1,45 @@
+name: Python application
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Install dependencies
+      run: |
+        old_dir=`pwd`
+        set -e
+        sudo apt-get update
+        sudo apt-get install -y bison python3-pip flex
+        cd /usr/local/lib
+        sudo wget https://www.antlr.org/download/antlr-4.7.2-complete.jar
+        export CLASSPATH=".:/usr/local/lib/antlr-4.7.2-complete.jar:$CLASSPATH"
+        antlr4='java -jar /usr/local/lib/antlr-4.7.2-complete.jar'
+        cd ~
+        wget https://people.csail.mit.edu/asolar/sketch-1.7.5.tar.gz
+        tar xvzf sketch-1.7.5.tar.gz
+        cd sketch-1.7.5
+        cd sketch-backend
+        chmod +x ./configure
+        ./configure
+        make
+        cd ..
+        cd sketch-frontend
+        chmod +x ./sketch
+        ./sketch test/sk/seq/miniTest1.sk
+        export PATH="$PATH:`pwd`"
+        export SKETCH_HOME="`pwd`/runtime"
+        cd $old_dir
+        python -m pip install --upgrade pip
+        pip install -e .
+        iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "0,1,2,3" 10 --hole-elimination
+        iterative_solver example_specs/simple.sk example_alus/stateful_alus/raw.alu example_alus/stateless_alus/stateless_alu.alu 2 2 "0,1,2,3" 10 --parallel-sketch --hole-elimination
+        python3 -m unittest

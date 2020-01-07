@@ -41,15 +41,17 @@
     // Inputs
     {% if stage_number == 0 %}
       // Read each PHV container from corresponding packet field.
-      {% for field_number in range(num_fields_in_prog) %}
+      {% for field_number in input_packet_fields %}
         {% if synthesized_allocation %}
+        // TODO: deal with the case where not all packets are fed as input
         {% for container_number in range(num_phv_containers) %}
            if (phv_config_{{field_number}}_{{container_number}} == 1){
               input_0_{{container_number}} = state_and_packet.pkt_{{field_number}};
            }
         {% endfor %}
         {% else %}
-        input_0_{{field_number}} = state_and_packet.pkt_{{field_number}};
+        // loop.index starts from 1 that's why we need to -1
+        input_0_{{loop.index - 1}} = state_and_packet.pkt_{{field_number}};
         {% endif %}
       {% endfor %}
 
@@ -222,7 +224,7 @@
     {% endfor %}
     {% endfor %}
 
-  {% for field_number in range(num_fields_in_prog) %}
+  {% for field_number in output_packet_fields %}
     // Write pkt_{{field_number}}
     {% if synthesized_allocation %}
     {% for container_number in range(num_phv_containers) %}
@@ -231,7 +233,7 @@
         }
     {% endfor %}
     {% else%}
-    state_and_packet.pkt_{{field_number}} = output_{{num_pipeline_stages - 1}}_{{field_number}};
+    state_and_packet.pkt_{{field_number}} = output_{{num_pipeline_stages - 1}}_{{loop.index - 1}};
     {% endif %}
   {% endfor %}
 
@@ -264,14 +266,14 @@
   |StateAndPacket| pipeline_result = pipeline(x);
   |StateAndPacket| program_result = program(x);
 
-  {% for state_group_number in range(num_state_groups) %}
+  {% for state_group_number in output_state_groups %}
     {% for slot_number in range(num_state_slots) %}
       assert(pipeline_result.state_group_{{state_group_number}}_state_{{slot_number}}
       == program_result.state_group_{{state_group_number}}_state_{{slot_number}});
     {% endfor %}
   {% endfor %}
 
-  {% for field_number in pkt_fields_to_check %}
+  {% for field_number in output_packet_fields %}
     assert(pipeline_result.pkt_{{field_number}} == program_result.pkt_{{field_number}});
   {% endfor %}
 

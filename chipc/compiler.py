@@ -43,7 +43,10 @@ class Compiler:
                  stateless_alu_filename, num_pipeline_stages,
                  num_alus_per_stage, sketch_name, parallel_sketch,
                  constant_set, synthesized_allocation=False,
-                 target_tofino=False, pkt_fields_to_check=[]):
+                 output_packet_fields=[],
+                 output_state_groups=[],
+                 input_packet_fields=[],
+                 target_tofino=False):
         self.spec_filename = spec_filename
         self.stateful_alu_filename = stateful_alu_filename
         self.stateless_alu_filename = stateless_alu_filename
@@ -59,10 +62,26 @@ class Compiler:
         self.num_fields_in_prog = get_num_pkt_fields(program_content)
         self.num_state_groups = len(get_state_group_info(program_content))
 
-        assert self.num_fields_in_prog <= num_alus_per_stage, (
-            'Number of fields in program %d is greater than number of '
-            'alus per stage %d. Try increasing number of alus per stage.' % (
-                self.num_fields_in_prog, num_alus_per_stage))
+        if not input_packet_fields:
+            assert self.num_fields_in_prog <= num_alus_per_stage, (
+                'Number of fields in program %d is greater than number of '
+                'alus per stage %d. Try increasing '
+                'number of alus per stage.' % (
+                    self.num_fields_in_prog, num_alus_per_stage))
+        else:
+            assert len(input_packet_fields) <= num_alus_per_stage, (
+                'Number of input fields in program %d is'
+                'greater than number of alus per stage %d. Try increasing '
+                'number of alus per stage.' % (
+                    len(input_packet_fields), num_alus_per_stage))
+            # Guarantee that # of output_packet_fields is less than or equal
+            # to the num_alus_per_stage
+            if output_packet_fields is not None:
+                assert len(output_packet_fields) <= num_alus_per_stage, (
+                    'Number of checked fields in program %d is '
+                    'greater than number of alus per stage %d. '
+                    'Try increasing number of alus per stage.' % (
+                        len(output_packet_fields), num_alus_per_stage))
 
         # Initialize jinja2 environment for templates
         self.jinja2_env = Environment(
@@ -76,8 +95,17 @@ class Compiler:
             trim_blocks=True,
             lstrip_blocks=True)
 
-        if not pkt_fields_to_check:
-            pkt_fields_to_check = list(range(self.num_fields_in_prog))
+        if not output_packet_fields and not output_state_groups:
+            output_packet_fields = list(range(self.num_fields_in_prog))
+            output_state_groups = list(range(self.num_state_groups))
+        elif not output_packet_fields and output_state_groups:
+            output_packet_fields = []
+        elif output_packet_fields and not output_state_groups:
+            output_state_groups = []
+
+        # Differentiate between using default pkt input vs. specify pkt input
+        if not input_packet_fields:
+            input_packet_fields = list(range(self.num_fields_in_prog))
 
         # Create an object for sketch generation
         self.sketch_code_generator = SketchCodeGenerator(
@@ -87,12 +115,14 @@ class Compiler:
             num_phv_containers=num_alus_per_stage,
             num_state_groups=self.num_state_groups,
             num_fields_in_prog=self.num_fields_in_prog,
-            pkt_fields_to_check=pkt_fields_to_check,
+            output_packet_fields=output_packet_fields,
+            output_state_groups=output_state_groups,
             jinja2_env=self.jinja2_env,
             stateful_alu_filename=stateful_alu_filename,
             stateless_alu_filename=stateless_alu_filename,
             constant_set=constant_set,
             synthesized_allocation=synthesized_allocation,
+            input_packet_fields=input_packet_fields,
             target_tofino=target_tofino)
 
     def update_constants_for_synthesis(self, constant_set):

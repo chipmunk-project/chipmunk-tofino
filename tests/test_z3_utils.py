@@ -50,9 +50,10 @@ class GenerateCounterexamplesTest(unittest.TestCase):
     def test_successs_with_mock(self):
         x = z3.Int('pkt_0_0_0_0')
         simple_formula = z3.ForAll([x], z3.And(x > 3, x < 2))
-        pkt_fields, _ = z3_utils.generate_counterexamples(
+        pkt_fields, state_vars = z3_utils.generate_counterexamples(
             simple_formula)
-        self.assertDictEqual(pkt_fields, {'pkt_0': 0})
+        self.assertTrue('pkt_0' in pkt_fields)
+        self.assertDictEqual(state_vars, {})
 
     def test_unsat_formula(self):
         x = z3.Int('x')
@@ -64,10 +65,10 @@ class GenerateCounterexamplesTest(unittest.TestCase):
     def test_state_group_with_alphabets(self):
         x = z3.Int('state_group_1_state_0_b_b_0')
         simple_formula = z3.ForAll([x], z3.And(x > 3, x < 2))
-        _, state_vars = z3_utils.generate_counterexamples(
+        pkt_fields, state_vars = z3_utils.generate_counterexamples(
             simple_formula)
-        self.assertDictEqual(state_vars, {'state_group_1_state_0': 0})
-
+        self.assertDictEqual(pkt_fields, {})
+        self.assertTrue('state_group_1_state_0' in state_vars)
 
 class GetZ3FormulaTest(unittest.TestCase):
     def test_conversion(self):
