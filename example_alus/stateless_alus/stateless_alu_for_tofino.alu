@@ -20,7 +20,7 @@ if (opcode == 0) {
     // add(mdata.reseult1, mdata.pkt_0, immediate_operand);
     return pkt_0 + immediate_operand;
 } elif (opcode == 4) {
-    // subtract(mdata.result1, mdata.pkt_0, mdata.pkt_1);
+    // subtract(mdata.result1, mdata.pkt_1, mdata.pkt_0);
     return pkt_1 - pkt_0;
 } elif (opcode == 5) {
     // subtract(mdata.result1, mdata.pkt_0, immediate_operand);
