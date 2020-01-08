@@ -3,6 +3,9 @@ state variables : {register_lo, register_hi} // register_lo, register_hi
 hole variables : {}
 packet fields : {metadata_lo, metadata_hi} // metadata_lo, metadata_hi
 
+int original_lo = register_lo;
+int original_hi = register_hi;
+ 
 // compute_alu(A, B), where A can be metadata or constant
 // where B can be register or constant
 
@@ -59,10 +62,13 @@ if (update_lo_1_predicate && update_lo_2_predicate) {
     register_lo = register_lo;
 }
 
+int alu_lo = register_lo;
+int alu_hi = register_hi;
+
 // TODO: We can only update one metadata field, and we don't know at this point
 // which one will get updated. We would return simply one value from here and
 // let the output mux choose. To handle this, we would like to change all
 // stateful alus to return one single integer value and modify related Python
 // sketch generator scripts to accomodate this.
-int output_value = Mux5(metadata_hi, metadata_lo, register_lo, register_hi, 0);
+int output_value = Mux4(original_lo, original_hi, alu_lo, alu_hi);
 return output_value;
