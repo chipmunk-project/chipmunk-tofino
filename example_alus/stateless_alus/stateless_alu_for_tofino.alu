@@ -25,22 +25,10 @@ if (opcode == 0) {
 } elif (opcode == 5) {
     // subtract(mdata.result1, mdata.pkt_0, immediate_operand);
     return pkt_0 - immediate_operand;
-} elif (opcode == 6) {
+} else {
     // subtract(mdata.result1, immediate_operand, mdata.pkt_0);
     return immediate_operand - pkt_0;
-} elif (opcode == 7) {
-    // max(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-    return pkt_0 > pkt_1 ? pkt_0 : pkt_1;
-} elif (opcode == 8) {
-    // max(mdata.result1, mdata.pkt_0, immediate_operand);
-    return pkt_0 > immediate_operand ? pkt_0 : immediate_operand;
-} elif (opcode == 9) {
-    // min(mdata.result1, mdata.pkt_0, mdata.pkt_1);
-    return pkt_0 > pkt_1 ? pkt_1 : pkt_0;
-} else {
-    // min(mdata.result1, mdata.pkt_0, immediate_operand);
-    return pkt_0 > immediate_operand ? immediate_operand : pkt_0;
-}
+} 
   // TODO: add back left shift and right shift
   // elif (opcode == 14) {
   // shift_left(mdata.result1, mdata.pkt_0, 1;
