@@ -15,11 +15,11 @@ header ethernet_t ethernet;
 header_type ipv4_t {
     fields {
         // TODO: Have a hard limit on 5 fields for now. Ensure this in the tofino code generator.
-        pkt_0 : 32;
-        pkt_1 : 32;
-        pkt_2 : 32;
-        pkt_3 : 32;
-        pkt_4 : 32;
+        pkt_0 : 32 (signed);
+        pkt_1 : 32 (signed);
+        pkt_2 : 32 (signed);
+        pkt_3 : 32 (signed);
+        pkt_4 : 32 (signed);
     }
 }
 
@@ -51,6 +51,7 @@ parser parse_ipv4 {
 register reg_{{j}} {
     width : 64;
     instance_count : MAX_SIZE;
+    attributes : signed;
 }
 {% endfor %}
 

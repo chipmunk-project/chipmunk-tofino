@@ -465,13 +465,17 @@ bit {alu_name}_bool_op_{bool_op_count} (bit op1, bit op2, int opcode) {{
   }} else if (opcode == 5) {{
     return ~op2;
   }} else if (opcode == 6) {{
-    return op1 ^ op2;
+    // This used to be XOR; it's been switched to AND because
+    // the Tofino compiler doesn't accept it (issue #20).
+    return op1 && op2;
   }} else if (opcode == 7) {{
     return ~(op1 && op2);
   }} else if (opcode == 8) {{
     return op1 && op2;
   }} else if (opcode == 9) {{
-    return ~(op1 ^ op2);
+    // This used to be XOR; it's been switched to AND because
+    // the Tofino compiler doesn't accept it (issue #20).
+    return ~(op1 && op2);
   }} else if (opcode == 10) {{
     return op2;
   }} else if (opcode == 11) {{

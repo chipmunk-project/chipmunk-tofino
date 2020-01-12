@@ -1,3 +1,4 @@
+from hashlib import md5
 from os import path
 from pathlib import Path
 
@@ -119,18 +120,20 @@ class TofinoCodeGenerator:
         # pragma to remove all table dependencies and (hopefully)
         # take matters into our own hands
         ignore_all_table_deps = ''
+        sketch_name_passed_to_p4 = 'A' + \
+            md5(self.sketch_name_.encode('ascii')).hexdigest()[0:15]
         for i in range(self.num_pipeline_stages_):
             for j in range(self.num_alus_per_stage_):
                 if stateless_alus[i][j]['enable'] == 1:
                     ignore_all_table_deps += \
                         '@pragma ignore_table_dependency ' + \
-                        self.sketch_name_ + '_stateless_alu_' + \
+                        sketch_name_passed_to_p4 + '_stateless_alu_' + \
                         str(i) + '_' + str(j) + '_table\n'
             for k in range(self.num_state_groups_):
                 if salu_configs[i][k] == 1:
                     ignore_all_table_deps += \
                         '@pragma ignore_table_dependency ' + \
-                        self.sketch_name_ + '_stateful_alu_' + \
+                        sketch_name_passed_to_p4 + '_stateful_alu_' + \
                         str(i) + '_' + str(k) + '_table\n'
 
         if len(self.hole_assignments_) > 0:
@@ -139,7 +142,9 @@ class TofinoCodeGenerator:
             print('int', hole, '=', value)
 
         p4_code = template.render(
-            sketch_name=self.sketch_name_,
+            sketch_name=sketch_name_passed_to_p4,
+            # We use an md5 hash because the Tofino run time can't seem
+            # to handle tables with large names.
             num_pipeline_stages=self.num_pipeline_stages_,
             num_state_groups=self.num_state_groups_,
             num_alus_per_stage=self.num_alus_per_stage_,
@@ -148,6 +153,14 @@ class TofinoCodeGenerator:
             salu_configs=salu_configs,
             ignore_all_table_deps=ignore_all_table_deps
         )
+        # TODO: The line below is a terrible hack, but will probably suffice
+        # for running on Tofino now.
+        replaced_code = p4_code.replace('original_lo', 'register_lo').replace(
+            'original_hi', 'register_hi')
+        if replaced_code != p4_code:
+            print('Need to substitute original_hi/original_lo with '
+                  'register_hi/register_lo')
+            p4_code = replaced_code
 
         p4_filename = self.sketch_name_ + '.p4'
         Path(p4_filename).write_text(p4_code)
