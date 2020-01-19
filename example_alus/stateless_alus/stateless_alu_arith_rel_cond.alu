@@ -35,5 +35,5 @@ if (opcode == 0) {
 } elif (opcode == 14) {
   return pkt_0 != 0 ? pkt_1 : pkt_2;
 } else {
-  return pkt_0 != 0 ? pkt_1 : immediate_operand
+  return pkt_0 != 0 ? pkt_1 : immediate_operand;
 }

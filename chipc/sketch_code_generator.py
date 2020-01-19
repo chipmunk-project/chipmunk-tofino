@@ -28,7 +28,7 @@ class SketchCodeGenerator:
                  num_alus_per_stage, num_pipeline_stages, num_fields_in_prog,
                  output_packet_fields, output_state_groups,
                  jinja2_env, stateful_alu_filename,
-                 stateless_alu_filename, constant_set,
+                 stateless_alu_filename, constant_set, group_size,
                  synthesized_allocation, input_packet_fields, target_tofino):
         self.sketch_name_ = sketch_name
         self.total_hole_bits_ = 0
@@ -49,6 +49,7 @@ class SketchCodeGenerator:
         self.jinja2_env_.filters['add_prefix_suffix'] = add_prefix_suffix
         self.stateful_alu_filename_ = stateful_alu_filename
         self.stateless_alu_filename_ = stateless_alu_filename
+        self.group_size_ = group_size
         # self.constant_arr_def_ will be the form like
         # int constant_vector[4] = {0,1,2,3};
 
@@ -418,4 +419,5 @@ class SketchCodeGenerator:
                 ['int ' + str(hole) + ' = ' + str(value) + ';'
                     for hole, value in hole_assignments.items()]),
             additional_testcases=additional_testcases,
-            input_packet_fields=self.input_packet_fields_)
+            input_packet_fields=self.input_packet_fields_,
+            group_size=self.group_size_)

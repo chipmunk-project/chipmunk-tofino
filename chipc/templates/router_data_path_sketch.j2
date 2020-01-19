@@ -267,7 +267,7 @@
   |StateAndPacket| program_result = program(x);
 
   {% for state_group_number in output_state_groups %}
-    {% for slot_number in range(num_state_slots) %}
+    {% for slot_number in range(group_size) %}
       assert(pipeline_result.state_group_{{state_group_number}}_state_{{slot_number}}
       == program_result.state_group_{{state_group_number}}_state_{{slot_number}});
     {% endfor %}

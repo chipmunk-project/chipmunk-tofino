@@ -96,6 +96,20 @@ class IterativeSolverTest(unittest.TestCase):
                 '--input-packet', '0']),
         )
 
+    def test_blue_increase_1_1_pred_raw_bool_cex_mode_pkt0(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'blue_increase.sk'),
+                path.join(STATEFUL_ALU_DIR, 'pred_raw.alu'),
+                path.join(STATELESS_ALU_DIR,
+                          'stateless_alu_arith_rel_cond_bool.alu'),
+                '1', '1', '0,1,2,3', '10',
+                '--pkt-fields=0',
+                '--input-packet', '0']),
+        )
+
     def test_blue_increase_1_1_pred_raw_cex_mode_pkt1(self):
         self.assertEqual(
             0,

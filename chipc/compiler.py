@@ -42,7 +42,8 @@ class Compiler:
     def __init__(self, spec_filename, stateful_alu_filename,
                  stateless_alu_filename, num_pipeline_stages,
                  num_alus_per_stage, sketch_name, parallel_sketch,
-                 constant_set, synthesized_allocation=False,
+                 constant_set, group_size,
+                 synthesized_allocation=False,
                  output_packet_fields=[],
                  output_state_groups=[],
                  input_packet_fields=[],
@@ -121,6 +122,7 @@ class Compiler:
             stateful_alu_filename=stateful_alu_filename,
             stateless_alu_filename=stateless_alu_filename,
             constant_set=constant_set,
+            group_size=group_size,
             synthesized_allocation=synthesized_allocation,
             input_packet_fields=input_packet_fields,
             target_tofino=target_tofino)

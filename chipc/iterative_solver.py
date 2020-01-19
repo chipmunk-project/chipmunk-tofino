@@ -246,7 +246,7 @@ def main(argv):
                         args.stateless_alu_filename,
                         args.num_pipeline_stages, args.num_alus_per_stage,
                         sketch_name, args.parallel_sketch,
-                        constant_set,
+                        constant_set, group_size,
                         args.synthesized_allocation,
                         args.pkt_fields, args.state_groups,
                         args.input_packet, args.target_tofino)
