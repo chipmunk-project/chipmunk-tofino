@@ -49,6 +49,33 @@ class IterativeSolverTest(unittest.TestCase):
                 '--synthesized-allocation']),
         )
 
+    def test_conga_3_4_pair_cex_mode_s0(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'conga.sk'),
+                path.join(STATEFUL_ALU_DIR, 'pair.alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
+                '3', '4', '0,1,2,3', '10',
+                '--state-groups', '0',
+                '--input-packet', '3', '4']),
+        )
+
+    def test_conga_3_4_pair_cex_mode_synthesized_alloc_s0(self):
+        self.assertEqual(
+            0,
+            iterative_solver.main([
+                'iterative_solver',
+                path.join(SPEC_DIR, 'conga.sk'),
+                path.join(STATEFUL_ALU_DIR, 'pair.alu'),
+                path.join(STATELESS_ALU_DIR, 'stateless_alu.alu'),
+                '3', '4', '0,1,2,3', '10',
+                '--state-groups', '0',
+                '--input-packet', '3', '4',
+                '--synthesized-allocation']),
+        )
+
     def test_rcp_3_2_if_else_raw_cex_mode(self):
         self.assertEqual(
             0,

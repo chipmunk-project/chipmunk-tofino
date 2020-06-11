@@ -157,13 +157,13 @@ class SketchCodeGenerator:
         # assert sum(field) phv_config_{field}_{container} <= 1
         for j in range(self.num_phv_containers_):
             assert_predicate = '('
-            for k in range(self.num_fields_in_prog_):
+            for k in self.input_packet_fields_:
                 assert_predicate += ' phv_config_' + \
                     str(k) + '_' + str(j) + '+'
             assert_predicate += '0) <= 1'
             self.add_assert(assert_predicate)
         # assert sum(container) phv_config_{field}_{container} == 1
-        for k in range(self.num_fields_in_prog_):
+        for k in self.input_packet_fields_:
             assert_predicate = '('
             for j in range(self.num_phv_containers_):
                 assert_predicate += ' phv_config_' + \

@@ -1,0 +1,13 @@
+|StateAndPacket| program (|StateAndPacket| state_and_packet) {
+state_and_packet.pkt_1=state_and_packet.pkt_0<0 ? 0 : state_and_packet.pkt_0;
+state_and_packet.pkt_2=state_and_packet.pkt_0<0 ? 0 : state_and_packet.pkt_0;
+if (state_and_packet.pkt_3<state_and_packet.state_group_0_state_0) {state_and_packet.state_group_0_state_0=state_and_packet.pkt_3;
+state_and_packet.state_group_0_state_1=state_and_packet.pkt_4;
+
+;}else {if (state_and_packet.pkt_4==state_and_packet.state_group_0_state_1) {state_and_packet.state_group_0_state_0=state_and_packet.pkt_3;
+
+;}
+
+;}
+  return state_and_packet;
+}
