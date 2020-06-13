@@ -216,6 +216,11 @@ def main(argv):
     # Get the state vars information
     # TODO: add the max_input_bit into sketch_name
     state_group_info = get_state_group_info(program_content)
+
+    # record the number of state groups in the program
+    # which is equal to the num of stateful ALU per stage
+    state_group_num = len(get_state_group_info(program_content))
+
     sketch_name = args.spec_filename.split('/')[-1].split('.')[0] + \
         '_' + args.stateful_alu_filename.split('/')[-1].split('.')[0] + \
         '_' + args.stateless_alu_filename.split('/')[-1].split('.')[0] + \
@@ -285,6 +290,10 @@ def main(argv):
             compilation_success(sketch_name, hole_assignments, output)
             if args.target_tofino:
                 compiler.compile_to_tofino(hole_assignments)
+            print('Synthesis succeeded with ' + str(args.num_pipeline_stages) +
+                  ' stages and ' +
+                  str(state_group_num + args.num_alus_per_stage) +
+                  ' ALUs per stage')
             return 0
 
         print('Verification failed.')
