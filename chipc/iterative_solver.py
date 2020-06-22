@@ -219,7 +219,15 @@ def main(argv):
 
     # record the number of state groups in the program
     # which is equal to the num of stateful ALU per stage
-    state_group_num = len(get_state_group_info(program_content))
+    # if no member in args.state_groups and args.pkt_fields
+    # or equal to 0 if only members in args.pkt_fields
+    # or equal to the size of args.state_groups
+    if not args.state_groups and not args.pkt_fields:
+        state_group_num = len(get_state_group_info(program_content))
+    elif not args.state_groups and args.pkt_fields:
+        state_group_num = 0
+    else:
+        state_group_num = len(args.state_groups)
 
     sketch_name = args.spec_filename.split('/')[-1].split('.')[0] + \
         '_' + args.stateful_alu_filename.split('/')[-1].split('.')[0] + \
