@@ -1,4 +1,4 @@
-# Chipmunk (version that includes support for Tofino code generation)
+# Chipmunk (this version includes support for Tofino code generation)
 
 [![Build status](https://ci.appveyor.com/api/projects/status/atsuojrqo000bku4/branch/master?svg=true)](https://ci.appveyor.com/project/anirudhSK/chipmunk/branch/master)
 
