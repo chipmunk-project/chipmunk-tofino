@@ -61,7 +61,8 @@ setup(
     # This will let setuptools to copy ver what"s listed in MANIFEST.in
     include_package_data=True,
     install_requires=[
-        'antlr4-python3-runtime>=4.7.2', 'Jinja2>=2.10', 'ordered_set>=3.1.1',
+        'antlr4-python3-runtime>=4.7.2,<4.8', 'Jinja2>=2.10',
+        'ordered_set>=3.1.1',
         'overrides>=1.9', 'psutil>=5.6.1', 'z3-solver>=4.8.0.0'
     ],
     cmdclass={
