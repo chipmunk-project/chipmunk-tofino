@@ -68,11 +68,16 @@ def get_hole_bit_width(k: int) -> int:
 
 def compilation_success(sketch_name, hole_assignments, output):
     print('Compilation succeeded. Hole value assignments are following:')
+    hole_str = ''
     for hole, value in sorted(hole_assignments.items()):
         print('int', hole, '=', value)
+        hole_str += str(hole) + ' = ' + str(value) + '\n'
     p = Path(sketch_name + '.success')
     p.write_text(output)
     print('Output left in', p.name)
+    q = Path(sketch_name + '_hole_cfgs.txt')
+    q.write_text(hole_str)
+    print('Hole configuration left in', q.name)
 
 
 def compilation_failure(sketch_name, output):

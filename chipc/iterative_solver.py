@@ -12,6 +12,14 @@ from chipc.utils import get_num_pkt_fields
 from chipc.utils import get_state_group_info
 
 
+def print_set(constant_set):
+    ret_str = 'Final constant set is: '
+    for i in range(len(constant_set) - 1):
+        ret_str += constant_set[i] + ','
+    ret_str += constant_set[len(constant_set) - 1]
+    print(ret_str)
+
+
 def generate_hole_elimination_assert(hole_assignments):
     """Given hole value assignments, {'n_0: 'v_0', 'n_1': 'v_1', ... }, which
     failed to verify for larger input bit ranges, generates a single element
@@ -298,6 +306,9 @@ def main(argv):
             compilation_success(sketch_name, hole_assignments, output)
             if args.target_tofino:
                 compiler.compile_to_tofino(hole_assignments)
+            print_set(constant_set)
+            print('Using', args.num_alus_per_stage, 'stateless ALUs per stage')
+            print('Using', state_group_num, 'stateful ALUs per stage')
             print('Synthesis succeeded with ' + str(args.num_pipeline_stages) +
                   ' stages and ' +
                   str(state_group_num + args.num_alus_per_stage) +
