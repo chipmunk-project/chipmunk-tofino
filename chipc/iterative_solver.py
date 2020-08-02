@@ -323,7 +323,6 @@ def main(argv):
         if args.hole_elimination:
             hole_elimination_assert += generate_hole_elimination_assert(
                 hole_assignments)
-            print(hole_elimination_assert)
         else:
             print('Use returned counterexamples', pkt_fields, state_vars)
 
